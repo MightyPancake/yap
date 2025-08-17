@@ -1,0 +1,6 @@
+[submodule "modules/yap-c"]
+	path = modules/yap-c
+	url = https://github.com/MightyPancake/yap-c
+[submodule "modules/yap-ts"]
+	path = modules/yap-ts
+	url = https://github.com/MightyPancake/yap-ts
