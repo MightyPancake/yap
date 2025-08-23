@@ -105,10 +105,16 @@ int main(int argc, char** argv) {
         compile(args);
     }
     if (args.show_cflags){
-        char* resolved_yap_home = yap_resolve_path(".");
-        char* rsm = resolved_yap_home;
-        printf("-I%s/include/ -L%s/lib/\n", rsm, rsm);
-        free(resolved_yap_home);
+        char* exec_path = yap_get_self_path();
+        char* resolved_yap_exec = yap_resolve_path(exec_path);
+        printf("Resolved exec: %s\n", resolved_yap_exec);
+        char* yap_home_dir = yap_get_parent_dir(resolved_yap_exec);
+        printf("yap home dir: %s\n", yap_home_dir);
+        char* yhd = yap_home_dir;
+        printf("-I%s/include/ -L%s/lib/\n", yhd, yhd);
+        free(resolved_yap_exec);
+        free(yap_home_dir);
+        free(exec_path);
     }
     yap_free_args(args);
     return 0;
