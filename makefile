@@ -8,6 +8,8 @@ RESET := [0m
 debug ?= false
 log := $(debug)
 
+YAP_PATH := $(pwd)
+
 ifeq ($(log),true)
     CFLAGS += -DYAP_LOG
 endif
