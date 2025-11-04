@@ -6,7 +6,7 @@
 #endif
 
 #ifdef __linux__
-char* yap_resolve_path(char* path){
+char* yap_resolve_path(const char* path){
   if (path == NULL) {
         printf("ERROR: path is NULL\n");
         return NULL;
