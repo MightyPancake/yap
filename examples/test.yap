@@ -1,3 +1,3 @@
-fn main(){
-	a = 12
+fn func(){
+	a = 12;
 }

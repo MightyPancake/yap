@@ -1,24 +1,20 @@
 #include "yap/all.h"
 
-yap_state* yap_new_state(){
+yap_state* yap_state_new(){
     yap_log("Creating new state");
     yap_state* state = mem_one_cpy(((yap_state){
          .sources=darr_new(yap_source, 64),
-         .definitions=darr_new(yap_def, 64),
+         .source_codes=darr_new(yap_source_coude, 1),
          .scope=yap_new_scope(NULL),
      }));
     return state;
 }
 
-void yap_free_state(yap_state* st){
-  //free sources
-  for_darr(i, yap_source, src, st->sources){
-    yap_free_source(src);
-  }
-  darr_free(st->sources);
-
-  yap_free_scope(st->scope);
-  free(st);
+yap_source_code yap_source_code_new(){
+  yap_log("Creating new source code");
+  return (yap_source_code){
+    .definitions=darr_new(yap_def, 8)
+  };
 }
 
 void yap_state_push_source(yap_state* st, yap_source src){

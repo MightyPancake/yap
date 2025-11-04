@@ -11,4 +11,6 @@ typedef struct yap_compiler{
   yap_compiler_front front;
 }yap_compiler;
 
+char* yap_get_yap_home_path();
+
 #endif //BOB_COMPILER_H
