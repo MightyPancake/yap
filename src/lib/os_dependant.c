@@ -3,6 +3,7 @@
 #ifdef __linux__
   #include <libgen.h>
   #include <unistd.h>
+  #include <limits.h> //PATH_MAX
 #endif
 
 #ifdef __linux__
@@ -11,18 +12,12 @@ char* yap_resolve_path(const char* path){
         printf("ERROR: path is NULL\n");
         return NULL;
     }
-    char* ret = (char*)malloc(YAP_PATH_MAX);
-    if (ret == NULL) {
-        printf("ERROR: malloc failed\n");
-        return NULL;
-    }
-    char* res = realpath(path, ret);
+    char* res = realpath(path, NULL);
     if (res == NULL) {
         printf("Couldn't get realpath for %s!", path);
-        free(ret);
         return NULL;
     }
-    return ret;
+    return res;
 }
 #else
   #error 'yap_resolve_path' not yet implemented for platforms other than linux!
@@ -33,7 +28,7 @@ char* yap_get_parent_dir(const char *full_path) {
     if (!full_path) return NULL;
 
     // Copy full_path because dirname may modify it
-    char temp[YAP_PATH_MAX];
+    char temp[PATH_MAX];
     strncpy(temp, full_path, sizeof(temp) - 1);
     temp[sizeof(temp) - 1] = '\0';
 
@@ -53,7 +48,7 @@ char* yap_get_parent_dir(const char *full_path) {
 #ifdef __linux__
 char* yap_get_self_path() {
     // Allocate buffer
-    char *buf = malloc(YAP_PATH_MAX);
+    char *buf = malloc(PATH_MAX);
     if (!buf) {
         perror("malloc failed");
         return NULL;

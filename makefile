@@ -7,7 +7,7 @@ RESET := [0m
 
 debug ?= false
 ifeq ($(debug),true)
-    CFLAGS += -g -O0 -fno-omit-frame-pointer -DYAP_DEBUG
+    CFLAGS += -g -O1 -fno-omit-frame-pointer -DYAP_DEBUG
 endif
 
 log := $(debug)
@@ -33,7 +33,7 @@ MV := mv
 
 default: all
 
-all: lib compiler path
+all: lib compiler
 
 compiler:
 	@echo $(PURPLE)Building yap compiler$(RESET)
