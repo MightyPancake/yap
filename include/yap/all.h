@@ -2,8 +2,8 @@
 #define YAP_H
 
 //Tree-sitter parsing function
-#include "tree_sitter/api.h"
-const TSLanguage *tree_sitter_yap(void);
+// #include "tree_sitter/api.h"
+// const TSLanguage *tree_sitter_yap(void);
 
 //All types are in one header
 #include "types.h"
