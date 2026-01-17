@@ -26,7 +26,7 @@ void yap_block_free(yap_block block){
     default: break;
   }
 }
-void yap_free_state(yap_state* st){
+void yap_ctx_free(yap_ctx* st){
   yap_log("Freeing state");
   //free sources
   for_darr(i, yap_source, src, st->sources){
@@ -69,24 +69,39 @@ void yap_statement_free(yap_statement statement){
 void yap_expr_free(yap_expr expr){
   yap_log("Freeing expr");
   switch(expr.kind){
-    case yap_expr_bin_op:
-      yap_bin_op_free(expr.bin_op);
+    case yap_expr_bin:
+      yap_bin_expr_free(expr.bin_expr);
       break;
     case yap_expr_assignment:
       yap_assignment_free(expr.assignment);
+    case yap_expr_literal:
+      yap_literal_free(expr.literal);
+    default:
+      break;
+  }
+}
+
+void yap_literal_free(yap_literal lit){
+  yap_log("Freeing literal");
+  switch(lit.kind){
+    case yap_literal_numerical:
+      free(lit.text);
+      break;
     default:
       break;
   }
 }
 
 void yap_assignment_free(yap_assignment as){
-  yap_expr_free(*((yap_expr*)(as.expr)));
-  free(as.expr);
+  yap_expr_free(*((yap_expr*)as.left));
+  yap_expr_free(*((yap_expr*)as.right));
+  free(as.left);
+  free(as.right);
 }
 
-void yap_bin_op_free(yap_bin_op bin_op){
-  yap_expr_free(*((yap_expr*)bin_op.left));
-  yap_expr_free(*((yap_expr*)bin_op.right));
-  free(bin_op.left);
-  free(bin_op.right);
+void yap_bin_expr_free(yap_bin_expr bin_expr){
+  yap_expr_free(*((yap_expr*)bin_expr.left));
+  yap_expr_free(*((yap_expr*)bin_expr.right));
+  free(bin_expr.left);
+  free(bin_expr.right);
 }

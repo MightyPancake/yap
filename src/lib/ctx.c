@@ -1,13 +1,13 @@
 #include "yap/all.h"
 
-yap_state* yap_state_new(){
-    yap_log("Creating new state");
-    yap_state* state = mem_one_cpy(((yap_state){
+yap_ctx* yap_ctx_new(){
+    yap_log("Creating new ctx");
+    yap_ctx* ctx = mem_one_cpy(((yap_ctx){
          .sources=darr_new(yap_source, 64),
          .source_codes=darr_new(yap_source_coude, 1),
          .scope=yap_new_scope(NULL),
      }));
-    return state;
+    return ctx;
 }
 
 yap_source_code yap_source_code_new(){
@@ -17,10 +17,10 @@ yap_source_code yap_source_code_new(){
   };
 }
 
-void yap_state_push_source(yap_state* st, yap_source src){
+void yap_ctx_push_source(yap_ctx* st, yap_source src){
   darr_push(yap_source, st->sources, src);
 }
 
-yap_source yap_state_pop_source(yap_state* st){
+yap_source yap_ctx_pop_source(yap_ctx* st){
   return darr_pop(yap_source, st->sources);
 }

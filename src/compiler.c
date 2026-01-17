@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <argp.h>
 #include "yap/all.h"
+#include "yap/types.h"
 
 #ifdef YAP_DEBUG
     #include <valgrind/memcheck.h>
@@ -55,9 +56,9 @@ void compile(yap_args args){
 
     compiler.front.parse = load_func_dynamically(front_handle, front_name, yap_parse_fn, "yap_parse");
     //do stuff here
-    yap_state* state = compiler.front.parse(args);
+    yap_ctx* ctx = compiler.front.parse(args);
     
-    yap_free_state(state);
+    yap_ctx_free(ctx);
     
     //This will force resolving debug symbols before closing the handle!
     //Very important for valgrind to work correctly! :^)

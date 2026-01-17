@@ -1,0 +1,9 @@
+#ifndef YAP_CONTEXT_H
+#define YAP_CONTEXT_H
+
+//Basic
+//Source
+void yap_ctx_push_source(yap_ctx* st, yap_source src);
+yap_source yap_ctx_pop_source(yap_ctx* st);
+
+#endif //YAP_CONTEXT_H
