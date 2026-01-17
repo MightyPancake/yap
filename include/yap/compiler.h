@@ -1,7 +1,7 @@
 #ifndef BOB_COMPILER_H
 #define BOB_COMPILER_H
 
-typedef yap_state* (*yap_parse_fn)(yap_args);
+typedef yap_ctx* (*yap_parse_fn)(yap_args);
 
 typedef struct yap_compiler_front{
   yap_parse_fn parse;

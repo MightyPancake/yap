@@ -74,22 +74,32 @@ typedef struct yap_var{
   yap_type type;
 }yap_var;
 
+kenobi_new_struct_free(yap_blob,
+  //TODO: Finish blobs
+  unsigned int field_count;
+);
+
 kenobi_new_struct_free(yap_literal,
   enum {
     yap_literal_error,
-    yap_literal_numerical
+    yap_literal_numerical,
+    yap_literal_blob,
   } kind;
-  char* text;
+  union {
+    yap_blob blob;
+    char* text;
+    
+  };
 );
 
-kenobi_new_struct_free(yap_bin_op,
+kenobi_new_struct_free(yap_bin_expr,
   enum {
-    yap_bin_op_error = 0,
-    yap_bin_op_add = '+',
-    yap_bin_op_sub = '-',
-    yap_bin_op_mul = '*',
-    yap_bin_op_div = '/',
-    yap_bin_op_mod = '%'
+    yap_bin_expr_error = 0,
+    yap_bin_expr_add = '+',
+    yap_bin_expr_sub = '-',
+    yap_bin_expr_mul = '*',
+    yap_bin_expr_div = '/',
+    yap_bin_expr_mod = '%'
   } kind;
   union {
     struct {
@@ -122,8 +132,9 @@ kenobi_new_struct_free(yap_assignment,
   union {
     yap_error err;
     struct {
-      yap_lvalue lvalue;
-      void* expr; //yap_expr*
+      void* left; //yap_expr*
+      void* right; //yap_expr*
+      char op; //'=', '+', '-' etc.
     };
   };
 );
@@ -134,16 +145,18 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_error,
     yap_expr_literal,
     yap_expr_var,
-    yap_expr_bin_op,
+    yap_expr_bin,
     yap_expr_assignment,
   } kind;
   union {
     yap_error err;
     yap_literal literal;
-    yap_bin_op bin_op;
+    yap_bin_expr bin_expr;
     yap_assignment assignment;
   };
   yap_type type;
+  bool is_lvalue;
+  bool is_comptime;
 );
 
 
@@ -195,13 +208,12 @@ typedef struct yap_def{
 }yap_def;
 void yap_def_free(yap_def def);
 
-typedef struct yap_state{
+kenobi_new_struct_free(yap_ctx,
   darr sources;
   darr source_codes;
   yap_scope* scope;
-}yap_state;
-yap_state* yap_state_new();
-void yap_free_state(yap_state* st);
+);
+yap_ctx* yap_ctx_new();
 
 typedef struct yap_source_code{
   darr definitions;
