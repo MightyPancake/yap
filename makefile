@@ -70,7 +70,7 @@ test:
     --suppressions=valgrind_suppressions.supp \
     ./yap examples/test.yap
 
-submodules:
+submodules: all
 	git submodule update --init --recursive --remote
 	@make utils
 	@make yap_ts debug=$(debug)
