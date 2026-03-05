@@ -26,21 +26,20 @@ void yap_block_free(yap_block block){
     default: break;
   }
 }
-void yap_ctx_free(yap_ctx* st){
+void yap_ctx_free(yap_ctx st){
   yap_log("Freeing state");
   //free sources
-  for_darr(i, yap_source, src, st->sources){
+  for_darr(i, yap_source, src, st.sources){
     yap_free_source(src);
   }
-  darr_free(st->sources);
+  darr_free(st.sources);
 
-  for_darr(i, yap_source_code, src_code, st->source_codes){
+  for_darr(i, yap_source_code, src_code, st.source_codes){
     yap_source_code_free(src_code);
   }
-  darr_free(st->source_codes);
+  darr_free(st.source_codes);
 
-  yap_free_scope(st->scope);
-  free(st);
+  yap_free_scope(st.scope);
 }
 
 void yap_source_code_free(yap_source_code src_code){

@@ -58,7 +58,8 @@ void compile(yap_args args){
     //do stuff here
     yap_ctx* ctx = compiler.front.parse(args);
     
-    yap_ctx_free(ctx);
+    yap_ctx_free(*ctx);
+    free(ctx);
     
     //This will force resolving debug symbols before closing the handle!
     //Very important for valgrind to work correctly! :^)
