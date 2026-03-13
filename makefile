@@ -16,6 +16,7 @@ ifeq ($(log),true)
 endif
 
 YAP_PATH := $(shell pwd)
+export PATH := $(YAP_PATH):$(PATH)
 
 YAP_SHARED_FLAGS := -I./include -L./lib $(CFLAGS)
 
@@ -29,7 +30,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib test path
+.PHONY: default compiler lib test path workflow
 
 default: all
 
@@ -43,7 +44,7 @@ compiler:
 
 clean:
 	@$(RM) yap
-	@$(RM) ./lib/*
+	@find ./lib -mindepth 1 ! -name 'libs.md' -delete
 
 static_lib:
 	@echo $(PURPLE)Building yap lib$(RESET)
@@ -77,7 +78,19 @@ submodules:
 
 path:
 	@echo $(PURPLE)Adding yap to PATH using pathman$(RESET)
-	@pathman add .
+	@if command -v pathman >/dev/null 2>&1; then \
+		pathman add "$(YAP_PATH)"; \
+	elif [ -n "$$GITHUB_PATH" ]; then \
+		echo "$(YAP_PATH)" >> "$$GITHUB_PATH"; \
+		echo $(GREEN)Added yap to GitHub Actions PATH$(RESET); \
+	else \
+		echo $(CYAN)pathman not found; PATH is exported for this make process$(RESET); \
+	fi
+
+workflow:
+	@make submodules
+	@make path
+	@make test
 
 utils:
 	@cd ./include/utils && make clean && make
