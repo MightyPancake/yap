@@ -70,6 +70,7 @@ test:
     --track-origins=yes \
     --suppressions=valgrind_suppressions.supp \
     ./yap examples/test.yap
+	@echo $(GREEN)Tests passed!$(RESET)
 
 submodules:
 	git submodule update --init --recursive --remote
