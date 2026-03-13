@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install dependencies
         run: |
@@ -22,8 +22,5 @@ jobs:
       - name: Ensure Valgrind headers are available
         run: test -f /usr/include/valgrind/memcheck.h
 
-      - name: Initialize submodules and build parser
-        run: make submodules
-
-      - name: Run tests
-        run: make test
+      - name: Run workflow
+        run: make workflow
