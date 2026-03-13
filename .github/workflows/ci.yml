@@ -9,10 +9,14 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
@@ -21,6 +25,17 @@ jobs:
 
       - name: Ensure Valgrind headers are available
         run: test -f /usr/include/valgrind/memcheck.h
+
+      - name: Configure git auth for private submodules
+        env:
+          SUBMODULES_TOKEN: ${{ secrets.SUBMODULES_TOKEN }}
+        run: |
+          if [ -z "$SUBMODULES_TOKEN" ]; then
+            echo "Missing secret: SUBMODULES_TOKEN"
+            echo "Create a fine-grained PAT with read access to private repos: MightyPancake/yap-ts (and any other private submodules)."
+            exit 1
+          fi
+          git config --global url."https://x-access-token:${SUBMODULES_TOKEN}@github.com/".insteadOf "https://github.com/"
 
       - name: Initialize submodules and build parser
         run: make submodules
