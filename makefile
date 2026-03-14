@@ -111,13 +111,13 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-test_file:
-	@[ -n "$(file)" ] || { echo "Usage: make test_file file=<name>.yap"; exit 1; }
+run:
+	@[ -n "$(test)" ] || { echo "Usage: make run test=<name>.yap"; exit 1; }
 	valgrind \
 		--track-origins=yes \
 		--leak-check=full \
 		--suppressions=valgrind_suppressions.supp \
-		./yap tests/$(file).yap
+		./yap tests/$(test).yap
 
 submodules:
 	git submodule update --init --recursive --remote
