@@ -39,7 +39,7 @@ void yap_close_handle(void* handle){
     DL_SYM_RES; \
     })
 
-void compile(yap_args args){
+int compile(yap_args args){
     printf("Source files count: %ld\n", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){
@@ -55,8 +55,16 @@ void compile(yap_args args){
 
 
     compiler.front.parse = load_func_dynamically(front_handle, front_name, yap_parse_fn, "yap_parse");
+    compiler.front.print_error = load_func_dynamically(front_handle, front_name, yap_print_error_fn, "yap_print_error");
+    
     //do stuff here
     yap_ctx* ctx = compiler.front.parse(args);
+
+    //Handle possible errors
+    for_darr(i, yap_error, err, ctx->errors){
+        compiler.front.print_error(err);
+    }
+    int result = darr_len(ctx->errors) ? 1 : 0;
     
     yap_ctx_free(*ctx);
     free(ctx);
@@ -69,6 +77,7 @@ void compile(yap_args args){
     #endif
     // end of stuff here
     yap_close_handle(front_handle);
+    return result;
 }
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
@@ -127,6 +136,7 @@ char* yap_get_yap_home_path(){
 }
 
 int main(int argc, char** argv) {
+    int result = 0;
     //Parse args
     yap_args args = (yap_args){
       .output_file = "a",
@@ -140,14 +150,14 @@ int main(int argc, char** argv) {
         return 1;
     }
     // printf("Command: %s\n", args.command);
-
     //Switch on command
     strus_switch(args.command, "compile"){
         //do compile stuff here
         if (!darr_empty(args.extra)){
-            compile(args);
+            result = compile(args);
         }else{
             printf("No sources to compile!\n");
+            result = 1;
         }
     }
     char* yhd;
@@ -163,6 +173,6 @@ int main(int argc, char** argv) {
         printf("Installing...\n");
     }
     yap_free_args(args);
-    return 0;
+    return result;
 }
 

@@ -38,6 +38,10 @@ void yap_ctx_free(yap_ctx st){
     yap_source_code_free(src_code);
   }
   darr_free(st.source_codes);
+  for_darr(i, yap_error, err, st.errors){
+    yap_error_free(err);
+  }
+  darr_free(st.errors);
 
   yap_free_scope(st.scope);
 }
@@ -103,4 +107,9 @@ void yap_bin_expr_free(yap_bin_expr bin_expr){
   yap_expr_free(*((yap_expr*)bin_expr.right));
   free(bin_expr.left);
   free(bin_expr.right);
+}
+
+void yap_error_free(yap_error err){
+  yap_log("Freeing error");
+  free(err.msg);
 }
