@@ -3,12 +3,16 @@ CFLAGS := -Wall
 CYAN := [96m
 PURPLE := [94m
 GREEN := [92m
+RED := [91m
 RESET := [0m
 
 debug ?= false
 ifeq ($(debug),true)
     CFLAGS += -g -O1 -fno-omit-frame-pointer -DYAP_DEBUG
 endif
+
+show_test_output ?= false
+detailed_test ?= false
 
 log := $(debug)
 ifeq ($(log),true)
@@ -30,7 +34,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib test path workflow
+.PHONY: default compiler lib test test_file path workflow
 
 default: all
 
@@ -66,11 +70,54 @@ test:
 	@make debug=true
 	@yap -c
 	@yap -m
-	valgrind \
-    --track-origins=yes \
-    --suppressions=valgrind_suppressions.supp \
-    ./yap examples/test.yap
+	@echo $(CYAN)Running tests$(RESET)
+	@set -e; \
+	failed=0; \
+	for test_file in tests/*.yap; do \
+		[ -e "$$test_file" ] || { echo "No test files found in ./tests"; exit 1; }; \
+		vg_log=$$(mktemp); \
+		cmd_log=$$(mktemp); \
+		test_failed=0; \
+		leak_found=0; \
+		if valgrind \
+			--track-origins=yes \
+			--leak-check=full \
+			--suppressions=valgrind_suppressions.supp \
+			--log-file="$$vg_log" \
+			./yap "$$test_file" >"$$cmd_log" 2>&1; then \
+			status="$(GREEN)passed$(RESET)"; \
+		else \
+			status="$(RED)failed$(RESET)"; \
+			test_failed=1; \
+			failed=1; \
+		fi; \
+		leaks=""; \
+		if grep -Eq 'definitely lost:[[:space:]]*[1-9][0-9]* bytes|indirectly lost:[[:space:]]*[1-9][0-9]* bytes|possibly lost:[[:space:]]*[1-9][0-9]* bytes' "$$vg_log"; then \
+			leak_found=1; \
+			leaks="$(RED)LEAKING!$(RESET)"; \
+		fi; \
+		printf '%s: %s %s\n' "$$test_file" "$$status" "$$leaks"; \
+		if [ "$(show_test_output)" = "true" ]; then \
+			cat "$$cmd_log"; \
+		fi; \
+		if [ "$(detailed_test)" = "true" ] && { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
+			echo $(CYAN)Output for $$test_file$(RESET); \
+			cat "$$cmd_log"; \
+			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
+			cat "$$vg_log"; \
+		fi; \
+		rm -f "$$vg_log" "$$cmd_log"; \
+	done; \
+	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
+
+test_file:
+	@[ -n "$(file)" ] || { echo "Usage: make test_file file=<name>.yap"; exit 1; }
+	valgrind \
+		--track-origins=yes \
+		--leak-check=full \
+		--suppressions=valgrind_suppressions.supp \
+		./yap tests/$(file).yap
 
 submodules:
 	git submodule update --init --recursive --remote
@@ -91,6 +138,7 @@ path:
 workflow:
 	@make submodules
 	@make path
+	@make test detailed_test=true
 	@make test
 
 utils:

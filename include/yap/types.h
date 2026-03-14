@@ -25,6 +25,7 @@ typedef struct yap_source{
   char* path;
   size_t sz;
   char* content;
+  void* ctx;
 }yap_source;
 
 kenobi_new_struct_free(yap_code_pos,
@@ -40,9 +41,9 @@ kenobi_new_struct_free(yap_code_range,
 
 kenobi_new_struct_free(yap_error,
   enum {
-    yap_error_no_pos,
-    yap_error_pos,
-    yap_error_calc_offset
+    yap_error_no_pos, //Errors without position (ie. no source)
+    yap_error_pos, //Errors with position
+    yap_error_calc_offset //Not used yet
   } kind;
   yap_source* src;
   yap_code_range range;
@@ -212,6 +213,7 @@ kenobi_new_struct_free(yap_ctx,
   darr sources;
   darr source_codes;
   yap_scope* scope;
+  darr errors;
 );
 yap_ctx* yap_ctx_new();
 
