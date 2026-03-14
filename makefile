@@ -12,7 +12,7 @@ ifeq ($(debug),true)
 endif
 
 show_test_output ?= false
-detailed_test ?= false
+detailed ?= false
 
 log := $(debug)
 ifeq ($(log),true)
@@ -100,7 +100,7 @@ test:
 		if [ "$(show_test_output)" = "true" ]; then \
 			cat "$$cmd_log"; \
 		fi; \
-		if [ "$(detailed_test)" = "true" ] && { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
+		if [ "$(detailed)" = "true" ] && { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
 			echo $(CYAN)Output for $$test_file$(RESET); \
 			cat "$$cmd_log"; \
 			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
@@ -138,8 +138,7 @@ path:
 workflow:
 	@make submodules
 	@make path
-	@make test detailed_test=true
-	@make test
+	@make test detailed=true
 
 utils:
 	@cd ./include/utils && make clean && make
