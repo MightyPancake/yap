@@ -43,7 +43,10 @@ void yap_ctx_free(yap_ctx st){
   }
   darr_free(st.errors);
 
-  yap_free_scope(st.scope);
+  for_darr(i, yap_scope*, sc, st.scopes){
+    yap_free_scope(sc);
+  }
+  darr_free(st.scopes);
 }
 
 void yap_source_code_free(yap_source_code src_code){
@@ -77,8 +80,10 @@ void yap_expr_free(yap_expr expr){
       break;
     case yap_expr_assignment:
       yap_assignment_free(expr.assignment);
+      break;
     case yap_expr_literal:
       yap_literal_free(expr.literal);
+      break;
     default:
       break;
   }

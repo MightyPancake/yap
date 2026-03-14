@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall
+CFLAGS := -Wall -Wextra
 CYAN := [96m
 PURPLE := [94m
 GREEN := [92m
