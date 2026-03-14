@@ -60,7 +60,7 @@ int compile(yap_args args){
     yap_ctx* ctx = compiler.front.parse(args);
 
     //Handle possible errors
-    for_darr(i, yap_error, err, ctx->errors){
+    for_darr(i, err, ctx->errors){
         compiler.front.print_error(err);
     }
     int result = darr_len(ctx->errors) ? 1 : 0;
@@ -98,7 +98,7 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
-        darr_push(char*, args->extra, arg);
+        darr_push(args->extra, arg);
         break;
     case ARGP_KEY_END:
         // if (state->arg_num < 1)
@@ -139,7 +139,7 @@ int main(int argc, char** argv) {
     //Parse args
     yap_args args = (yap_args){
       .output_file = "a",
-      .extra = darr_new(char*, 16),
+            .extra = darr_new(char*),
       .command = "compile"
     };
 
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
     //Switch on command
     strus_switch(args.command, "compile"){
         //do compile stuff here
-        if (!darr_empty(args.extra)){
+        if (darr_len(args.extra) > 0){
             result = compile(args);
         }else{
             printf("No sources to compile!\n");

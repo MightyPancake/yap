@@ -12,6 +12,7 @@ void yap_def_free(yap_def def){
 
 void yap_func_def_free(yap_func_def fn_def){
   yap_log("Freeing func def");
+  darr_free(fn_def.args);
   yap_block_free(fn_def.body);
 }
 
@@ -19,7 +20,7 @@ void yap_block_free(yap_block block){
   yap_log("Freeing block");
   switch(block.kind){
     case yap_block_valid:
-      for_darr(i, yap_statement, statement, block.statements)
+      for_darr(i, statement, block.statements)
         yap_statement_free(statement);
       darr_free(block.statements);
       break;
@@ -29,21 +30,21 @@ void yap_block_free(yap_block block){
 void yap_ctx_free(yap_ctx st){
   yap_log("Freeing state");
   //free sources
-  for_darr(i, yap_source, src, st.sources){
+  for_darr(i, src, st.sources){
     yap_free_source(src);
   }
   darr_free(st.sources);
 
-  for_darr(i, yap_source_code, src_code, st.source_codes){
+  for_darr(i, src_code, st.source_codes){
     yap_source_code_free(src_code);
   }
   darr_free(st.source_codes);
-  for_darr(i, yap_error, err, st.errors){
+  for_darr(i, err, st.errors){
     yap_error_free(err);
   }
   darr_free(st.errors);
 
-  for_darr(i, yap_scope*, sc, st.scopes){
+  for_darr(i, sc, st.scopes){
     yap_free_scope(sc);
   }
   darr_free(st.scopes);
@@ -51,7 +52,7 @@ void yap_ctx_free(yap_ctx st){
 
 void yap_source_code_free(yap_source_code src_code){
   yap_log("Freeing source code");
-  for_darr(i, yap_def, def, src_code.definitions){
+  for_darr(i, def, src_code.definitions){
     yap_log("Freeing def #%d");
     yap_def_free(def);
   }

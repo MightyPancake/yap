@@ -14,7 +14,7 @@ typedef struct hashmap* map;
 
 typedef struct yap_args{
   char* output_file;
-  darr extra;
+  darr(char*) extra;
   bool show_modules_path;
   char* command;
 }yap_args;
@@ -179,13 +179,13 @@ typedef struct yap_block{
     yap_block_valid
   } kind;
   union {
-    darr statements;
+    darr(yap_statement) statements;
     yap_error err;
   };
 }yap_block;
 
 typedef struct yap_func_def{
-  darr args;
+  darr(int) args;
   yap_type ret_typ;
   yap_block body;
 }yap_func_def;
@@ -209,16 +209,18 @@ typedef struct yap_def{
 }yap_def;
 void yap_def_free(yap_def def);
 
+typedef struct yap_source_code yap_source_code;
+
 kenobi_new_struct_free(yap_ctx,
-  darr sources; //darr of yap_source, represents the source files being compiled.
-  darr source_codes; //darr of yap_source_code
-  darr errors; //darr of yap_error
-  darr scopes; //stack of scopes for codegen. Top is current, bottom is global.
+  darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
+  darr(yap_source_code) source_codes; //darr of yap_source_code
+  darr(yap_error) errors; //darr of yap_error
+  darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
 );
 yap_ctx* yap_ctx_new();
 
 typedef struct yap_source_code{
-  darr definitions;
+  darr(yap_def) definitions;
 }yap_source_code;
 void yap_source_code_free(yap_source_code src_code);
 
