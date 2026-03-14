@@ -76,7 +76,7 @@ typedef struct yap_var{
 }yap_var;
 
 kenobi_new_struct_free(yap_blob,
-  //TODO: Finish blobs
+  //TODO: Finish blobs aka literals for structs and arrays
   unsigned int field_count;
 );
 
@@ -210,10 +210,10 @@ typedef struct yap_def{
 void yap_def_free(yap_def def);
 
 kenobi_new_struct_free(yap_ctx,
-  darr sources;
-  darr source_codes;
-  yap_scope* scope;
-  darr errors;
+  darr sources; //darr of yap_source, represents the source files being compiled.
+  darr source_codes; //darr of yap_source_code
+  darr errors; //darr of yap_error
+  darr scopes; //stack of scopes for codegen. Top is current, bottom is global.
 );
 yap_ctx* yap_ctx_new();
 
@@ -231,7 +231,7 @@ map new_##T##_map();
 
 #define declare_map_for(T) \
 uint64_t map_hash_##T##_f(const void *item, uint64_t seed0, uint64_t seed1) {return hashmap_murmur(((ptr_type(yap_##T))item)->name, strlen(((ptr_type(yap_##T))item)->name), seed0, seed1);} \
-int map_cmp_##T##_f(const void* a, const void* b, void *udata){return strcmp(((ptr_type(yap_##T))(a))->name, ((ptr_type(yap_##T))(b))->name); } \
+int map_cmp_##T##_f(const void* a, const void* b, void *udata){(void)udata; return strcmp(((ptr_type(yap_##T))(a))->name, ((ptr_type(yap_##T))(b))->name); } \
 map new_##T##_map(){return new_map(yap_##T, map_hash_##T##_f, map_cmp_##T##_f);}
 
 #endif //YAP_TYPES_H

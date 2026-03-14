@@ -40,7 +40,7 @@ void yap_close_handle(void* handle){
     })
 
 int compile(yap_args args){
-    printf("Source files count: %ld\n", darr_len(args.extra));
+    yap_log("Source files count: %ld\n", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){
         .front = (yap_compiler_front){}
@@ -48,10 +48,9 @@ int compile(yap_args args){
 
     const char front_name[] = "ts_yap";
     void* front_handle = yap_get_handle("./modules/yap-ts/libyap_ts.so");
-    printf("libyap_ts.so loaded at %p\n", front_handle);
-    printf("libyap_ts.so loaded at %p\n", front_handle);
-    void* sym = dlsym(front_handle, "yap_parse");
-    printf("yap_parse symbol at %p\n", sym);
+    // yap_log("libyap_ts.so loaded at %p\n", front_handle);
+    // void* sym = dlsym(front_handle, "yap_parse");
+    // yap_log("yap_parse symbol at %p\n", sym);
 
 
     compiler.front.parse = load_func_dynamically(front_handle, front_name, yap_parse_fn, "yap_parse");
@@ -124,7 +123,7 @@ static struct argp_option options[] = {
 static char doc[] = "The tool for yap programming language.";
 static char args_doc[] = "source file(s)";
 
-static struct argp argp = { options, parse_args, args_doc, doc };
+static struct argp argp = { options, parse_args, args_doc, doc, .children=NULL};
 
 char* yap_get_yap_home_path(){
         char* exec_path = yap_get_self_path();
