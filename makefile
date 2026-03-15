@@ -120,7 +120,7 @@ run:
 		./yap tests/$(test).yap
 
 submodules:
-	git submodule update --init --recursive --remote
+	git submodule update --init --recursive
 	@make utils
 	@make yap_ts debug=$(debug)
 
