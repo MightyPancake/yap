@@ -3,5 +3,9 @@
 //a := 5
 
 fn add(int a, int b){
-    ret a + b
+    //TODO: Fix undefined param variables
+    a := 6
+    b := 7
+    c := a + b
+    //ret c
 }
