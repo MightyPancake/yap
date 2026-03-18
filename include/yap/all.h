@@ -13,7 +13,6 @@
 #include "source.h"
 #include "scope.h"
 #include "ctx.h"
-#include "var.h"
 #include "args.h"
 #include "code.h"
 

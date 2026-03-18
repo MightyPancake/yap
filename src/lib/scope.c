@@ -9,19 +9,10 @@ yap_scope* yap_new_scope(void* parent){
     }));
 }
 
-void yap_free_scope(yap_scope* sc){
-    void* item;
-    size_t iter = 0;
-    while (hashmap_iter(sc->variables, &iter, &item)) {
-        yap_var* var = item;
-        yap_variable_free(var);
-    }
-    hashmap_free(sc->variables);
-    free(sc);
-}
-
-void yap_scope_set_var(yap_scope* sc, yap_var* var){
-    hashmap_set(sc->variables, var);
+void yap_scope_set_var(yap_scope* sc, yap_var var){
+    yap_log("Setting variable '%s' in scope", var.name);
+    // yap_var* var_ptr = mem_one_cpy(var);
+    hashmap_set(sc->variables, &var);
 }
 
 const yap_var* yap_scope_get_var(yap_scope* sc, char* name){

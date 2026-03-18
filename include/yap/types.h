@@ -50,34 +50,62 @@ kenobi_new_struct_free(yap_error,
   char* msg;
 );
 
+typedef uint32_t yap_type_id;
 
 typedef enum yap_type_kind{
-  yap_type_primitive,
-  yap_type_ptr,
-  yap_type_fn
+  yap_type_untyped, //Default type for literals and variables before type inference
+  yap_type_primitive, //Primitive types like int, float, byte etc.
+  yap_type_ptr, //Pointer to another type, subtype is the type it points to
+  yap_type_func,
+  yap_type_struct,
+  yap_type_blob,
 }yap_type_kind;
 
 typedef struct yap_prim_type{
-  char* name;
-  size_t sz;
+  size_t bytes;
+  bool is_signed;
+  bool is_float;
 }yap_prim_type;
 
-typedef struct yap_type{
-  yap_type_kind kind;
-  union {
-    yap_prim_type primitive;
-    void* subtype;
-  };
-}yap_type;
-
-typedef struct yap_var{
+kenobi_new_struct_free(yap_struct_type,
   char* name;
-  yap_type type;
-}yap_var;
+  char* c_name;
+  darr(yap_type_id) fields; //pointers to yap_var
+);
+
+kenobi_new_struct_free(yap_fn_type,
+  char* name;
+  char* c_name;
+  darr(yap_type_id) args; //pointers to yap_type
+  yap_type_id ret; //pointer to return type
+);
 
 kenobi_new_struct_free(yap_blob,
   //TODO: Finish blobs aka literals for structs and arrays
   unsigned int field_count;
+);
+
+kenobi_new_struct_free(yap_type,
+  yap_type_kind kind;
+  union {
+    yap_type_id untyped_default; //for pointers, points to the type it points to
+    yap_prim_type primitive;
+    yap_type_id pointer_type;
+    yap_fn_type func;
+    yap_struct_type structure;
+    yap_blob blob;
+  };
+);
+
+kenobi_new_struct_free(yap_named_type,
+  yap_type_id id;
+  char* name;
+  char* c_name;
+);
+
+kenobi_new_struct_free(yap_var,
+  char* name;
+  yap_type_id type;
 );
 
 kenobi_new_struct_free(yap_literal,
@@ -119,7 +147,7 @@ kenobi_new_struct_free(yap_lvalue,
   union {
     yap_error err;
     struct {
-      yap_type type;
+      yap_type_id type;
       yap_var var;
     };
   };
@@ -155,21 +183,31 @@ kenobi_new_struct_free(yap_expr,
     yap_bin_expr bin_expr;
     yap_assignment assignment;
   };
-  yap_type type;
+  yap_type_id type;
   bool is_lvalue;
   bool is_comptime;
 );
 
+kenobi_new_struct_free(yap_var_decl,
+  enum {
+    yap_var_decl_error,
+    yap_var_decl_valid
+  } kind;
+  yap_var var;
+  yap_expr expr;
+);
 
 kenobi_new_struct_free(yap_statement,
   enum {
     yap_statement_error,
     yap_statement_empty,
     yap_statement_expr,
+    yap_statement_var_decl
   } kind;
   union {
     yap_error err;
     yap_expr expr;
+    yap_var_decl var_decl;
   };
 );
 
@@ -186,15 +224,14 @@ typedef struct yap_block{
 
 typedef struct yap_func_def{
   darr(int) args;
-  yap_type ret_typ;
+  yap_type_id ret_typ;
   yap_block body;
 }yap_func_def;
 
-typedef struct yap_scope{
+kenobi_new_struct_free(yap_scope,
   void* parent;
   map variables;
-}yap_scope;
-void yap_scope_free();
+);
 
 typedef struct yap_def{
   enum {
@@ -216,6 +253,15 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
   darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
+  darr(yap_type) types; //yap_type_id points to types in this array
+  map named_types; //map of named types
+  //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
+  yap_type_id int_type_id;  //cached type_id for i32
+  yap_type_id bool_type_id; //cached type_id for bool
+  yap_type_id float_type_id; //cached type_id for f32
+  yap_type_id untyped_int_type_id;  //cached type_id for untyped integer literals
+  yap_type_id untyped_float_type_id; //cached type_id for untyped float literals
+  yap_type_id untyped_byte_type_id;  //cached type_id for untyped byte literals
 );
 yap_ctx* yap_ctx_new();
 

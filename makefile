@@ -144,4 +144,4 @@ utils:
 	@cd ./include/utils && make clean && make
 
 yap_ts: all
-	@cd ./modules/yap-ts && make clean && make debug=$(debug)
+	@cd ./modules/yap-ts && make debug=$(debug)
