@@ -17,6 +17,20 @@ yap_type yap_ctx_coerce_type(yap_ctx* ctx, yap_type src);
 yap_type yap_untyped_type(yap_type_id default_id);
 bool yap_ctx_type_ids_eq(yap_ctx* ctx, yap_type_id left_id, yap_type_id right_id);
 bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right);
+void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes);
+void* yap_ctx_one_raw(yap_ctx* ctx, size_t bytes);
+void* yap_ctx_one_cpy_raw(yap_ctx* ctx, const void* src, size_t bytes);
+
+#define yap_ctx_one(CTX, T) ((T*)yap_ctx_one_raw((CTX), sizeof(T)))
+#define yap_ctx_one_cpy(CTX, V) ({ \
+	__typeof__(V)* _yap_ctx_one_cpy_tmp = yap_ctx_one((CTX), __typeof__(V)); \
+	if (_yap_ctx_one_cpy_tmp) *_yap_ctx_one_cpy_tmp = (V); \
+	_yap_ctx_one_cpy_tmp; \
+})
+
+char* yap_ctx_strus_newf(yap_ctx* ctx, const char* fmt, ...);
+
+#define yap_ctx_darr_new(CTX, T, ...) quake_darr_new(&(CTX)->arena, T, ##__VA_ARGS__)
 
 
 #endif //YAP_CONTEXT_H

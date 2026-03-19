@@ -249,10 +249,14 @@ void yap_def_free(yap_def def);
 typedef struct yap_source_code yap_source_code;
 
 kenobi_new_struct_free(yap_ctx,
+  //Arena
+  quake arena; //Memory arena for all allocations in the compiler, freed at the end of compilation. Speeds up allocation and deallocation significantly.
   darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
   darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
+
+  //Types
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types
   //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
