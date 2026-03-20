@@ -68,6 +68,7 @@ lib:
 
 test:
 	@make debug=true
+	@make yap_ts debug=true
 	@yap -c
 	@yap -m
 	@echo $(CYAN)Running tests$(RESET)

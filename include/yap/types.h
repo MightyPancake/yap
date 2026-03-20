@@ -211,7 +211,7 @@ kenobi_new_struct_free(yap_statement,
   };
 );
 
-typedef struct yap_block{
+kenobi_new_struct_free(yap_block,
   enum {
     yap_block_error,
     yap_block_valid
@@ -220,39 +220,42 @@ typedef struct yap_block{
     darr(yap_statement) statements;
     yap_error err;
   };
-}yap_block;
+);
 
-typedef struct yap_func_def{
+kenobi_new_struct_free(yap_func_decl,
   darr(int) args;
   yap_type_id ret_typ;
   yap_block body;
-}yap_func_def;
+);
 
 kenobi_new_struct_free(yap_scope,
   void* parent;
   map variables;
 );
 
-typedef struct yap_def{
+kenobi_new_struct_free(yap_decl,
   enum {
-    yap_def_error,
-    yap_def_null,
-    yap_def_func
+    yap_decl_error,
+    yap_decl_null,
+    yap_decl_func
   } kind;
   union{
-    yap_func_def func_def;
+    yap_func_decl func_decl;
     yap_error err;
   };
-}yap_def;
-void yap_def_free(yap_def def);
+);
 
 typedef struct yap_source_code yap_source_code;
 
 kenobi_new_struct_free(yap_ctx,
+  //Arena
+  quake arena; //Memory arena for all allocations in the compiler, freed at the end of compilation. Speeds up allocation and deallocation significantly.
   darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
   darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
+
+  //Types
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types
   //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
@@ -266,7 +269,7 @@ kenobi_new_struct_free(yap_ctx,
 yap_ctx* yap_ctx_new();
 
 typedef struct yap_source_code{
-  darr(yap_def) definitions;
+  darr(yap_decl) declarations;
 }yap_source_code;
 void yap_source_code_free(yap_source_code src_code);
 

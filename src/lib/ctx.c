@@ -5,6 +5,7 @@ declare_map_for(named_type);
 yap_ctx* yap_ctx_new(){
     yap_log("Creating new ctx");
     yap_ctx* ctx = mem_one_cpy(((yap_ctx){
+      .arena = quake_new(),
       .sources=darr_new(yap_source),
       .source_codes=darr_new(yap_source_code),
       .scopes=darr_new(yap_scope*),
@@ -30,6 +31,43 @@ yap_ctx* yap_ctx_new(){
     
     return ctx;
 }
+
+void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes){
+    if (!ctx || bytes == 0) return NULL;
+    return quake_alloc(&ctx->arena, bytes);
+}
+
+void* yap_ctx_one_raw(yap_ctx* ctx, size_t bytes){
+  return yap_ctx_malloc(ctx, bytes);
+}
+
+void* yap_ctx_one_cpy_raw(yap_ctx* ctx, const void* src, size_t bytes){
+  if (!src || bytes == 0) return NULL;
+  void* out = yap_ctx_one_raw(ctx, bytes);
+  if (!out) return NULL;
+  memcpy(out, src, bytes);
+  return out;
+}
+
+char* yap_ctx_strus_newf(yap_ctx* ctx, const char* fmt, ...){
+  if (!ctx || !fmt) return NULL;
+
+  char* out = NULL;
+  va_list ap;
+  va_start(ap, fmt);
+  int result = quake_vasprintf(&ctx->arena, &out, fmt, ap);
+  va_end(ap);
+
+  if (result < 0) return NULL;
+  return out;
+}
+
+char* yap_ctx_strus_cpy(yap_ctx* ctx, char* src){
+  if (!ctx || !src) return NULL;
+  size_t len = strlen(src);
+  return yap_ctx_one_cpy_raw(ctx, src, len + 1);
+}
+
 yap_scope* yap_ctx_current_scope(yap_ctx* ctx){
     if (darr_len(ctx->scopes) == 0) return NULL;
     return darr_last(ctx->scopes);
@@ -48,9 +86,7 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float){
 
 yap_source_code yap_source_code_new(){
   yap_log("Creating new source code");
-  return (yap_source_code){
-    .definitions=darr_new(yap_def)
-  };
+  return (yap_source_code){};
 }
 
 void yap_ctx_push_source(yap_ctx* ctx, yap_source src){
