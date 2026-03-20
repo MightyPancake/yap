@@ -16,8 +16,4 @@
 
 yap_source_code yap_new_source_code();
 
-void yap_def_free(yap_def def);
-void yap_func_def_free(yap_func_def fn_def);
-void yap_block_free(yap_block block);
-
 #endif //YAP_CODE_H

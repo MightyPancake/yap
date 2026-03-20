@@ -1,19 +1,19 @@
 #include "yap/all.h"
 #include "yap/types.h"
 
-void yap_def_free(yap_def def){
-  switch(def.kind){
-    case yap_def_func:
-      yap_func_def_free(def.func_def);
+void yap_decl_free(yap_decl decl){
+  switch(decl.kind){
+    case yap_decl_func:
+      yap_func_decl_free(decl.func_decl);
       break;
     default: break;
   }
 }
 
-void yap_func_def_free(yap_func_def fn_def){
+void yap_func_decl_free(yap_func_decl fn_decl){
   yap_log("Freeing func def");
-  darr_free(fn_def.args);
-  yap_block_free(fn_def.body);
+  darr_free(fn_decl.args);
+  yap_block_free(fn_decl.body);
 }
 
 void yap_block_free(yap_block block){
@@ -22,48 +22,50 @@ void yap_block_free(yap_block block){
     case yap_block_valid:
       for_darr(i, statement, block.statements)
         yap_statement_free(statement);
-      darr_free(block.statements);
       break;
     default: break;
   }
 }
-void yap_ctx_free(yap_ctx st){
+void yap_ctx_free(yap_ctx ctx){
   yap_log("Freeing state");
   //free sources
-  for_darr(i, src, st.sources){
+  for_darr(i, src, ctx.sources){
     yap_free_source(src);
   }
-  darr_free(st.sources);
+  darr_free(ctx.sources);
 
-  for_darr(i, src_code, st.source_codes){
+  for_darr(i, src_code, ctx.source_codes){
     yap_source_code_free(src_code);
   }
-  darr_free(st.source_codes);
-  for_darr(i, err, st.errors){
+  darr_free(ctx.source_codes);
+  for_darr(i, err, ctx.errors){
     yap_error_free(err);
   }
-  darr_free(st.errors);
+  darr_free(ctx.errors);
 
-  for_darr(i, sc, st.scopes){
+  for_darr(i, sc, ctx.scopes){
     yap_scope_free(*sc);
     free(sc);
   }
-  darr_free(st.scopes);
+  darr_free(ctx.scopes);
 
   //Types
-  for_darr(i, typ, st.types){
+  for_darr(i, typ, ctx.types){
     yap_type_free(typ);
   }
-  darr_free(st.types);
+  darr_free(ctx.types);
   //Named types
   void* item;
   size_t iter = 0;
-  while (hashmap_iter(st.named_types, &iter, &item)) {
+  while (hashmap_iter(ctx.named_types, &iter, &item)) {
     yap_named_type* named = item;
     free(named->name);
     free(named->c_name);
   }
-  hashmap_free(st.named_types);
+  hashmap_free(ctx.named_types);
+
+  //Free arena
+  quake_free(&ctx.arena);
 }
 
 void yap_type_free(yap_type typ){
@@ -77,11 +79,11 @@ void yap_type_free(yap_type typ){
 
 void yap_source_code_free(yap_source_code src_code){
   yap_log("Freeing source code");
-  for_darr(i, def, src_code.definitions){
-    yap_log("Freeing def #%d");
-    yap_def_free(def);
+  for_darr(i, decl, src_code.declarations){
+    yap_log("Freeing declaration #%d");
+    yap_decl_free(decl);
   }
-  darr_free(src_code.definitions);
+  // darr_free(src_code.definitions);
 }
 
 void yap_statement_free(yap_statement statement){
@@ -125,10 +127,7 @@ void yap_expr_free(yap_expr expr){
 void yap_literal_free(yap_literal lit){
   yap_log("Freeing literal");
   switch(lit.kind){
-    case yap_literal_error:
-      break;
     default:
-      free(lit.text);
       break;
   }
 }
@@ -136,15 +135,15 @@ void yap_literal_free(yap_literal lit){
 void yap_assignment_free(yap_assignment as){
   yap_expr_free(*((yap_expr*)as.left));
   yap_expr_free(*((yap_expr*)as.right));
-  free(as.left);
-  free(as.right);
+  // free(as.left);
+  // free(as.right);
 }
 
 void yap_bin_expr_free(yap_bin_expr bin_expr){
   yap_expr_free(*((yap_expr*)bin_expr.left));
   yap_expr_free(*((yap_expr*)bin_expr.right));
-  free(bin_expr.left);
-  free(bin_expr.right);
+  // free(bin_expr.left);
+  // free(bin_expr.right);
 }
 
 void yap_error_free(yap_error err){
@@ -166,5 +165,5 @@ void yap_scope_free(yap_scope sc){
 
 void yap_var_free(yap_var var){
   yap_log("Freeing variable '%s'", var.name);
-    free(var.name);
+  // free(var.name);
 }

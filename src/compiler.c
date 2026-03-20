@@ -40,7 +40,7 @@ void yap_close_handle(void* handle){
     })
 
 int compile(yap_args args){
-    yap_log("Source files count: %ld\n", darr_len(args.extra));
+    yap_log("Source files count: %ld", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){
         .front = (yap_compiler_front){}
@@ -65,6 +65,10 @@ int compile(yap_args args){
     }
     int result = darr_len(ctx->errors) ? 1 : 0;
     
+    yap_log("Compilation finished with %ld error(s)", darr_len(ctx->errors));
+    yap_log("Freeing state and closing handles...");
+    yap_log("Context allocated %u bytes in arena", quake_allocated_sz(&ctx->arena));
+    yap_log("Freeing what remains of the context...\n\n");
     yap_ctx_free(*ctx);
     free(ctx);
     

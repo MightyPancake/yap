@@ -29,6 +29,7 @@ void* yap_ctx_one_cpy_raw(yap_ctx* ctx, const void* src, size_t bytes);
 })
 
 char* yap_ctx_strus_newf(yap_ctx* ctx, const char* fmt, ...);
+char* yap_ctx_strus_cpy(yap_ctx* ctx, char* src);
 
 #define yap_ctx_darr_new(CTX, T, ...) quake_darr_new(&(CTX)->arena, T, ##__VA_ARGS__)
 
