@@ -62,6 +62,12 @@ char* yap_ctx_strus_newf(yap_ctx* ctx, const char* fmt, ...){
   return out;
 }
 
+char* yap_ctx_strus_cpy(yap_ctx* ctx, char* src){
+  if (!ctx || !src) return NULL;
+  size_t len = strlen(src);
+  return yap_ctx_one_cpy_raw(ctx, src, len + 1);
+}
+
 yap_scope* yap_ctx_current_scope(yap_ctx* ctx){
     if (darr_len(ctx->scopes) == 0) return NULL;
     return darr_last(ctx->scopes);
@@ -80,9 +86,7 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float){
 
 yap_source_code yap_source_code_new(){
   yap_log("Creating new source code");
-  return (yap_source_code){
-    .definitions=darr_new(yap_def)
-  };
+  return (yap_source_code){};
 }
 
 void yap_ctx_push_source(yap_ctx* ctx, yap_source src){
