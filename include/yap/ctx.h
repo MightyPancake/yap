@@ -11,7 +11,7 @@ yap_type* yap_ctx_get_type(yap_ctx* ctx, yap_type_id id);
 yap_type* yap_ctx_get_type_by_name(yap_ctx* ctx, char* name);
 yap_type_id yap_ctx_get_type_id_by_name(yap_ctx* ctx, char* name);
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name, char* c_name, yap_type typ);
-yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float);
+yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* mangled_name);
 yap_type_id yap_ctx_coerce_type_id_to_id(yap_ctx* ctx, yap_type_id src_id);
 yap_type yap_ctx_coerce_type(yap_ctx* ctx, yap_type src);
 yap_type yap_untyped_type(yap_type_id default_id);
@@ -32,6 +32,9 @@ char* yap_ctx_strus_newf(yap_ctx* ctx, const char* fmt, ...);
 char* yap_ctx_strus_cpy(yap_ctx* ctx, char* src);
 
 #define yap_ctx_darr_new(CTX, T, ...) quake_darr_new(&(CTX)->arena, T, ##__VA_ARGS__)
+
+char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ);
+yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ);
 
 
 #endif //YAP_CONTEXT_H

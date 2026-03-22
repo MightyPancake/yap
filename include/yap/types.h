@@ -59,12 +59,14 @@ typedef enum yap_type_kind{
   yap_type_func,
   yap_type_struct,
   yap_type_blob,
+  yap_type_error,
 }yap_type_kind;
 
 typedef struct yap_prim_type{
   size_t bytes;
   bool is_signed;
   bool is_float;
+  char* mangled_name;
 }yap_prim_type;
 
 kenobi_new_struct_free(yap_struct_type,
@@ -74,10 +76,8 @@ kenobi_new_struct_free(yap_struct_type,
 );
 
 kenobi_new_struct_free(yap_fn_type,
-  char* name;
-  char* c_name;
   darr(yap_type_id) args; //pointers to yap_type
-  yap_type_id ret; //pointer to return type
+  yap_type_id return_type; //pointer to return type
 );
 
 kenobi_new_struct_free(yap_blob,
@@ -94,6 +94,7 @@ kenobi_new_struct_free(yap_type,
     yap_fn_type func;
     yap_struct_type structure;
     yap_blob blob;
+    yap_error err;
   };
 );
 
@@ -222,8 +223,23 @@ kenobi_new_struct_free(yap_block,
   };
 );
 
+kenobi_new_struct_free(yap_func_arg,
+  enum {
+    yap_func_arg_error,
+    yap_func_arg_valid
+  } kind;
+  union {
+    yap_error err;
+    struct {
+      char* name;
+      yap_type_id type;
+      yap_expr default_value; //optional default value for the argument, if kind is yap_func_arg_error then this is not used
+    };
+  };
+);
+
 kenobi_new_struct_free(yap_func_decl,
-  darr(int) args;
+  darr(yap_func_arg) args;
   yap_type_id ret_typ;
   yap_block body;
 );
@@ -259,6 +275,7 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types
   //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
+  yap_type_id void_type_id; //cached type_id for void
   yap_type_id int_type_id;  //cached type_id for i32
   yap_type_id bool_type_id; //cached type_id for bool
   yap_type_id float_type_id; //cached type_id for f32

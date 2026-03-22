@@ -67,7 +67,7 @@ lib:
 	@echo $(GREEN)Done!$(RESET)
 
 test:
-	@make debug=true
+	@make debug=true2
 	@make yap_ts debug=true
 	@yap -c
 	@yap -m
