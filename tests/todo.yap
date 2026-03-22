@@ -2,7 +2,7 @@
 //1+2
 //a := 5
 
-fn add(int a, int b){
+fn add(i32 a, i32 b){
     //TODO: Fix undefined param variables
     a := 6
     b := 7
