@@ -12,7 +12,7 @@ void yap_decl_free(yap_decl decl){
 
 void yap_func_decl_free(yap_func_decl fn_decl){
   yap_log("Freeing func def");
-  darr_free(fn_decl.args);
+  // darr_free(fn_decl.args);
   yap_block_free(fn_decl.body);
 }
 
@@ -55,13 +55,13 @@ void yap_ctx_free(yap_ctx ctx){
   }
   darr_free(ctx.types);
   //Named types
-  void* item;
-  size_t iter = 0;
-  while (hashmap_iter(ctx.named_types, &iter, &item)) {
-    yap_named_type* named = item;
-    free(named->name);
-    free(named->c_name);
-  }
+  // void* item;
+  // size_t iter = 0;
+  // while (hashmap_iter(ctx.named_types, &iter, &item)) {
+  //   yap_named_type* named = item;
+  //   free(named->name);
+  //   free(named->c_name);
+  // }
   hashmap_free(ctx.named_types);
 
   //Free arena
@@ -164,6 +164,7 @@ void yap_scope_free(yap_scope sc){
 }
 
 void yap_var_free(yap_var var){
-  yap_log("Freeing variable '%s'", var.name);
+  (void)var;
+  // yap_log("Freeing variable '%s'", var.name);
   // free(var.name);
 }
