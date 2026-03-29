@@ -269,6 +269,7 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
+  //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope' 
   darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
 
   //Types

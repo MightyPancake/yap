@@ -4,7 +4,7 @@
 
 #ifdef YAP_LOG
   #ifndef YAP_LOG_TAG
-    #define YAP_LOG_TAG "YAP_SHARED"
+    #define YAP_LOG_TAG "LIBYAP"
   #endif
   #ifndef YAP_LOG_TAG_COLOR
     #define YAP_LOG_TAG_COLOR aesc_blue
