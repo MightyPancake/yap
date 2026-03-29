@@ -75,6 +75,10 @@ yap_scope* yap_ctx_current_scope(yap_ctx* ctx){
     return darr_last(ctx->scopes);
 }
 
+yap_scope* yap_ctx_new_scope(yap_ctx* ctx){
+  return yap_new_scope(&darr_last(ctx->scopes));
+}
+
 yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* mangled_name){
   return (yap_type){
     .kind = yap_type_primitive,
@@ -85,6 +89,7 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* m
       .mangled_name = mangled_name
     }
   };
+  
 }
 
 yap_source_code yap_source_code_new(){
@@ -215,7 +220,7 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
       return strus_copy(typ.primitive.mangled_name);
     case yap_type_ptr: {
       char* sub = yap_ctx_type_to_mangle_string(ctx, *yap_ctx_get_type(ctx, typ.pointer_type));
-      res = yap_ctx_strus_newf(ctx, "P%s", sub);
+      res = strus_newf("P%s", sub);
       free(sub);
       return res;
     }
