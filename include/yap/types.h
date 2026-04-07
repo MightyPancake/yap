@@ -66,6 +66,7 @@ typedef struct yap_prim_type{
   size_t bytes;
   bool is_signed;
   bool is_float;
+  char* name;
   char* mangled_name;
 }yap_prim_type;
 
@@ -77,6 +78,7 @@ kenobi_new_struct_free(yap_struct_type,
 
 kenobi_new_struct_free(yap_fn_type,
   darr(yap_type_id) args; //pointers to yap_type
+  // darr(char*) arg_names; //optional parameter names (NULL if positional-only, otherwise parallel to args)
   yap_type_id return_type; //pointer to return type
 );
 
@@ -109,6 +111,8 @@ kenobi_new_struct_free(yap_var,
   yap_type_id type;
 );
 
+typedef struct yap_expr yap_expr;
+
 kenobi_new_struct_free(yap_literal,
   enum {
     yap_literal_error,
@@ -133,8 +137,8 @@ kenobi_new_struct_free(yap_bin_expr,
   } kind;
   union {
     struct {
-      void* right; //yap_expr*
-      void* left;  //yap_expr*
+      yap_expr* right; //yap_expr*
+      yap_expr* left;  //yap_expr*
     };
     yap_error err;
   };
@@ -162,13 +166,17 @@ kenobi_new_struct_free(yap_assignment,
   union {
     yap_error err;
     struct {
-      void* left; //yap_expr*
-      void* right; //yap_expr*
+      yap_expr* left; //yap_expr*
+      yap_expr* right; //yap_expr*
       char op; //'=', '+', '-' etc.
     };
   };
 );
 
+kenobi_new_struct_free(yap_func_call,
+  yap_expr* func_expr;
+  darr(yap_expr) params;
+);
 
 kenobi_new_struct_free(yap_expr,
   enum {
@@ -177,12 +185,14 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_var,
     yap_expr_bin,
     yap_expr_assignment,
+    yap_expr_func_call
   } kind;
   union {
     yap_error err;
     yap_literal literal;
     yap_bin_expr bin_expr;
     yap_assignment assignment;
+    yap_func_call func_call;
   };
   yap_type_id type;
   bool is_lvalue;
@@ -269,8 +279,9 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
-  //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope' 
-  darr(yap_scope*) scopes; //stack of scopes for codegen. Top is current, bottom is global.
+  //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope'
+  darr(yap_scope*) scopes; //Array holding 
+  darr(yap_scope*) current_scopes; //stack of scopes for codegen. Top is current, bottom is global.
 
   //Types
   darr(yap_type) types; //yap_type_id points to types in this array

@@ -6,8 +6,17 @@
 #include "yap/types.h"
 
 #ifdef YAP_DEBUG
-    #include <valgrind/memcheck.h>
-    #include <valgrind/valgrind.h>
+    #if defined(__has_include)
+        #if __has_include(<valgrind/memcheck.h>) && __has_include(<valgrind/valgrind.h>)
+            #include <valgrind/memcheck.h>
+            #include <valgrind/valgrind.h>
+            #define YAP_HAS_VALGRIND 1
+        #endif
+    #endif
+#endif
+
+#ifndef YAP_HAS_VALGRIND
+    #define YAP_HAS_VALGRIND 0
 #endif
 
 void* yap_get_handle(const char* path){
@@ -75,7 +84,7 @@ int compile(yap_args args){
     //This will force resolving debug symbols before closing the handle!
     //Very important for valgrind to work correctly! :^)
     //tldr; multiple hours wasted learning this
-    #ifdef YAP_DEBUG
+    #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
     // end of stuff here

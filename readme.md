@@ -10,7 +10,7 @@ One can easily just create their own package managers and boot it to yap.
 
 All yap does is launch utilities that are meant to have unified argument syntax.
 
-This means each yap module will have it's own arguments and if you want a different implementation you can just swap it for anything that follows he guidelines.
+This means each yap module will have it's own arguments and if you want a different implementation you can just swap it for anything that follows the guidelines.
 
 ## What's inside this directory then?
 
