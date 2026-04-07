@@ -2,11 +2,11 @@
 
 declare_map_for(var);
 
-yap_scope* yap_new_scope(void* parent){
-    return mem_one_cpy(((yap_scope){
+yap_scope yap_new_scope(void* parent){
+    return (yap_scope){
         .parent=parent,
         .variables=new_var_map()
-    }));
+    };
 }
 
 void yap_scope_set_var(yap_scope* sc, yap_var var){

@@ -9,22 +9,23 @@ yap_ctx* yap_ctx_new(){
       .sources=darr_new(yap_source),
       .source_codes=darr_new(yap_source_code),
       .scopes=darr_new(yap_scope*),
+      .current_scopes=darr_new(yap_scope*),
       .errors=darr_new(yap_error),
       .types=darr_new(yap_type), //yap_type_id points to types in this array
       .named_types=new_named_type_map(),
     }));
-    darr_push(ctx->scopes, yap_new_scope(NULL));
+    yap_ctx_push_new_scope(ctx); //Push global scope
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
     yap_ctx_push_named_type(ctx, "", "", (yap_type){}); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
-    ctx->void_type_id = yap_ctx_push_named_type(ctx, "none", "void", yap_primitive_type(0, false, false, yap_ctx_strus_newf(ctx, "v")));
-    ctx->bool_type_id = yap_ctx_push_named_type(ctx, "bool", "bool", yap_primitive_type(1, false, false, yap_ctx_strus_newf(ctx, "b")));
-    yap_ctx_push_named_type(ctx, "byte", "char", yap_primitive_type(1, false, false, yap_ctx_strus_newf(ctx, "c")));
-    ctx->int_type_id = yap_ctx_push_named_type(ctx, "i32", "int32_t", yap_primitive_type(4, true, false, yap_ctx_strus_newf(ctx, "i32")));
-    yap_ctx_push_named_type(ctx, "u32", "uint32_t", yap_primitive_type(4, false, false, yap_ctx_strus_newf(ctx, "u32")));
-    yap_ctx_push_named_type(ctx, "i64", "int64_t", yap_primitive_type(8, true, false, yap_ctx_strus_newf(ctx, "i64")));
-    yap_ctx_push_named_type(ctx, "u64", "uint64_t", yap_primitive_type(8, false, false, yap_ctx_strus_newf(ctx, "u64")));
-    ctx->float_type_id = yap_ctx_push_named_type(ctx, "f32", "float", yap_primitive_type(4, true, true, yap_ctx_strus_newf(ctx, "f32")));
-    yap_ctx_push_named_type(ctx, "f64", "double", yap_primitive_type(8, true, true, yap_ctx_strus_newf(ctx, "f64")));
+    ctx->void_type_id = yap_ctx_push_named_type(ctx, "none", "void", yap_primitive_type(0, false, false, "none", "v"));
+    ctx->bool_type_id = yap_ctx_push_named_type(ctx, "bool", "bool", yap_primitive_type(1, false, false, "bool", "b"));
+    yap_ctx_push_named_type(ctx, "byte", "char", yap_primitive_type(1, false, false, "byte", "c"));
+    ctx->int_type_id = yap_ctx_push_named_type(ctx, "i32", "int32_t", yap_primitive_type(4, true, false, "i32", "i32"));
+    yap_ctx_push_named_type(ctx, "u32", "uint32_t", yap_primitive_type(4, false, false, "u32", "u32"));
+    yap_ctx_push_named_type(ctx, "i64", "int64_t", yap_primitive_type(8, true, false, "i64", "i64"));
+    yap_ctx_push_named_type(ctx, "u64", "uint64_t", yap_primitive_type(8, false, false, "u64", "u64"));
+    ctx->float_type_id = yap_ctx_push_named_type(ctx, "f32", "float", yap_primitive_type(4, true, true, "f32", "f32"));
+    yap_ctx_push_named_type(ctx, "f64", "double", yap_primitive_type(8, true, true, "f64", "f64"));
 
     //Untyped default types for literal coercion
     ctx->untyped_int_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->int_type_id));
@@ -70,22 +71,49 @@ char* yap_ctx_strus_cpy(yap_ctx* ctx, char* src){
   return yap_ctx_one_cpy_raw(ctx, src, len + 1);
 }
 
+yap_scope* yap_ctx_new_scope(yap_ctx* ctx, yap_scope* parent){
+    if (!ctx) return NULL;
+    yap_scope* new_scope = yap_ctx_one_cpy(ctx, yap_new_scope(parent));
+    darr_push(ctx->scopes, new_scope);
+    return new_scope;
+}
+
+yap_scope* yap_ctx_push_new_scope(yap_ctx* ctx){
+    if (!ctx) return NULL;
+    yap_scope* new_scope = yap_ctx_new_scope(ctx, yap_ctx_current_scope(ctx));
+    darr_push(ctx->current_scopes, new_scope);
+    return new_scope;
+}
+
+yap_scope* yap_ctx_pop_scope(yap_ctx* ctx){
+    if (!ctx || darr_len(ctx->current_scopes) == 0) return NULL;
+    return darr_pop(ctx->current_scopes);
+}
+
 yap_scope* yap_ctx_current_scope(yap_ctx* ctx){
-    if (darr_len(ctx->scopes) == 0) return NULL;
-    return darr_last(ctx->scopes);
+    if (darr_len(ctx->current_scopes) == 0) return NULL;
+    return darr_last(ctx->current_scopes);
 }
 
-yap_scope* yap_ctx_new_scope(yap_ctx* ctx){
-  return yap_new_scope(&darr_last(ctx->scopes));
+void yap_ctx_push_var(yap_ctx* ctx, yap_var var){
+    if (!ctx) return;
+    yap_scope* current_scope = yap_ctx_current_scope(ctx);
+    if (!current_scope){
+        yap_log("No scope to push variable to");
+        return;
+    }
+    yap_scope_set_var(current_scope, var);
+
 }
 
-yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* mangled_name){
+yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* name, char* mangled_name){
   return (yap_type){
     .kind = yap_type_primitive,
     .primitive = (yap_prim_type){
       .bytes = bytes,
       .is_signed = is_signed,
       .is_float = is_float,
+      .name = name,
       .mangled_name = mangled_name
     }
   };
@@ -179,6 +207,97 @@ bool yap_ctx_type_ids_eq(yap_ctx* ctx, yap_type_id left_id, yap_type_id right_id
   return yap_ctx_types_eq(ctx, *left, *right);
 }
 
+bool yap_ctx_type_id_compatible(yap_ctx* ctx, yap_type_id id1, yap_type_id id2){
+  if (!ctx) return false;
+  yap_type* type1 = yap_ctx_get_type(ctx, id1);
+  yap_type* type2 = yap_ctx_get_type(ctx, id2);
+  if (!type1 || !type2) return false;
+  return yap_ctx_type_compatible(ctx, *type1, *type2);
+}
+
+//Check if type1 can be used in a context that expects type2.
+//This should be treated one way only! Mainly used for possible coercions.
+bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
+  if (yap_ctx_types_eq(ctx, type1, type2)) return true;
+  // Make sure at least one of the types is untype to proceed
+  if (!(type1.kind == yap_type_untyped || type2.kind == yap_type_untyped)) return false;
+  yap_type t1 = type2;
+  yap_type t2 = type1;
+  if (type1.kind == yap_type_untyped){
+    t1 = type1;
+    t2 = type2;
+  }
+  // t1 has to be untyped, t2 *can* be untyped
+  yap_type coerced_t1 = yap_ctx_coerce_type(ctx, t1);
+  // All untyped primitives match
+  // TODO: This is clearly not the case, so it needs a fix!
+  if(coerced_t1.kind == yap_type_primitive && t2.kind == yap_type_primitive) return true;
+  return false;
+}
+
+char* yap_ctx_type_id_to_string(yap_ctx* ctx, yap_type_id id){
+  yap_type* typ = yap_ctx_get_type(ctx, id);
+  if (!typ) return "(invalid type id)";
+  return yap_ctx_type_to_string(ctx, *typ);
+}
+
+//Needs to be freed after use!
+char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
+  char* res = NULL;
+  switch (typ.kind){
+    case yap_type_primitive:
+      return strus_copy(typ.primitive.name);
+    case yap_type_ptr:
+      yap_type* sub_type = yap_ctx_get_type(ctx, typ.pointer_type);
+      if (!sub_type) return strus_copy("(error getting type)");
+      char* sub = yap_ctx_type_to_string(ctx, *sub_type);
+      if (!sub) return strus_copy("(error getting type)");
+      res = strus_newf("%s@", sub);
+      free(sub);
+      break;
+    case yap_type_func:
+      yap_fn_type func = typ.func;
+      char* ret_type_str = yap_ctx_type_to_string(ctx, *yap_ctx_get_type(ctx, func.return_type));
+      if (!ret_type_str) return strus_copy("(error getting type)");
+      res = strus_newf("(%s fn", ret_type_str);
+      free(ret_type_str);
+      for_darr(i, arg_type_id, typ.func.args){
+        yap_type* arg_type = yap_ctx_get_type(ctx, arg_type_id);
+        if (!arg_type) {
+          free(res);
+          return strus_copy("(error getting type)");
+        }
+        char* arg_type_str = yap_ctx_type_to_string(ctx, *arg_type);
+        if (!arg_type_str) {
+          free(res);
+          return strus_copy("(error getting type)");
+        }
+        strus_cat(res, " ");
+        strus_cat(res, arg_type_str);
+        free(arg_type_str);
+        if (i != darr_len(typ.func.args) - 1) strus_cat(res, ", ");
+      }
+      strus_cat(res, ")");
+      yap_type* return_type = yap_ctx_get_type(ctx, typ.func.return_type);
+      if (!return_type) {
+        free(res);
+        return strus_copy("(error getting type)");
+      }
+      char* return_type_str = yap_ctx_type_to_string(ctx, *return_type);
+      if (!return_type_str) {
+        free(res);
+        return strus_copy("(error getting type)");
+      }
+      strus_cat(res, " -> ");
+      strus_cat(res, return_type_str);
+      free(return_type_str);
+      break;
+    default:
+      return strus_copy("(unimplemented type to string)");
+  }
+  return res;
+}
+
 bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
   if (!ctx) return false;
   left = yap_ctx_coerce_type(ctx, left);
@@ -217,22 +336,46 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
   char* res;
   switch(typ.kind){
     case yap_type_primitive:
+      yap_log("Getting mangle string for primitive type with mangled name '%s'", typ.primitive.mangled_name);
       return strus_copy(typ.primitive.mangled_name);
     case yap_type_ptr: {
-      char* sub = yap_ctx_type_to_mangle_string(ctx, *yap_ctx_get_type(ctx, typ.pointer_type));
+      yap_log("Getting mangle string for pointer type");
+      yap_type* sub_type = yap_ctx_get_type(ctx, typ.pointer_type);
+      if (!sub_type) return NULL;
+      char* sub = yap_ctx_type_to_mangle_string(ctx, *sub_type);
+      if (!sub) return NULL;
       res = strus_newf("P%s", sub);
       free(sub);
       return res;
     }
     case yap_type_func: {
+      yap_log("Getting mangle string for function type");
       res = strus_copy("FP"); //Function Pointer
       //Append mangle string of return type
-      char* return_type_str = yap_ctx_type_to_mangle_string(ctx, *yap_ctx_get_type(ctx, typ.func.return_type));
+      yap_type* return_type = yap_ctx_get_type(ctx, typ.func.return_type);
+      if (!return_type) {
+        free(res);
+        return NULL;
+      }
+      char* return_type_str = yap_ctx_type_to_mangle_string(ctx, *return_type);
+      if (!return_type_str) {
+        free(res);
+        return NULL;
+      }
       strus_cat(res, return_type_str);
       free(return_type_str);
       //Append mangle string of parameter types
       for_darr(i, param_type_id, typ.func.args){
-        char* arg_type_str = yap_ctx_type_to_mangle_string(ctx, *yap_ctx_get_type(ctx, param_type_id));
+        yap_type* arg_type = yap_ctx_get_type(ctx, param_type_id);
+        if (!arg_type) {
+          free(res);
+          return NULL;
+        }
+        char* arg_type_str = yap_ctx_type_to_mangle_string(ctx, *arg_type);
+        if (!arg_type_str) {
+          free(res);
+          return NULL;
+        }
         strus_cat(res, arg_type_str);
         free(arg_type_str);
       }
@@ -240,10 +383,12 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
       return res;
     }
     case yap_type_struct:
+      yap_log("Getting mangle string for struct type");
       //TODO: Change to correct pattern: NXStructNameE where X is the length of the struct name. For now we just use the struct name as the mangle string, which is simpler but can cause conflicts and doesn't allow for anonymous structs.
       return strus_newf("%d%s", (int)strlen(typ.structure.name), typ.structure.name);
     case yap_type_untyped:
-      return yap_ctx_type_to_mangle_string(ctx, *yap_ctx_get_type(ctx, typ.untyped_default));
+      yap_log("Getting mangle string for untyped type");
+      return yap_ctx_type_to_mangle_string(ctx, yap_ctx_coerce_type(ctx, typ));
     case yap_type_blob:
     default:
       return NULL;

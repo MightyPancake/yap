@@ -1,7 +1,7 @@
 #ifndef YAP_SCOPE_H
 #define YAP_SCOPE_H
 
-yap_scope* yap_new_scope(void* parent);
+yap_scope yap_new_scope(void* parent);
 void yap_free_scope(yap_scope* sc);
 
 const yap_var* yap_scope_get_var(yap_scope* sc, char* name);

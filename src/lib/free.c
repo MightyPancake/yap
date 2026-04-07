@@ -45,8 +45,10 @@ void yap_ctx_free(yap_ctx ctx){
 
   for_darr(i, sc, ctx.scopes){
     yap_scope_free(*sc);
-    free(sc);
+    // No need to free the scope itself since it's allocated in the arena
+    // free(sc);
   }
+  darr_free(ctx.current_scopes);
   darr_free(ctx.scopes);
 
   //Types

@@ -3,6 +3,10 @@
 
 //Basic
 yap_scope* yap_ctx_current_scope(yap_ctx* ctx);
+yap_scope* yap_ctx_new_scope(yap_ctx* ctx, yap_scope* parent);
+yap_scope* yap_ctx_push_new_scope(yap_ctx* ctx);
+yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
+void yap_ctx_push_var(yap_ctx* ctx, yap_var var);
 void yap_ctx_push_source(yap_ctx* st, yap_source src);
 yap_source yap_ctx_pop_source(yap_ctx* st);
 void yap_ctx_push_error(yap_ctx* st, yap_error err);
@@ -11,12 +15,20 @@ yap_type* yap_ctx_get_type(yap_ctx* ctx, yap_type_id id);
 yap_type* yap_ctx_get_type_by_name(yap_ctx* ctx, char* name);
 yap_type_id yap_ctx_get_type_id_by_name(yap_ctx* ctx, char* name);
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name, char* c_name, yap_type typ);
-yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* mangled_name);
+yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* name, char* mangled_name);
 yap_type_id yap_ctx_coerce_type_id_to_id(yap_ctx* ctx, yap_type_id src_id);
 yap_type yap_ctx_coerce_type(yap_ctx* ctx, yap_type src);
 yap_type yap_untyped_type(yap_type_id default_id);
+
+//Types
 bool yap_ctx_type_ids_eq(yap_ctx* ctx, yap_type_id left_id, yap_type_id right_id);
 bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right);
+bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2);
+bool yap_ctx_type_id_compatible(yap_ctx* ctx, yap_type_id id1, yap_type_id id2);
+char* yap_ctx_type_id_to_string(yap_ctx* ctx, yap_type_id id);
+char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ);
+
+//Memory
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes);
 void* yap_ctx_one_raw(yap_ctx* ctx, size_t bytes);
 void* yap_ctx_one_cpy_raw(yap_ctx* ctx, const void* src, size_t bytes);
