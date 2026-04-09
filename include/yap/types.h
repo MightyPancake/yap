@@ -199,6 +199,8 @@ kenobi_new_struct_free(yap_expr,
   bool is_comptime;
 );
 
+typedef struct yap_statement yap_statement;
+
 kenobi_new_struct_free(yap_var_decl,
   enum {
     yap_var_decl_error,
@@ -208,17 +210,48 @@ kenobi_new_struct_free(yap_var_decl,
   yap_expr expr;
 );
 
+kenobi_new_struct_free(yap_if,
+  yap_expr condition;
+  yap_statement* then_branch;
+);
+
+kenobi_new_struct_free(yap_if_else,
+  yap_expr condition;
+  yap_statement* then_branch;
+  yap_statement* else_branch;
+);
+
+kenobi_new_struct_free(yap_while,
+  yap_expr condition;
+  yap_statement* body;
+);
+
+kenobi_new_struct_free(yap_return_statement,
+  yap_expr value;
+);
+
 kenobi_new_struct_free(yap_statement,
   enum {
     yap_statement_error,
     yap_statement_empty,
     yap_statement_expr,
-    yap_statement_var_decl
+    yap_statement_var_decl,
+    yap_statement_return,
+    yap_statement_if,
+    yap_statement_if_else,
+    yap_statement_while,
+    yap_statement_for,
+    yap_statement_break,
+    yap_statement_continue
   } kind;
   union {
     yap_error err;
     yap_expr expr;
     yap_var_decl var_decl;
+    yap_return_statement return_stmt;
+    yap_if if_stmt;
+    yap_if_else if_else_stmt;
+    yap_while while_stmt;
   };
 );
 
