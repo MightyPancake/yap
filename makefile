@@ -112,6 +112,9 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
+rerun: yap_ts
+	@make run test=$(test)
+
 run:
 	@[ -n "$(test)" ] || { echo "Usage: make run test=<name>.yap"; exit 1; }
 	valgrind \
