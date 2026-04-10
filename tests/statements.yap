@@ -26,14 +26,20 @@ i32 fn test(){
 		a
 	
 	//8. for_loop
-	//TODO
+	for b:=0, b, b+1
 
 	//9. return_statement
 	ret a
 
 	//10. break_statement
-	//TODO
+	while 1 {
+		a
+		break
+	}
 
 	//11. continue_statement
-	//TODO
+	while 1 {
+		if a continue
+		a+1
+	}
 }

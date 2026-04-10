@@ -226,8 +226,26 @@ kenobi_new_struct_free(yap_while,
   yap_statement* body;
 );
 
+kenobi_new_struct_free(yap_for,
+  yap_statement* init;
+  yap_expr condition;
+  yap_expr* update;
+  yap_statement* body;
+);
+
 kenobi_new_struct_free(yap_return_statement,
   yap_expr value;
+);
+
+kenobi_new_struct_free(yap_block,
+  enum {
+    yap_block_error,
+    yap_block_valid
+  } kind;
+  union {
+    darr(yap_statement) statements;
+    yap_error err;
+  };
 );
 
 kenobi_new_struct_free(yap_statement,
@@ -242,7 +260,8 @@ kenobi_new_struct_free(yap_statement,
     yap_statement_while,
     yap_statement_for,
     yap_statement_break,
-    yap_statement_continue
+    yap_statement_continue,
+    yap_statement_block
   } kind;
   union {
     yap_error err;
@@ -252,17 +271,8 @@ kenobi_new_struct_free(yap_statement,
     yap_if if_stmt;
     yap_if_else if_else_stmt;
     yap_while while_stmt;
-  };
-);
-
-kenobi_new_struct_free(yap_block,
-  enum {
-    yap_block_error,
-    yap_block_valid
-  } kind;
-  union {
-    darr(yap_statement) statements;
-    yap_error err;
+    yap_for for_stmt;
+    yap_block block;
   };
 );
 
@@ -290,6 +300,7 @@ kenobi_new_struct_free(yap_func_decl,
 kenobi_new_struct_free(yap_scope,
   void* parent;
   map variables;
+  bool is_loop; //Whether this scope is a loop scope, used for break/continue statements
 );
 
 kenobi_new_struct_free(yap_decl,
@@ -313,7 +324,7 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
   //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope'
-  darr(yap_scope*) scopes; //Array holding 
+  darr(yap_scope*) scopes; //Array holding all scopes
   darr(yap_scope*) current_scopes; //stack of scopes for codegen. Top is current, bottom is global.
 
   //Types

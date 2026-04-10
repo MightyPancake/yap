@@ -85,6 +85,14 @@ yap_scope* yap_ctx_push_new_scope(yap_ctx* ctx){
     return new_scope;
 }
 
+yap_scope* yap_ctx_push_new_loop_scope(yap_ctx* ctx){
+    if (!ctx) return NULL;
+    yap_scope* new_scope = yap_ctx_new_scope(ctx, yap_ctx_current_scope(ctx));
+    new_scope->is_loop = true;
+    darr_push(ctx->current_scopes, new_scope);
+    return new_scope;
+}
+
 yap_scope* yap_ctx_pop_scope(yap_ctx* ctx){
     if (!ctx || darr_len(ctx->current_scopes) == 0) return NULL;
     return darr_pop(ctx->current_scopes);
