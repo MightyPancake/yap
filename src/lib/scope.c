@@ -5,7 +5,8 @@ declare_map_for(var);
 yap_scope yap_new_scope(void* parent){
     return (yap_scope){
         .parent=parent,
-        .variables=new_var_map()
+        .variables=new_var_map(),
+        .is_loop=false
     };
 }
 
@@ -13,6 +14,17 @@ void yap_scope_set_var(yap_scope* sc, yap_var var){
     yap_log("Setting variable '%s' in scope", var.name);
     // yap_var* var_ptr = mem_one_cpy(var);
     hashmap_set(sc->variables, &var);
+}
+
+bool yap_scope_has_var(yap_scope* sc, char* name){
+    yap_var dummy = (yap_var){.name=name};
+    return hashmap_get(sc->variables, &dummy) != NULL;
+}
+
+bool yap_scope_in_loop(yap_scope* sc){
+    if (!sc) return false;
+    if (sc->is_loop) return true;
+    return yap_scope_in_loop(sc->parent);
 }
 
 const yap_var* yap_scope_get_var(yap_scope* sc, char* name){
