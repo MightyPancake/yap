@@ -1,6 +1,7 @@
 #include "yap/all.h"
 
 declare_map_for(named_type);
+declare_map_for(module);
 
 yap_ctx* yap_ctx_new(){
     yap_log("Creating new ctx");
@@ -11,10 +12,15 @@ yap_ctx* yap_ctx_new(){
       .scopes=darr_new(yap_scope*),
       .current_scopes=darr_new(yap_scope*),
       .errors=darr_new(yap_error),
+      .modules=new_module_map(),
+      .current_module=NULL,
       .types=darr_new(yap_type), //yap_type_id points to types in this array
       .named_types=new_named_type_map(),
     }));
     yap_ctx_push_new_scope(ctx); //Push global scope
+    ctx->global_scope = yap_ctx_current_scope(ctx);
+    yap_ctx_create_new_module(ctx, "main");
+    yap_ctx_switch_module(ctx, "main");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
     yap_ctx_push_named_type(ctx, "", "", (yap_type){}); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_named_type(ctx, "none", "void", yap_primitive_type(0, false, false, "none", "v"));
@@ -33,6 +39,59 @@ yap_ctx* yap_ctx_new(){
     ctx->untyped_byte_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->bool_type_id));
     
     return ctx;
+}
+
+yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name){
+  if (!ctx || !name) return NULL;
+  const yap_module dummy = {.name = name};
+  return (yap_module*)hashmap_get(ctx->modules, &dummy);
+}
+
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name){
+  if (!ctx || !name || !ctx->global_scope) return NULL;
+  yap_module* module = yap_ctx_get_module(ctx, name);
+  if (module){
+    char* msg = strus_newf("Module '%s' already exists", name);
+    yap_ctx_push_error(ctx, (yap_error){
+      .kind = yap_error_no_pos,
+      .src = NULL,
+      .msg = msg
+    });
+    return NULL;
+  }
+
+  yap_scope* module_scope = yap_ctx_new_scope(ctx, ctx->global_scope);
+  if (!module_scope) return NULL;
+
+  yap_module new_module = {
+    .name = yap_ctx_strus_cpy(ctx, name),
+    .scope = module_scope
+  };
+  hashmap_set(ctx->modules, &new_module);
+  return yap_ctx_get_module(ctx, name);
+}
+
+yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
+  if (!ctx || !name) return NULL;
+  yap_module* module = yap_ctx_get_module(ctx, name);
+  if (!module){
+    char* msg = strus_newf("Module '%s' does not exist", name);
+    yap_ctx_push_error(ctx, (yap_error){
+      .kind = yap_error_no_pos,
+      .src = NULL,
+      .msg = msg ? msg : strus_copy("Module does not exist")
+    });
+    return NULL;
+  }
+
+  while (darr_len(ctx->current_scopes) > 0){
+    darr_pop(ctx->current_scopes);
+  }
+
+  darr_push(ctx->current_scopes, ctx->global_scope);
+  darr_push(ctx->current_scopes, module->scope);
+  ctx->current_module = module;
+  return module;
 }
 
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes){

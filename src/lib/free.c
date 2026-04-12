@@ -65,6 +65,7 @@ void yap_ctx_free(yap_ctx ctx){
   //   free(named->c_name);
   // }
   hashmap_free(ctx.named_types);
+  hashmap_free(ctx.modules);
 
   //Free arena
   quake_free(&ctx.arena);
