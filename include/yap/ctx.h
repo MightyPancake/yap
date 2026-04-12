@@ -11,6 +11,11 @@ yap_scope* yap_ctx_push_new_scope(yap_ctx* ctx);
 yap_scope* yap_ctx_push_new_loop_scope(yap_ctx* ctx);
 yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
 
+//Module manipulation
+yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name);
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name);
+yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name);
+
 //Source manipulation
 void yap_ctx_push_source(yap_ctx* st, yap_source src);
 yap_source yap_ctx_pop_source(yap_ctx* st);

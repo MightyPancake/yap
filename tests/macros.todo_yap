@@ -1,0 +1,63 @@
+// Test for macros
+
+//Returning from the macro emits the value in-place
+//Macros can return expressions...
+expr fn my_num#(){
+    ret literal#(i32, "123")
+}
+
+//... statements ...
+statement fn custom_for#(statement init, expr condition, expr update, statement body){
+    ret block#(
+        init,
+        while#(
+            condition,
+            block#(
+                body,
+                expr_statement#(update)
+            )
+        )
+    )
+}
+
+//... types ...
+type fn fat_ptr#(type t){
+    ret struct#(
+            ["data", ptr_to#(t)],
+            ["sz", u64]
+        )
+}
+
+//... declarations ...
+decl fn decl_fat_pointer#(type t){
+    //Macros can use other macros!
+    ret declare_type(
+        [concat#("fat_ptr_", t:to_str#), fat_ptr#(t)]
+    )
+}
+
+//Or nothing
+none fn warn_user#(){
+    warn#("Something bla bla bla") //This emits a warning!
+}
+
+//Macros can produce side effect
+expr fn new_fat_ptr#(type t, u64 sz){
+    //Inserts a given type if not present.
+    //If it's mismatched, produces an error.
+    typ_decl := decl_fat_pointer#(t)
+    emit#(typ_decl)
+    //This makes sure the type is declared before use!
+    ret literal#(
+        fat_ptr#(t),
+        [
+            sz:=sz,
+            fptr := func_call#(etc...)
+        ]
+    )
+}
+
+none fn main(){
+    a := my_num# //Paramless macro call
+    i32_arr := new_fat_ptr#(i32, 128)
+}
