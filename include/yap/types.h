@@ -320,6 +320,21 @@ kenobi_new_struct_free(yap_decl,
   };
 );
 
+kenobi_new_struct_free(yap_macro_val,
+  enum {
+    yap_macro_val_error,
+    yap_macro_val_expr,
+    yap_macro_val_decl,
+    yap_macro_val_stmt,
+  } kind;
+  union {
+    yap_error err;
+    yap_expr expr;
+    yap_decl decl;
+    yap_statement stmt;
+  };
+);
+
 typedef struct yap_source_code yap_source_code;
 
 kenobi_new_struct_free(yap_ctx,
