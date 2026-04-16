@@ -23,12 +23,13 @@ YAP_PATH := $(shell pwd)
 export PATH := $(YAP_PATH):$(PATH)
 
 YAP_SHARED_FLAGS := -I./include -L./lib $(CFLAGS)
+YAP_TCC_LINK_FLAGS := -ltcc
 
 #Makes sure the compiler looks for yap.so in the lib dir
 YAP_COMPILER_LINKER_FLAGS := -Wl,-rpath,$(YAP_PATH)/lib
 YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap -o yap $(YAP_COMPILER_LINKER_FLAGS)
 
-YAP_LIB_FLAGS := $(YAP_SHARED_FLAGS) ./src/lib/*.c
+YAP_LIB_FLAGS := $(YAP_SHARED_FLAGS) ./src/lib/*.c $(YAP_TCC_LINK_FLAGS)
 
 RM := rm -fr
 CP := cp -r
@@ -62,12 +63,12 @@ static_lib:
 lib:
 	@echo $(PURPLE)Building libyap.so$(RESET)
 	$(CC) -fPIC -c $(YAP_LIB_FLAGS)
-	$(CC) -shared -o ./lib/libyap.so ./*.o
+	$(CC) -shared -o ./lib/libyap.so ./*.o $(YAP_TCC_LINK_FLAGS)
 	$(RM) ./*.o
 	@echo $(GREEN)Done!$(RESET)
 
 test:
-	@make debug=true2
+	@make debug=true
 	@make yap_ts debug=true
 	@yap -c
 	@yap -m
