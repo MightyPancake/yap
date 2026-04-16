@@ -34,7 +34,7 @@ void* yap_get_handle(const char* path){
 }
 
 void yap_close_handle(void* handle){
-    dlclose(handle);
+    if (handle) dlclose(handle);
 }
 
 #define load_func_dynamically(HANDLE, HANDLE_NAME, T, SYM) ({\
@@ -52,29 +52,52 @@ int compile(yap_args args){
     yap_log("Source files count: %ld", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){
-        .front = (yap_compiler_front){}
+        .back_handle = NULL,
+        .macro_eval_handle = NULL,
+        .front_handle = NULL,
     };
 
-    const char front_name[] = "ts_yap";
-    void* front_handle = yap_get_handle("./modules/yap-ts/libyap_ts.so");
+    //Load compiler modules
+    // yap_compiler_load_macro_eval_module(&compiler, "./modules/yap-macro/libyap_macro.so", "yap-c");
+    yap_compiler_load_front_module(&compiler, "./modules/yap-ts/libyap_ts.so", "yap-ts");
+    // yap_compiler_load_back_module(&compiler, "./modules/yap-macro/libyap_macro.so", "yap-c");
+
+
+    // void* front_handle = yap_get_handle("./modules/yap-ts/libyap_ts.so");
+    // void* back_handle = yap_get_handle("./modules/yap-c/libyap_c.so");
     // yap_log("libyap_ts.so loaded at %p\n", front_handle);
     // void* sym = dlsym(front_handle, "yap_parse");
     // yap_log("yap_parse symbol at %p\n", sym);
 
+    //Macro expansion function
+    // TODO
+    // compiler.front_module.macro_eval = load_func_dynamically(front_handle, front_name, yap_expand_macros_fn, "yap_eval_macro");
 
-    compiler.front.parse = load_func_dynamically(front_handle, front_name, yap_parse_fn, "yap_parse");
-    compiler.front.print_error = load_func_dynamically(front_handle, front_name, yap_print_error_fn, "yap_print_error");
+    //Function to print errors
     
-    //do stuff here
-    yap_ctx* ctx = compiler.front.parse(args);
+    //Do the compilation procces here
+    //Step 1: Create a context
+    yap_ctx* ctx = yap_ctx_new();
+
+    //Step 2: Attach macro eval function to context so it can be used during parsing
+
+    
+    //Step 3: Parse the source files and fill the context with the results
+    ctx = compiler.front_module.parse(ctx, args);
+    //at this point, ctx should be filled with sources, source codes, errors and types. We can check for errors and print them if needed.
+
+    //Step 4: Codegen and emition
+    //TODO: Implement codegen and emition lol
 
     //Handle possible errors
     for_darr(i, err, ctx->errors){
-        compiler.front.print_error(err);
+        compiler.front_module.print_error(err);
     }
     int result = darr_len(ctx->errors) ? 1 : 0;
     
-    yap_log("Compilation finished with %ld error(s)", darr_len(ctx->errors));
+    yap_log("Parsing finished with %ld error(s)", darr_len(ctx->errors));
+
+    //Cleanup
     yap_log("Freeing state and closing handles...");
     yap_log("Context allocated %u bytes in arena", quake_allocated_sz(&ctx->arena));
     yap_log("Freeing what remains of the context...\n\n");
@@ -88,8 +111,28 @@ int compile(yap_args args){
         VALGRIND_DO_LEAK_CHECK;
     #endif
     // end of stuff here
-    yap_close_handle(front_handle);
+    yap_close_handle(compiler.front_handle);
+    yap_close_handle(compiler.back_handle);
+    yap_close_handle(compiler.macro_eval_handle);
     return result;
+}
+
+void yap_compiler_load_macro_eval_module(yap_compiler* compiler, const char* path, const char* name){
+    (void)name;
+    compiler->macro_eval_handle = yap_get_handle(path);
+    //compiler->macro_eval_module.macro_eval = load_func_dynamically(compiler->macro_eval_handle, name, yap_macro_eval_fn, "yap_eval_macro");
+}
+
+void yap_compiler_load_front_module(yap_compiler* compiler, const char* path, const char* name){
+    compiler->front_handle = yap_get_handle(path);
+    compiler->front_module.parse = load_func_dynamically(compiler->front_handle, name, yap_parse_fn, "yap_parse");
+    compiler->front_module.print_error = load_func_dynamically(compiler->front_handle, name, yap_print_error_fn, "yap_print_error");
+}
+
+void yap_compiler_load_back_module(yap_compiler* compiler, const char* path, const char* name){
+    (void)name;
+    compiler->back_handle = yap_get_handle(path);
+    //TODO: Load codegen and emition functions here when they are implemented
 }
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
@@ -167,6 +210,7 @@ int main(int argc, char** argv) {
         //do compile stuff here
         if (darr_len(args.extra) > 0){
             result = compile(args);
+            yap_tcc_example();
         }else{
             printf("No sources to compile!\n");
             result = 1;

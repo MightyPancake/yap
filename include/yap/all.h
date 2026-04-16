@@ -15,6 +15,7 @@
 #include "ctx.h"
 #include "args.h"
 #include "code.h"
+#include "macro.h"
 
 #include "os_dependant.h"
 
