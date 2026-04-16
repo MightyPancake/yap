@@ -303,6 +303,11 @@ kenobi_new_struct_free(yap_scope,
   bool is_loop; //Whether this scope is a loop scope, used for break/continue statements
 );
 
+kenobi_new_struct_free(yap_module,
+  char* name;
+  yap_scope* scope;
+);
+
 kenobi_new_struct_free(yap_decl,
   enum {
     yap_decl_error,
@@ -312,6 +317,21 @@ kenobi_new_struct_free(yap_decl,
   union{
     yap_func_decl func_decl;
     yap_error err;
+  };
+);
+
+kenobi_new_struct_free(yap_macro_val,
+  enum {
+    yap_macro_val_error,
+    yap_macro_val_expr,
+    yap_macro_val_decl,
+    yap_macro_val_stmt,
+  } kind;
+  union {
+    yap_error err;
+    yap_expr expr;
+    yap_decl decl;
+    yap_statement stmt;
   };
 );
 
@@ -326,6 +346,11 @@ kenobi_new_struct_free(yap_ctx,
   //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope'
   darr(yap_scope*) scopes; //Array holding all scopes
   darr(yap_scope*) current_scopes; //stack of scopes for codegen. Top is current, bottom is global.
+  yap_scope* global_scope;
+
+  //Modules
+  map modules; //map of named modules
+  yap_module* current_module;
 
   //Types
   darr(yap_type) types; //yap_type_id points to types in this array
