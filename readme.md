@@ -18,4 +18,4 @@ The yap program is used to launch yap related modules.
 Each module should have at least 1 category. For example, yap ships with the `front/ts` module which is used to parse yap code using tree sitter.
 
 Every directory here represents a module category.
-The `shared` directory is used to 
+The `shared` directory is used to ...
