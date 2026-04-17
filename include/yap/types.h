@@ -67,6 +67,7 @@ typedef struct yap_prim_type{
   bool is_signed;
   bool is_float;
   char* name;
+  char* c_name;
   char* mangled_name;
 }yap_prim_type;
 
@@ -292,6 +293,7 @@ kenobi_new_struct_free(yap_func_arg,
 );
 
 kenobi_new_struct_free(yap_func_decl,
+  char* name;
   darr(yap_func_arg) args;
   yap_type_id ret_typ;
   yap_block body;
