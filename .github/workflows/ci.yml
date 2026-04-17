@@ -24,6 +24,7 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive include/utils modules/yap-ts
           git submodule update --init --recursive --remote modules/yap-c
+          git -C modules/yap-c submodule update --init --recursive tinycc
 
       - name: Build and install TinyCC
         run: |
