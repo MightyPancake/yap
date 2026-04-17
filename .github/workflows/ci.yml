@@ -20,7 +20,10 @@ jobs:
           sudo apt-get install -y build-essential make git valgrind
 
       - name: Initialize submodules
-        run: git submodule update --init --recursive
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive include/utils modules/yap-ts
+          git submodule update --init --recursive --remote modules/yap-c
 
       - name: Build and install TinyCC
         run: |
@@ -34,4 +37,6 @@ jobs:
         run: test -f /usr/include/valgrind/memcheck.h
 
       - name: Run workflow
-        run: make workflow
+        run: |
+          make path
+          make test detailed=true
