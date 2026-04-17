@@ -18,10 +18,10 @@
       devShells = forAllSystems (system:
         let
           pkgs = import nixpkgs { inherit system; };
-          lib = pkgs.lib;
-          tcc = pkgs.tinycc;
-          tccDev = lib.getDev tcc;
-          tccLib = lib.getLib tcc;
+          # lib = pkgs.lib;
+          # tcc = pkgs.tinycc;
+          # tccDev = lib.getDev tcc;
+          # tccLib = lib.getLib tcc;
         in
         {
           default = pkgs.mkShell {
@@ -33,13 +33,13 @@
               git
             ];
 
-            buildInputs = [ tcc ];
+            # buildInputs = [ tcc ];
 
-            shellHook = ''
-              export CPATH="${tccDev}/include''${CPATH:+:$CPATH}"
-              export LIBRARY_PATH="${tccLib}/lib''${LIBRARY_PATH:+:$LIBRARY_PATH}"
-              export LD_LIBRARY_PATH="${tccLib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-            '';
+            # shellHook = ''
+            #   export CPATH="${tccDev}/include''${CPATH:+:$CPATH}"
+            #   export LIBRARY_PATH="${tccLib}/lib''${LIBRARY_PATH:+:$LIBRARY_PATH}"
+            #   export LD_LIBRARY_PATH="${tccLib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            # '';
           };
         }
       );
