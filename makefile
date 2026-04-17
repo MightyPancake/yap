@@ -70,6 +70,7 @@ lib:
 test:
 	@make debug=true
 	@make yap_ts debug=true
+	@make yap_c debug=true
 	@yap -c
 	@yap -m
 	@echo $(CYAN)Running tests$(RESET)
@@ -113,7 +114,7 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-rerun: yap_ts
+rerun: yap_ts yap_c
 	@make run test=$(test)
 
 run:
@@ -128,6 +129,7 @@ submodules:
 	git submodule update --init --recursive
 	@make utils
 	@make yap_ts debug=$(debug)
+	@make yap_c debug=$(debug)
 
 path:
 	@echo $(PURPLE)Adding yap to PATH using pathman$(RESET)
@@ -150,3 +152,6 @@ utils:
 
 yap_ts: all
 	@cd ./modules/yap-ts && make debug=$(debug)
+
+yap_c: all
+	@cd ./modules/yap-c && make debug=$(debug)
