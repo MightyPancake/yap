@@ -60,7 +60,7 @@ int compile(yap_args args){
     //Load compiler modules
     // yap_compiler_load_macro_eval_module(&compiler, "./modules/yap-macro/libyap_macro.so", "yap-c");
     yap_compiler_load_front_module(&compiler, "./modules/yap-ts/libyap_ts.so", "yap-ts");
-    // yap_compiler_load_back_module(&compiler, "./modules/yap-macro/libyap_macro.so", "yap-c");
+    yap_compiler_load_back_module(&compiler, "./modules/yap-c/libyap_c.so", "yap-c");
 
 
     // void* front_handle = yap_get_handle("./modules/yap-ts/libyap_ts.so");
@@ -88,6 +88,7 @@ int compile(yap_args args){
 
     //Step 4: Codegen and emition
     //TODO: Implement codegen and emition lol
+    compiler.back_module.codegen(ctx);
 
     //Handle possible errors
     for_darr(i, err, ctx->errors){
@@ -120,7 +121,7 @@ int compile(yap_args args){
 void yap_compiler_load_macro_eval_module(yap_compiler* compiler, const char* path, const char* name){
     (void)name;
     compiler->macro_eval_handle = yap_get_handle(path);
-    //compiler->macro_eval_module.macro_eval = load_func_dynamically(compiler->macro_eval_handle, name, yap_macro_eval_fn, "yap_eval_macro");
+    compiler->macro_eval_module.macro_eval = load_func_dynamically(compiler->macro_eval_handle, name, yap_macro_eval_fn, "yap_eval_macro");
 }
 
 void yap_compiler_load_front_module(yap_compiler* compiler, const char* path, const char* name){
@@ -132,7 +133,7 @@ void yap_compiler_load_front_module(yap_compiler* compiler, const char* path, co
 void yap_compiler_load_back_module(yap_compiler* compiler, const char* path, const char* name){
     (void)name;
     compiler->back_handle = yap_get_handle(path);
-    //TODO: Load codegen and emition functions here when they are implemented
+    compiler->back_module.codegen = load_func_dynamically(compiler->back_handle, name, yap_codegen_fn, "yap_gen_code");
 }
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
@@ -210,7 +211,6 @@ int main(int argc, char** argv) {
         //do compile stuff here
         if (darr_len(args.extra) > 0){
             result = compile(args);
-            yap_tcc_example();
         }else{
             printf("No sources to compile!\n");
             result = 1;
