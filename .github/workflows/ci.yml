@@ -26,14 +26,6 @@ jobs:
           git submodule update --init --recursive --remote modules/yap-c
           git -C modules/yap-c submodule update --init --recursive tinycc
 
-      - name: Build and install TinyCC
-        run: |
-          cd modules/yap-c/tinycc
-          ./configure --prefix=/usr/local
-          make -j"$(nproc)"
-          sudo make install
-          sudo ldconfig
-
       - name: Ensure Valgrind headers are available
         run: test -f /usr/include/valgrind/memcheck.h
 
