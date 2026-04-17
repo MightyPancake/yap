@@ -22,16 +22,16 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_create_new_module(ctx, "main");
     yap_ctx_switch_module(ctx, "main");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
-    yap_ctx_push_named_type(ctx, "", "", (yap_type){}); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
-    ctx->void_type_id = yap_ctx_push_named_type(ctx, "none", "void", yap_primitive_type(0, false, false, "none", "v"));
-    ctx->bool_type_id = yap_ctx_push_named_type(ctx, "bool", "bool", yap_primitive_type(1, false, false, "bool", "b"));
-    yap_ctx_push_named_type(ctx, "byte", "char", yap_primitive_type(1, false, false, "byte", "c"));
-    ctx->int_type_id = yap_ctx_push_named_type(ctx, "i32", "int32_t", yap_primitive_type(4, true, false, "i32", "i32"));
-    yap_ctx_push_named_type(ctx, "u32", "uint32_t", yap_primitive_type(4, false, false, "u32", "u32"));
-    yap_ctx_push_named_type(ctx, "i64", "int64_t", yap_primitive_type(8, true, false, "i64", "i64"));
-    yap_ctx_push_named_type(ctx, "u64", "uint64_t", yap_primitive_type(8, false, false, "u64", "u64"));
-    ctx->float_type_id = yap_ctx_push_named_type(ctx, "f32", "float", yap_primitive_type(4, true, true, "f32", "f32"));
-    yap_ctx_push_named_type(ctx, "f64", "double", yap_primitive_type(8, true, true, "f64", "f64"));
+    yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
+    ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
+    ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
+    yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
+    ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int32_t");
+    yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "uint32_t");
+    yap_ctx_push_new_primitive_type(ctx, 8, true, false, "i64", "i64", "int64_t");
+    yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "uint64_t");
+    ctx->float_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, true, "f32", "f32", "float");
+    yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
 
     //Untyped default types for literal coercion
     ctx->untyped_int_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->int_type_id));
@@ -173,7 +173,7 @@ void yap_ctx_push_var(yap_ctx* ctx, yap_var var){
 
 }
 
-yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* name, char* mangled_name){
+yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* name, char* mangled_name, char* c_name){
   return (yap_type){
     .kind = yap_type_primitive,
     .primitive = (yap_prim_type){
@@ -181,7 +181,8 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* n
       .is_signed = is_signed,
       .is_float = is_float,
       .name = name,
-      .mangled_name = mangled_name
+      .mangled_name = mangled_name,
+      .c_name = c_name
     }
   };
   
@@ -234,6 +235,10 @@ yap_type yap_untyped_type(yap_type_id default_id){
     .kind = yap_type_untyped,
     .untyped_default = default_id
   };
+}
+
+yap_type_id yap_ctx_push_new_primitive_type(yap_ctx* ctx, size_t bytes, bool is_signed, bool is_float, char* name, char* mangled_name, char* c_name){
+  return yap_ctx_push_named_type(ctx, name, c_name, yap_primitive_type(bytes, is_signed, is_float, name, mangled_name, c_name));
 }
 
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name_p, char* c_name_p, yap_type typ){
@@ -345,19 +350,6 @@ char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
         if (i != darr_len(typ.func.args) - 1) strus_cat(res, ", ");
       }
       strus_cat(res, ")");
-      yap_type* return_type = yap_ctx_get_type(ctx, typ.func.return_type);
-      if (!return_type) {
-        free(res);
-        return strus_copy("(error getting type)");
-      }
-      char* return_type_str = yap_ctx_type_to_string(ctx, *return_type);
-      if (!return_type_str) {
-        free(res);
-        return strus_copy("(error getting type)");
-      }
-      strus_cat(res, " -> ");
-      strus_cat(res, return_type_str);
-      free(return_type_str);
       break;
     default:
       return strus_copy("(unimplemented type to string)");
