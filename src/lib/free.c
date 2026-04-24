@@ -107,7 +107,7 @@ void yap_statement_free(yap_statement statement){
 
 void yap_var_decl_free(yap_var_decl var_decl){
   yap_log("Freeing variable declaration");
-  yap_expr_free(var_decl.expr);
+  yap_expr_free(var_decl.init);
 }
 
 void yap_expr_free(yap_expr expr){

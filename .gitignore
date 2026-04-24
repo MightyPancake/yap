@@ -2,3 +2,4 @@
 yap
 lib/libyap.so
 summary.md
+out.c
