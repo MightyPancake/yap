@@ -78,6 +78,7 @@ int compile(yap_args args){
     //Do the compilation procces here
     //Step 1: Create a context
     yap_ctx* ctx = yap_ctx_new();
+    ctx->print_error = compiler.front_module.print_error;
 
     //Step 2: Attach macro eval function to context so it can be used during parsing
 
