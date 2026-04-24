@@ -135,7 +135,7 @@ kenobi_new_struct_free(yap_bin_expr,
     yap_bin_expr_mul = '*',
     yap_bin_expr_div = '/',
     yap_bin_expr_mod = '%'
-  } kind;
+  } op;
   union {
     struct {
       yap_expr* right; //yap_expr*
@@ -194,10 +194,12 @@ kenobi_new_struct_free(yap_expr,
     yap_bin_expr bin_expr;
     yap_assignment assignment;
     yap_func_call func_call;
+    char* var_name;
   };
   yap_type_id type;
   bool is_lvalue;
   bool is_comptime;
+  yap_code_range range;
 );
 
 typedef struct yap_statement yap_statement;
@@ -208,7 +210,7 @@ kenobi_new_struct_free(yap_var_decl,
     yap_var_decl_valid
   } kind;
   yap_var var;
-  yap_expr expr;
+  yap_expr init;
 );
 
 kenobi_new_struct_free(yap_if,
@@ -339,6 +341,8 @@ kenobi_new_struct_free(yap_macro_val,
 
 typedef struct yap_source_code yap_source_code;
 
+typedef void (*yap_print_error_fn)(yap_error);
+
 kenobi_new_struct_free(yap_ctx,
   //Arena
   quake arena; //Memory arena for all allocations in the compiler, freed at the end of compilation. Speeds up allocation and deallocation significantly.
@@ -365,6 +369,10 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id untyped_int_type_id;  //cached type_id for untyped integer literals
   yap_type_id untyped_float_type_id; //cached type_id for untyped float literals
   yap_type_id untyped_byte_type_id;  //cached type_id for untyped byte literals
+
+  //External
+  yap_print_error_fn print_error;
+
 );
 yap_ctx* yap_ctx_new();
 
