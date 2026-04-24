@@ -277,6 +277,7 @@ kenobi_new_struct_free(yap_statement,
     yap_for for_stmt;
     yap_block block;
   };
+  yap_code_range range;
 );
 
 kenobi_new_struct_free(yap_func_arg,

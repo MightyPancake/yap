@@ -206,6 +206,20 @@ void yap_ctx_push_error(yap_ctx* ctx, yap_error err){
   darr_push(ctx->errors, err);
 }
 
+bool yap_ctx_dispatch_errors(yap_ctx* ctx){
+  if (!ctx) return false;
+  if (darr_len(ctx->errors) == 0) return false;
+  for_darr(i, err, ctx->errors){
+    ctx->print_error(err);
+  }
+  for_darr(i, err, ctx->errors){
+    yap_error_free(err);
+  }
+  darr_free(ctx->errors);
+  ctx->errors = darr_new(yap_error);
+  return true;
+}
+
 yap_type_id yap_ctx_push_type(yap_ctx* ctx, yap_type typ){
   darr_push(ctx->types, typ);
   return darr_len(ctx->types) - 1;

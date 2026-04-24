@@ -42,6 +42,7 @@ yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ);
 
 //Errors
 void yap_ctx_push_error(yap_ctx* st, yap_error err);
+bool yap_ctx_dispatch_errors(yap_ctx* ctx);
 
 //Memory
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes);
