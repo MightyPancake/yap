@@ -99,6 +99,14 @@ kenobi_new_struct_free(yap_type,
     yap_blob blob;
     yap_error err;
   };
+  bool is_mut;
+);
+
+#define yap_type_qualifier_string_len 16
+kenobi_new_struct_free(yap_type_qualifier_strings,
+  char restrict_str[yap_type_qualifier_string_len];
+  char volatile_str[yap_type_qualifier_string_len];
+  char const_str[yap_type_qualifier_string_len];
 );
 
 kenobi_new_struct_free(yap_named_type,
@@ -123,7 +131,6 @@ kenobi_new_struct_free(yap_literal,
   union {
     yap_blob blob;
     char* text;
-    
   };
 );
 
@@ -232,7 +239,7 @@ kenobi_new_struct_free(yap_while,
 kenobi_new_struct_free(yap_for,
   yap_statement* init;
   yap_expr condition;
-  yap_expr* update;
+  yap_expr update;
   yap_statement* body;
 );
 

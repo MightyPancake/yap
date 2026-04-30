@@ -85,6 +85,7 @@ int compile(yap_args args){
     
     //Step 3: Parse the source files and fill the context with the results
     ctx = compiler.front_module.parse(ctx, args);
+    if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
     //at this point, ctx should be filled with sources, source codes, errors and types. We can check for errors and print them if needed.
 
     //Step 4: Codegen and emition
@@ -113,10 +114,21 @@ int compile(yap_args args){
         VALGRIND_DO_LEAK_CHECK;
     #endif
     // end of stuff here
+    yap_free_compiler(compiler);
+    return result;
+}
+
+int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int error_code){
+    yap_free_compiler(compiler);
+    yap_ctx_free(*ctx);
+    free(ctx);
+    return error_code;
+}
+
+void yap_free_compiler(yap_compiler compiler){
     yap_close_handle(compiler.front_handle);
     yap_close_handle(compiler.back_handle);
     yap_close_handle(compiler.macro_eval_handle);
-    return result;
 }
 
 void yap_compiler_load_macro_eval_module(yap_compiler* compiler, const char* path, const char* name){
