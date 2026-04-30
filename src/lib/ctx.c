@@ -256,9 +256,11 @@ yap_type_id yap_ctx_push_new_primitive_type(yap_ctx* ctx, size_t bytes, bool is_
 }
 
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name_p, char* c_name_p, yap_type typ){
+  yap_type t = typ;
+  t.is_mut = true;
   char* name = yap_ctx_strus_cpy(ctx, name_p);
   char* c_name = c_name_p ? yap_ctx_strus_cpy(ctx, c_name_p) : NULL;
-  yap_type_id id = yap_ctx_push_type(ctx, typ);
+  yap_type_id id = yap_ctx_push_type(ctx, t);
   yap_log("Pushing named type '%s' with C name '%s', got id %u", name_p, c_name_p ? c_name_p : "NULL", id);
   yap_named_type named = {
     .id = id,
@@ -406,24 +408,33 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
 }
 
 char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
+  return yap_ctx_mangle_type(ctx, typ, (yap_type_qualifier_strings){
+    .restrict_str = "r",
+    .volatile_str = "V",
+    .const_str = "K",
+  });
+}
+
+char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings qs){
+  const char* const_str = (typ.is_mut ? "" : qs.const_str);
   char* res;
   switch(typ.kind){
     case yap_type_primitive:
       yap_log("Getting mangle string for primitive type with mangled name '%s'", typ.primitive.mangled_name);
-      return strus_copy(typ.primitive.mangled_name);
+      return strus_newf("%s%s", const_str, typ.primitive.mangled_name);
     case yap_type_ptr: {
       yap_log("Getting mangle string for pointer type");
       yap_type* sub_type = yap_ctx_get_type(ctx, typ.pointer_type);
       if (!sub_type) return NULL;
       char* sub = yap_ctx_type_to_mangle_string(ctx, *sub_type);
       if (!sub) return NULL;
-      res = strus_newf("P%s", sub);
+      res = strus_newf("%sP%s", const_str, sub);
       free(sub);
       return res;
     }
     case yap_type_func: {
       yap_log("Getting mangle string for function type");
-      res = strus_copy("FP"); //Function Pointer
+      res = strus_newf("%sPF", const_str); //Function Pointer
       //Append mangle string of return type
       yap_type* return_type = yap_ctx_get_type(ctx, typ.func.return_type);
       if (!return_type) {
@@ -458,7 +469,7 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
     case yap_type_struct:
       yap_log("Getting mangle string for struct type");
       //TODO: Change to correct pattern: NXStructNameE where X is the length of the struct name. For now we just use the struct name as the mangle string, which is simpler but can cause conflicts and doesn't allow for anonymous structs.
-      return strus_newf("%d%s", (int)strlen(typ.structure.name), typ.structure.name);
+      return strus_newf("%s%d%s", const_str, (int)strlen(typ.structure.name), typ.structure.name);
     case yap_type_untyped:
       yap_log("Getting mangle string for untyped type");
       return yap_ctx_type_to_mangle_string(ctx, yap_ctx_coerce_type(ctx, typ));
@@ -471,12 +482,12 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
 yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ){
   char* name = NULL;
   switch(typ.kind){
-    case yap_type_primitive:
-      name = yap_ctx_strus_cpy(ctx, typ.primitive.mangled_name);
-      break;
-    case yap_type_struct:
-      name = yap_ctx_strus_cpy(ctx, typ.structure.name);
-      break;
+    // case yap_type_primitive:
+    //   name = yap_ctx_strus_cpy(ctx, typ.primitive.mangled_name);
+    //   break;
+    // case yap_type_struct:
+    //   name = yap_ctx_strus_cpy(ctx, typ.structure.name);
+    //   break;
     default:
       char* temp_name = yap_ctx_type_to_mangle_string(ctx, typ);
       name = yap_ctx_strus_cpy(ctx, temp_name);
@@ -491,5 +502,12 @@ yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ){
     return existing_id;
   }
   yap_log("Type '%s' does not exist", name);
-  return yap_ctx_push_named_type(ctx, name, NULL, typ);
+  yap_type_id id = yap_ctx_push_type(ctx, typ);
+  yap_named_type named = {
+    .id = id,
+    .name = name,
+    .c_name = NULL,
+  };
+  hashmap_set(ctx->named_types, &named);
+  return id;
 }

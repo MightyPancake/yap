@@ -13,7 +13,8 @@ i32 fn some_func_using_funcs(
 	i32 num,
 	f32 f
 ){
-	d := 123
+	mut d := 123
+	d = 12
 	// f2 := f + 1
 	res := add(1, 2)
 	//res(1)
@@ -24,4 +25,5 @@ i32 fn some_func_using_funcs(
 	ret;
 	if a foo()
 	else bar()
+	//add := (i32 fn i32 a, i32 b) {}
 }

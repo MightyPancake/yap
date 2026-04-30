@@ -35,4 +35,7 @@ void yap_compiler_load_macro_eval_module(yap_compiler* compiler, const char* pat
 void yap_compiler_load_back_module(yap_compiler* compiler, const char* path, const char* name);
 void yap_compiler_load_front_module(yap_compiler* compiler, const char* path, const char* name);
 
+void yap_free_compiler(yap_compiler compiler);
+int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int error_code);
+
 #endif //YAP_COMPILER_H
