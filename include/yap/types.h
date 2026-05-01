@@ -99,7 +99,7 @@ kenobi_new_struct_free(yap_type,
     yap_blob blob;
     yap_error err;
   };
-  bool is_mut;
+  bool is_const;
 );
 
 #define yap_type_qualifier_string_len 16
@@ -118,6 +118,11 @@ kenobi_new_struct_free(yap_named_type,
 kenobi_new_struct_free(yap_var,
   char* name;
   yap_type_id type;
+);
+
+kenobi_new_struct_free(yap_var_declarator,
+  char* name;
+  bool is_const;
 );
 
 typedef struct yap_expr yap_expr;
@@ -174,8 +179,8 @@ kenobi_new_struct_free(yap_assignment,
   union {
     yap_error err;
     struct {
-      yap_expr* left; //yap_expr*
-      yap_expr* right; //yap_expr*
+      yap_expr* left;
+      yap_expr* right;
       char op; //'=', '+', '-' etc.
     };
   };
@@ -193,7 +198,10 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_var,
     yap_expr_bin,
     yap_expr_assignment,
-    yap_expr_func_call
+    yap_expr_func_call,
+    yap_expr_cast,
+    yap_expr_at_op,
+    yap_expr_paren,
   } kind;
   union {
     yap_error err;
@@ -202,6 +210,7 @@ kenobi_new_struct_free(yap_expr,
     yap_assignment assignment;
     yap_func_call func_call;
     char* var_name;
+    yap_expr* subexpr;
   };
   yap_type_id type;
   bool is_lvalue;
