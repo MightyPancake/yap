@@ -13,7 +13,7 @@ i32 fn some_func_using_funcs(
 	i32 num,
 	f32 f
 ){
-	mut d := 123
+	d := 123
 	d = 12
 	// f2 := f + 1
 	res := add(1, 2)

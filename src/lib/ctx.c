@@ -257,7 +257,7 @@ yap_type_id yap_ctx_push_new_primitive_type(yap_ctx* ctx, size_t bytes, bool is_
 
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name_p, char* c_name_p, yap_type typ){
   yap_type t = typ;
-  t.is_mut = true;
+  t.is_const = false;
   char* name = yap_ctx_strus_cpy(ctx, name_p);
   char* c_name = c_name_p ? yap_ctx_strus_cpy(ctx, c_name_p) : NULL;
   yap_type_id id = yap_ctx_push_type(ctx, t);
@@ -416,7 +416,7 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ){
 }
 
 char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings qs){
-  const char* const_str = (typ.is_mut ? "" : qs.const_str);
+  const char* const_str = (typ.is_const ? qs.const_str : "");
   char* res;
   switch(typ.kind){
     case yap_type_primitive:
@@ -510,4 +510,12 @@ yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ){
   };
   hashmap_set(ctx->named_types, &named);
   return id;
+}
+
+yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id){
+  yap_type ptr_type = (yap_type){
+    .kind=yap_type_ptr,
+    .pointer_type=id
+  };
+  return yap_ctx_insert_type_if_not_exists(ctx, ptr_type);
 }

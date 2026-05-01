@@ -40,6 +40,7 @@ char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ);
 char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ); //Auto qualifier strings
 char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings qs); //Custom qualifier strings
 yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ);
+yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id);
 
 //Errors
 void yap_ctx_push_error(yap_ctx* st, yap_error err);

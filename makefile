@@ -114,6 +114,7 @@ test:
 
 rerun: yap_ts yap_c
 	@make run test=$(test)
+	bat out.c
 
 run:
 	@[ -n "$(test)" ] || { echo "Usage: make run test=<name>.yap"; exit 1; }
