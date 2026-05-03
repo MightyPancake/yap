@@ -202,6 +202,8 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_cast,
     yap_expr_at_op,
     yap_expr_paren,
+    yap_expr_increment,
+    yap_expr_decrement,
   } kind;
   union {
     yap_error err;
