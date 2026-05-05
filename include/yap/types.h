@@ -12,6 +12,16 @@ typedef struct hashmap* map;
 #define base_type(PT) __typeof__(* ( (PT) 0 ))
 #define ptr_type(T) __typeof__(T)*
 
+// Forward declarations for recursive types
+typedef struct yap_expr yap_expr;
+typedef struct yap_statement yap_statement;
+typedef struct yap_source_code yap_source_code;
+
+// IDs
+typedef uint64_t yap_anon_id;
+typedef uint32_t yap_type_id;
+
+
 typedef struct yap_args{
   char* output_file;
   darr(char*) extra;
@@ -20,13 +30,14 @@ typedef struct yap_args{
 }yap_args;
 
 //Types
-typedef struct yap_source{
-  void* parent;
-  char* path;
-  size_t sz;
-  char* content;
-  void* ctx;
-}yap_source;
+kenobi_new_struct(yap_source,
+  void* parent; //Parent scope; NULL for global scope
+  char* path; //File path of the source, used for error reporting
+  char* content; //Pointer to content
+  size_t sz; //Size of the content
+  void* ctx; //Context pointer
+  yap_anon_id anon_id; //Counter for generating unique names for anonymous items
+);
 
 kenobi_new_struct_free(yap_code_pos,
   int line;
@@ -50,14 +61,14 @@ kenobi_new_struct_free(yap_error,
   char* msg;
 );
 
-typedef uint32_t yap_type_id;
-
 typedef enum yap_type_kind{
   yap_type_untyped, //Default type for literals and variables before type inference
   yap_type_primitive, //Primitive types like int, float, byte etc.
   yap_type_ptr, //Pointer to another type, subtype is the type it points to
   yap_type_func,
   yap_type_struct,
+  yap_type_union,
+  yap_type_enum,
   yap_type_blob,
   yap_type_error,
 }yap_type_kind;
@@ -71,10 +82,37 @@ typedef struct yap_prim_type{
   char* mangled_name;
 }yap_prim_type;
 
+kenobi_new_struct_free(yap_struct_field,
+  enum {
+    yap_struct_field_error,
+    yap_struct_field_valid
+  } kind;
+  char* name;
+  yap_type_id type;
+  yap_expr* default_value;
+);
+
 kenobi_new_struct_free(yap_struct_type,
   char* name;
   char* c_name;
-  darr(yap_type_id) fields; //pointers to yap_var
+  darr(yap_struct_field) fields; //pointers to yap_var
+);
+
+kenobi_new_struct_free(yap_union_type,
+  char* name;
+  char* c_name;
+  darr(yap_struct_field) variants;
+);
+
+kenobi_new_struct_free(yap_enum_variant,
+  char* name;
+  yap_expr* value;
+);
+
+kenobi_new_struct_free(yap_enum_type,
+  char* name;
+  char* c_name;
+  darr(yap_enum_variant) variants;
 );
 
 kenobi_new_struct_free(yap_fn_type,
@@ -96,6 +134,8 @@ kenobi_new_struct_free(yap_type,
     yap_type_id pointer_type;
     yap_fn_type func;
     yap_struct_type structure;
+    yap_union_type uni;
+    yap_enum_type enumeration;
     yap_blob blob;
     yap_error err;
   };
@@ -124,8 +164,6 @@ kenobi_new_struct_free(yap_var_declarator,
   char* name;
   bool is_const;
 );
-
-typedef struct yap_expr yap_expr;
 
 kenobi_new_struct_free(yap_literal,
   enum {
@@ -219,8 +257,6 @@ kenobi_new_struct_free(yap_expr,
   bool is_comptime;
   yap_code_range range;
 );
-
-typedef struct yap_statement yap_statement;
 
 kenobi_new_struct_free(yap_var_decl,
   enum {
@@ -331,16 +367,34 @@ kenobi_new_struct_free(yap_module,
   yap_scope* scope;
 );
 
+kenobi_new_struct_free(yap_named_type_decl,
+  char* name;
+  enum {
+    yap_named_type_decl_error,
+    yap_named_type_decl_valid
+  } kind;
+  enum {
+    yap_named_type_decl_alias, //TODO
+    yap_named_type_decl_struct,
+    yap_named_type_decl_enum,
+    yap_named_type_decl_union,
+  } type_kind;
+  yap_type_id type_id;
+);
+
 kenobi_new_struct_free(yap_decl,
   enum {
     yap_decl_error,
     yap_decl_null,
-    yap_decl_func
+    yap_decl_func,
+    yap_decl_named_type,
   } kind;
   union{
     yap_func_decl func_decl;
+    yap_named_type_decl named_type_decl;
     yap_error err;
   };
+  yap_code_range range;
 );
 
 kenobi_new_struct_free(yap_macro_val,
@@ -357,8 +411,6 @@ kenobi_new_struct_free(yap_macro_val,
     yap_statement stmt;
   };
 );
-
-typedef struct yap_source_code yap_source_code;
 
 typedef void (*yap_print_error_fn)(yap_error);
 
@@ -381,6 +433,7 @@ kenobi_new_struct_free(yap_ctx,
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types
   //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
+  yap_type_id internal_error_type_id; //Type ID representing an internal compiler error, used for error handling when the compiler encounters an unexpected state.
   yap_type_id void_type_id; //cached type_id for void
   yap_type_id int_type_id;  //cached type_id for i32
   yap_type_id bool_type_id; //cached type_id for bool

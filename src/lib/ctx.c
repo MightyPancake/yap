@@ -22,7 +22,7 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_create_new_module(ctx, "main");
     yap_ctx_switch_module(ctx, "main");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
-    yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
+    ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
     ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
     yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
@@ -395,7 +395,19 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
     case yap_type_struct:
       if (darr_len(left.structure.fields) != darr_len(right.structure.fields)) return false;
       for (size_t i = 0; i < darr_len(left.structure.fields); i++){
-        if (!yap_ctx_type_ids_eq(ctx, left.structure.fields[i], right.structure.fields[i])) return false;
+        if (!yap_ctx_type_ids_eq(ctx, left.structure.fields[i].type, right.structure.fields[i].type)) return false;
+      }
+      return true;
+    case yap_type_union:
+      if (darr_len(left.uni.variants) != darr_len(right.uni.variants)) return false;
+      for (size_t i = 0; i < darr_len(left.uni.variants); i++){
+        if (!yap_ctx_type_ids_eq(ctx, left.uni.variants[i].type, right.uni.variants[i].type)) return false;
+      }
+      return true;
+    case yap_type_enum:
+      if (darr_len(left.enumeration.variants) != darr_len(right.enumeration.variants)) return false;
+      for (size_t i = 0; i < darr_len(left.enumeration.variants); i++){
+        if (!strus_eq(left.enumeration.variants[i].name, right.enumeration.variants[i].name)) return false;
       }
       return true;
     case yap_type_blob:
@@ -469,7 +481,16 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
     case yap_type_struct:
       yap_log("Getting mangle string for struct type");
       //TODO: Change to correct pattern: NXStructNameE where X is the length of the struct name. For now we just use the struct name as the mangle string, which is simpler but can cause conflicts and doesn't allow for anonymous structs.
-      return strus_newf("%s%d%s", const_str, (int)strlen(typ.structure.name), typ.structure.name);
+      char* struct_name = typ.structure.name ? typ.structure.name : typ.structure.c_name;
+      return strus_newf("%s%d%s", const_str, (int)strlen(struct_name), struct_name);
+    case yap_type_union:
+      yap_log("Getting mangle string for union type");
+      char* union_name = typ.uni.name ? typ.uni.name : typ.uni.c_name;
+      return strus_newf("%sU%d%s", const_str, (int)strlen(union_name), union_name);
+    case yap_type_enum:
+      yap_log("Getting mangle string for enum type");
+      char* enum_name = typ.enumeration.name ? typ.enumeration.name : typ.enumeration.c_name;
+      return strus_newf("%sN%d%s", const_str, (int)strlen(enum_name), enum_name);
     case yap_type_untyped:
       yap_log("Getting mangle string for untyped type");
       return yap_ctx_type_to_mangle_string(ctx, yap_ctx_coerce_type(ctx, typ));
@@ -482,12 +503,6 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
 yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ){
   char* name = NULL;
   switch(typ.kind){
-    // case yap_type_primitive:
-    //   name = yap_ctx_strus_cpy(ctx, typ.primitive.mangled_name);
-    //   break;
-    // case yap_type_struct:
-    //   name = yap_ctx_strus_cpy(ctx, typ.structure.name);
-    //   break;
     default:
       char* temp_name = yap_ctx_type_to_mangle_string(ctx, typ);
       name = yap_ctx_strus_cpy(ctx, temp_name);
@@ -512,10 +527,21 @@ yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ){
   return id;
 }
 
+yap_type yap_empty_type(yap_type_kind kind){
+    return (yap_type){
+        .kind=kind,
+        .is_const=false
+    };
+}
+
 yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id){
   yap_type ptr_type = (yap_type){
     .kind=yap_type_ptr,
     .pointer_type=id
   };
   return yap_ctx_insert_type_if_not_exists(ctx, ptr_type);
+}
+
+char* yap_ctx_get_anon_name(yap_ctx* ctx, const char* t_name, yap_anon_id anon_id){
+  return yap_ctx_strus_newf(ctx, "__anon_%s_%lu", t_name, anon_id);
 }
