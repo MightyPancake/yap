@@ -17,8 +17,8 @@
 
 void yap_emit_error_rangef(yap_ctx* ctx, yap_source* src, yap_code_range range, const char* fmt, ...);
 
-#define yap_emit_error_at(CTX, SRC, WITH_RANGE, FMT, ...) \
-  yap_emit_error_rangef((CTX), (SRC), (WITH_RANGE).loc.range, (FMT) __VA_OPT__(,) __VA_ARGS__)
+#define yap_emit_error_at(CTX, LOC, WITH_RANGE, FMT, ...) \
+  yap_emit_error_rangef((CTX), (LOC).src, (WITH_RANGE).loc.range, (FMT) __VA_OPT__(,) __VA_ARGS__)
 
 yap_source_code yap_new_source_code();
 
