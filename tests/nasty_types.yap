@@ -1,5 +1,3 @@
-//Not yet covered!
-
 struct hello {
     byte@@ cheeky_double_pointer,
     u64 sz

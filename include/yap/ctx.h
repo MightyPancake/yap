@@ -13,7 +13,7 @@ yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
 
 //Module manipulation
 yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name);
-yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name);
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix);
 yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name);
 
 //Source manipulation

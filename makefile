@@ -83,6 +83,7 @@ test:
 		if valgrind \
 			--track-origins=yes \
 			--leak-check=full \
+			--error-exitcode=99 \
 			--suppressions=valgrind_suppressions.supp \
 			--log-file="$$vg_log" \
 			./yap "$$test_file" >"$$cmd_log" 2>&1; then \
@@ -101,7 +102,12 @@ test:
 		if [ "$(show_test_output)" = "true" ]; then \
 			cat "$$cmd_log"; \
 		fi; \
-		if [ "$(detailed)" = "true" ] && { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
+		if { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
+			echo $(CYAN)Output for $$test_file$(RESET); \
+			cat "$$cmd_log"; \
+			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
+			cat "$$vg_log"; \
+		elif [ "$(detailed)" = "true" ]; then \
 			echo $(CYAN)Output for $$test_file$(RESET); \
 			cat "$$cmd_log"; \
 			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
@@ -121,6 +127,7 @@ run:
 	valgrind \
 		--track-origins=yes \
 		--leak-check=full \
+		--error-exitcode=99 \
 		--suppressions=valgrind_suppressions.supp \
 		./yap tests/$(test).yap
 
