@@ -17,6 +17,7 @@ void yap_emit_error_rangef(yap_ctx* ctx, yap_source* src, yap_code_range range, 
 		.kind = yap_error_pos,
 		.src = src,
 		.range = range,
+		.loc = (yap_loc){.src = src, .range = range},
 		.msg = msg
 	});
 }

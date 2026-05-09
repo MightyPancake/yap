@@ -8,7 +8,6 @@ yap_ctx* yap_ctx_new(){
     yap_ctx* ctx = mem_one_cpy(((yap_ctx){
       .arena = quake_new(),
       .sources=darr_new(yap_source),
-      .source_codes=darr_new(yap_source_code),
       .scopes=darr_new(yap_scope*),
       .current_scopes=darr_new(yap_scope*),
       .errors=darr_new(yap_error),
@@ -19,7 +18,7 @@ yap_ctx* yap_ctx_new(){
     }));
     yap_ctx_push_new_scope(ctx); //Push global scope
     ctx->global_scope = yap_ctx_current_scope(ctx);
-    yap_ctx_create_new_module(ctx, "main");
+    yap_ctx_create_new_module(ctx, "main", ""); //The main module lacks prefix for mangling since it's the root module
     yap_ctx_switch_module(ctx, "main");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
     ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
@@ -47,7 +46,7 @@ yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name){
   return (yap_module*)hashmap_get(ctx->modules, &dummy);
 }
 
-yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name){
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
   if (!ctx || !name || !ctx->global_scope) return NULL;
   yap_module* module = yap_ctx_get_module(ctx, name);
   if (module){
@@ -65,7 +64,9 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name){
 
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
-    .scope = module_scope
+    .prefix = yap_ctx_strus_cpy(ctx, prefix),
+    .scope = module_scope,
+    .decls = darr_new(yap_decl)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);
@@ -186,11 +187,6 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* n
     }
   };
   
-}
-
-yap_source_code yap_source_code_new(){
-  yap_log("Creating new source code");
-  return (yap_source_code){};
 }
 
 void yap_ctx_push_source(yap_ctx* ctx, yap_source src){

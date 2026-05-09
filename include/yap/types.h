@@ -50,6 +50,11 @@ kenobi_new_struct_free(yap_code_range,
   yap_code_pos end;
 );
 
+kenobi_new_struct_free(yap_loc,
+  yap_source* src;
+  yap_code_range range;
+);
+
 kenobi_new_struct_free(yap_error,
   enum {
     yap_error_no_pos, //Errors without position (ie. no source)
@@ -58,6 +63,7 @@ kenobi_new_struct_free(yap_error,
   } kind;
   yap_source* src;
   yap_code_range range;
+  yap_loc loc;
   char* msg;
 );
 
@@ -255,6 +261,7 @@ kenobi_new_struct_free(yap_expr,
   yap_type_id type;
   bool is_lvalue;
   bool is_comptime;
+  yap_loc loc;
   yap_code_range range;
 );
 
@@ -331,6 +338,7 @@ kenobi_new_struct_free(yap_statement,
     yap_for for_stmt;
     yap_block block;
   };
+  yap_loc loc;
   yap_code_range range;
 );
 
@@ -362,11 +370,6 @@ kenobi_new_struct_free(yap_scope,
   bool is_loop; //Whether this scope is a loop scope, used for break/continue statements
 );
 
-kenobi_new_struct_free(yap_module,
-  char* name;
-  yap_scope* scope;
-);
-
 kenobi_new_struct_free(yap_named_type_decl,
   char* name;
   enum {
@@ -394,6 +397,7 @@ kenobi_new_struct_free(yap_decl,
     yap_named_type_decl named_type_decl;
     yap_error err;
   };
+  yap_loc loc;
   yap_code_range range;
 );
 
@@ -412,13 +416,19 @@ kenobi_new_struct_free(yap_macro_val,
   };
 );
 
+kenobi_new_struct_free(yap_module,
+  char* name;
+  char* prefix; //Prefix for name mangling, usually derived from the module name
+  yap_scope* scope; //Here live things declared in the module
+  darr(yap_decl) decls; //All declarations in the module, used for codegen
+);
+
 typedef void (*yap_print_error_fn)(yap_error);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
   quake arena; //Memory arena for all allocations in the compiler, freed at the end of compilation. Speeds up allocation and deallocation significantly.
   darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
-  darr(yap_source_code) source_codes; //darr of yap_source_code
   darr(yap_error) errors; //darr of yap_error
   //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope'
   darr(yap_scope*) scopes; //Array holding all scopes
@@ -448,9 +458,6 @@ kenobi_new_struct_free(yap_ctx,
 );
 yap_ctx* yap_ctx_new();
 
-typedef struct yap_source_code{
-  darr(yap_decl) declarations;
-}yap_source_code;
 void yap_source_code_free(yap_source_code src_code);
 
 //Hashmap functions for types
