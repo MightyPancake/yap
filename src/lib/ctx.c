@@ -299,6 +299,16 @@ bool yap_ctx_type_id_compatible(yap_ctx* ctx, yap_type_id id1, yap_type_id id2){
   return yap_ctx_type_compatible(ctx, *type1, *type2);
 }
 
+yap_type_id yap_ctx_find_common_type(yap_ctx* ctx, yap_type_id id1, yap_type_id id2){
+  if (!ctx) return 0;
+  yap_type* type1 = yap_ctx_get_type(ctx, id1);
+  yap_type* type2 = yap_ctx_get_type(ctx, id2);
+  if (!type1 || !type2) return 0;
+  if (yap_ctx_type_compatible(ctx, *type1, *type2)) return yap_ctx_coerce_type_id_to_id(ctx, id1);
+  if (yap_ctx_type_compatible(ctx, *type2, *type1)) return yap_ctx_coerce_type_id_to_id(ctx, id2);
+  return ctx->internal_error_type_id;
+}
+
 //Check if type1 can be used in a context that expects type2.
 //This should be treated one way only! Mainly used for possible coercions.
 bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
@@ -315,7 +325,7 @@ bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
   yap_type coerced_t1 = yap_ctx_coerce_type(ctx, t1);
   // All untyped primitives match
   // TODO: This is clearly not the case, so it needs a fix!
-  if(coerced_t1.kind == yap_type_primitive && t2.kind == yap_type_primitive) return true;
+  if (coerced_t1.kind == yap_type_primitive && t2.kind == yap_type_primitive) return true;
   return false;
 }
 
