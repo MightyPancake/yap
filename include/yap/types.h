@@ -235,6 +235,12 @@ kenobi_new_struct_free(yap_func_call,
   darr(yap_expr) params;
 );
 
+kenobi_new_struct_free(yap_ternary_expr,
+  yap_expr* condition;
+  yap_expr* then_expr;
+  yap_expr* else_expr;
+);
+
 kenobi_new_struct_free(yap_expr,
   enum {
     yap_expr_error,
@@ -248,6 +254,7 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_paren,
     yap_expr_increment,
     yap_expr_decrement,
+    yap_expr_ternary,
   } kind;
   union {
     yap_error err;
@@ -255,6 +262,7 @@ kenobi_new_struct_free(yap_expr,
     yap_bin_expr bin_expr;
     yap_assignment assignment;
     yap_func_call func_call;
+    yap_ternary_expr ternary;
     char* var_name;
     yap_expr* subexpr;
   };
