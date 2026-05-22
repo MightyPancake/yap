@@ -286,6 +286,7 @@ kenobi_new_struct_free(yap_var_decl,
     yap_var_decl_valid
   } kind;
   yap_var var;
+  bool has_init;
   yap_expr init;
 );
 

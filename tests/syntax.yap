@@ -1,6 +1,6 @@
 // module#()
 
-i32 fn main(i32 argc, byte@@ argv){
+fn main(i32:argc, byte@@:argv) -> i32 {
 	1+2-3*4/5%6
 	a := 6
 	b := 7
