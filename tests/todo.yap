@@ -1,13 +1,5 @@
-struct my_struct {
-    i32 a,
-    byte b
-}
-
-none fn main(i32 argc, byte@@ argv){ 
-    a := 1
-    b := a + 2
-    if (a) a = 3
-    t := a ? 1 else b
-
-    //t := []
+fn main(){
+    a := 0
+    i32:c := 0
+    i32:b //This should generally be avoided
 }

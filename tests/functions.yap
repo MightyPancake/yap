@@ -1,18 +1,18 @@
-i32 fn add(i32 a, i32 b){
+fn add(i32:a, i32:b) -> i32 {
 	1+2
 }
 
-none fn foo(){}
-none fn bar(){}
+fn foo() {}
+fn bar() {}
 
-i32 fn some_func_using_funcs(
-	(fn) a,
-	(fn) a2,
-	(i32 fn) b,
-	(i32@ fn i32@) c,
-	i32 num,
-	f32 f
-){
+fn some_func_using_funcs(
+	(fn):a,
+	(fn):a2,
+	(i32 fn):b,
+	(i32@ fn i32@):c,
+	i32:num,
+	f32:f
+) -> i32 {
 	d := 123
 	d = 12
 	// f2 := f + 1

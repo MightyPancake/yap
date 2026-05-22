@@ -1,4 +1,4 @@
-i32 fn test(){
+fn test() -> i32 {
 	//1. macro_statement
 	//TODO
 
