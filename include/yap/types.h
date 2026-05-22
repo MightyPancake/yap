@@ -241,6 +241,11 @@ kenobi_new_struct_free(yap_ternary_expr,
   yap_expr* else_expr;
 );
 
+kenobi_new_struct_free(yap_member_access,
+  yap_expr* object;
+  char* member;
+);
+
 kenobi_new_struct_free(yap_expr,
   enum {
     yap_expr_error,
@@ -255,6 +260,7 @@ kenobi_new_struct_free(yap_expr,
     yap_expr_increment,
     yap_expr_decrement,
     yap_expr_ternary,
+    yap_expr_member_access,
   } kind;
   union {
     yap_error err;
@@ -265,6 +271,7 @@ kenobi_new_struct_free(yap_expr,
     yap_ternary_expr ternary;
     char* var_name;
     yap_expr* subexpr;
+    yap_member_access member_access;
   };
   yap_type_id type;
   bool is_lvalue;
@@ -453,13 +460,13 @@ kenobi_new_struct_free(yap_ctx,
   //Cached type ids for primitives and untyped literals for fast access during parsing and type inference
   yap_type_id internal_error_type_id; //Type ID representing an internal compiler error, used for error handling when the compiler encounters an unexpected state.
   yap_type_id void_type_id; //cached type_id for void
+  yap_type_id blob_type_id; //cached type_id for blobs
   yap_type_id int_type_id;  //cached type_id for i32
   yap_type_id bool_type_id; //cached type_id for bool
   yap_type_id float_type_id; //cached type_id for f32
   yap_type_id untyped_int_type_id;  //cached type_id for untyped integer literals
   yap_type_id untyped_float_type_id; //cached type_id for untyped float literals
   yap_type_id untyped_byte_type_id;  //cached type_id for untyped byte literals
-
   //External
   yap_print_error_fn print_error;
 

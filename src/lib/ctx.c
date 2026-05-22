@@ -548,6 +548,40 @@ yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id){
   return yap_ctx_insert_type_if_not_exists(ctx, ptr_type);
 }
 
+yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, const char* member_name){
+  yap_type* object_type = yap_ctx_get_type(ctx, object_type_id);
+  if (!object_type) return 0;
+  switch(object_type->kind){
+    case yap_type_struct:
+      for_darr(i, field, object_type->structure.fields){
+        if (strus_eq(field.name, member_name)){
+          return field.type;
+        }
+      }
+      break;
+    case yap_type_union:
+      for_darr(i, variant, object_type->uni.variants){
+        if (strus_eq(variant.name, member_name)){
+          return variant.type;
+        }
+      }
+      return ctx->internal_error_type_id;
+    default:
+      return ctx->internal_error_type_id;
+  }
+  return ctx->internal_error_type_id;
+}
+
+yap_type_id yap_push_blob_type(yap_ctx* ctx, size_t field_count){
+  yap_type blob_type = (yap_type){
+    .kind = yap_type_blob,
+    .blob = {
+      .field_count = field_count
+    }
+  };
+  return yap_ctx_insert_type_if_not_exists(ctx, blob_type);
+}
+
 char* yap_ctx_get_anon_name(yap_ctx* ctx, const char* t_name, yap_anon_id anon_id){
   return yap_ctx_strus_newf(ctx, "__anon_%s_%lu", t_name, anon_id);
 }
