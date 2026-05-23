@@ -12,20 +12,23 @@ typedef struct hashmap* map;
 #define base_type(PT) __typeof__(* ( (PT) 0 ))
 #define ptr_type(T) __typeof__(T)*
 
+//Yap forward declarations
+#include "forward_decl.h"
+
+//Source
+#include "source.h"
+
+//Code location
+#include "loc.h"
+
+//Errors
+#include "error.h"
+
 //Node kinds
 #include "node_kinds.h"
 
 //Nodes (parsing output types)
 #include "nodes.h"
-
-// Forward declarations for recursive types
-typedef struct yap_expr yap_expr;
-typedef struct yap_statement yap_statement;
-typedef struct yap_source_code yap_source_code;
-
-// IDs
-typedef uint64_t yap_anon_id;
-typedef uint32_t yap_type_id;
 
 
 typedef struct yap_args{
@@ -36,42 +39,6 @@ typedef struct yap_args{
 }yap_args;
 
 //Types
-kenobi_new_struct(yap_source,
-  void* parent; //Parent scope; NULL for global scope
-  char* path; //File path of the source, used for error reporting
-  char* content; //Pointer to content
-  size_t sz; //Size of the content
-  void* ctx; //Context pointer
-  yap_anon_id anon_id; //Counter for generating unique names for anonymous items
-);
-
-kenobi_new_struct_free(yap_code_pos,
-  int line;
-  int column;
-  int offset; //bytes
-);
-
-kenobi_new_struct_free(yap_code_range,
-  yap_code_pos start;
-  yap_code_pos end;
-);
-
-kenobi_new_struct_free(yap_loc,
-  yap_source* src;
-  yap_code_range range;
-);
-
-kenobi_new_struct_free(yap_error,
-  enum {
-    yap_error_no_pos, //Errors without position (ie. no source)
-    yap_error_pos, //Errors with position
-    yap_error_calc_offset //Not used yet
-  } kind;
-  yap_source* src;
-  yap_code_range range;
-  yap_loc loc;
-  char* msg;
-);
 
 typedef struct yap_prim_type{
   size_t bytes;
