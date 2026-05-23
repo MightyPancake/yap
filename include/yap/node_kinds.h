@@ -1,7 +1,7 @@
 #ifndef YAP_NODE_KINDS_H
 #define YAP_NODE_KINDS_H
 
-//Node kinds
+//Declarations
 typedef enum {
     yap_decl_error,
     yap_decl_func,
@@ -45,5 +45,25 @@ typedef enum {
     yap_literal_numerical,
     yap_literal_blob,
 } yap_literal_kind;
+
+typedef enum {
+    yap_named_type_decl_error,
+    yap_named_type_decl_alias,
+    yap_named_type_decl_struct,
+    yap_named_type_decl_enum,
+    yap_named_type_decl_union,
+} yap_named_type_decl_kind;
+
+typedef enum {
+  yap_type_untyped, //Default type for literals and variables before type inference
+  yap_type_primitive, //Primitive types like int, float, byte etc.
+  yap_type_ptr, //Pointer to another type, subtype is the type it points to
+  yap_type_func,
+  yap_type_struct,
+  yap_type_union,
+  yap_type_enum,
+  yap_type_blob,
+  yap_type_error,
+}yap_type_kind;
 
 #endif //YAP_NODE_KINDS_H
