@@ -22,9 +22,9 @@ jobs:
       - name: Initialize submodules
         run: |
           git submodule sync --recursive
-          git submodule update --init --recursive include/utils modules/yap-ts
-          git submodule update --init --recursive --remote modules/yap-c
-          git -C modules/yap-c submodule update --init --recursive tinycc
+          git submodule update --init --recursive include/utils components/yap-ts
+          git submodule update --init --recursive --remote components/yap-c
+          git -C components/yap-c submodule update --init --recursive tinycc
 
       - name: Ensure Valgrind headers are available
         run: test -f /usr/include/valgrind/memcheck.h

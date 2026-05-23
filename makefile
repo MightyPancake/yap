@@ -157,7 +157,7 @@ utils:
 	@cd ./include/utils && make clean && make
 
 yap_ts: all
-	@cd ./modules/yap-ts && make debug=$(debug)
+	@cd ./components/yap-ts && make debug=$(debug)
 
 yap_c: all
-	@cd ./modules/yap-c && make debug=$(debug)
+	@cd ./components/yap-c && make debug=$(debug)

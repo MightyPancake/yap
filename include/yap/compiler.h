@@ -24,7 +24,7 @@ typedef struct yap_compiler{
   void* front_handle;
   void* back_handle;
   void* macro_eval_handle;
-  //Modules
+  //Components
   yap_compiler_front_module front_module;
   yap_compiler_macro_evaluation_module macro_eval_module;
   yap_compiler_back_module back_module;

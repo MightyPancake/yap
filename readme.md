@@ -14,8 +14,8 @@ This means each yap module will have it's own arguments and if you want a differ
 
 ## What's inside this directory then?
 
-The yap program is used to launch yap related modules.
-Each module should have at least 1 category. For example, yap ships with the `front/ts` module which is used to parse yap code using tree sitter.
+The yap program is used to launch yap related components.
+Each component should have at least 1 category. For example, yap ships with the `front/ts` component which is used to parse yap code using tree sitter.
 
-Every directory here represents a module category.
+Every directory here represents a component category.
 The `shared` directory is used to ...
