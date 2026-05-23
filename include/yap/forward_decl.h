@@ -3,7 +3,6 @@
 
 typedef struct yap_expr yap_expr;
 typedef struct yap_statement yap_statement;
-typedef struct yap_source_code yap_source_code;
 
 // IDs
 typedef uint64_t yap_anon_id;
