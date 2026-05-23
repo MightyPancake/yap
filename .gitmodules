@@ -4,9 +4,11 @@
 [submodule "components/yap-c"]
 	path = components/yap-c
 	url = https://github.com/MightyPancake/yap-c
+	branch = main
 [submodule "components/yap-ts"]
 	path = components/yap-ts
 	url = https://github.com/MightyPancake/yap-ts
+	branch = main
 [submodule "include/utils"]
 	path = include/utils
 	url = https://github.com/MightyPancake/utils
