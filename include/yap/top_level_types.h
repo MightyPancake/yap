@@ -1,0 +1,6 @@
+#ifndef YAP_TOP_LEVEL_TYPES_H
+#define YAP_TOP_LEVEL_TYPES_H
+
+
+
+#endif //YAP_TOP_LEVEL_TYPES_H

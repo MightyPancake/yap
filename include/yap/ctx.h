@@ -2,6 +2,7 @@
 #define YAP_CONTEXT_H
 
 //Basic
+yap_ctx* yap_ctx_new();
 void yap_ctx_push_var(yap_ctx* ctx, yap_var var);
 
 //Scope manipulation
