@@ -136,6 +136,7 @@ submodules:
 	@make utils
 	@make yap_ts debug=$(debug)
 	@make yap_c debug=$(debug)
+	@make yap_semantic debug=$(debug)
 
 path:
 	@echo $(PURPLE)Adding yap to PATH using pathman$(RESET)
@@ -161,3 +162,6 @@ yap_ts: all
 
 yap_c: all
 	@cd ./components/yap-c && make debug=$(debug)
+
+yap_semantic: all
+	@cd ./components/yap-semantic && make debug=$(debug)
