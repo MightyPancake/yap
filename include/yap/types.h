@@ -73,18 +73,6 @@ kenobi_new_struct_free(yap_error,
   char* msg;
 );
 
-typedef enum yap_type_kind{
-  yap_type_untyped, //Default type for literals and variables before type inference
-  yap_type_primitive, //Primitive types like int, float, byte etc.
-  yap_type_ptr, //Pointer to another type, subtype is the type it points to
-  yap_type_func,
-  yap_type_struct,
-  yap_type_union,
-  yap_type_enum,
-  yap_type_blob,
-  yap_type_error,
-}yap_type_kind;
-
 typedef struct yap_prim_type{
   size_t bytes;
   bool is_signed;
@@ -363,16 +351,7 @@ kenobi_new_struct_free(yap_scope,
 
 kenobi_new_struct_free(yap_named_type_decl,
   char* name;
-  enum {
-    yap_named_type_decl_error,
-    yap_named_type_decl_valid
-  } kind;
-  enum {
-    yap_named_type_decl_alias, //TODO
-    yap_named_type_decl_struct,
-    yap_named_type_decl_enum,
-    yap_named_type_decl_union,
-  } type_kind;
+  yap_named_type_decl_kind kind;
   yap_type_id type_id;
 );
 
