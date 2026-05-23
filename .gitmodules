@@ -1,8 +1,8 @@
-[submodule "modules/yap-c"]
-	path = modules/yap-c
+[submodule "components/yap-c"]
+	path = components/yap-c
 	url = https://github.com/MightyPancake/yap-c
-[submodule "modules/yap-ts"]
-	path = modules/yap-ts
+[submodule "components/yap-ts"]
+	path = components/yap-ts
 	url = https://github.com/MightyPancake/yap-ts
 [submodule "include/utils"]
 	path = include/utils

@@ -58,13 +58,13 @@ int compile(yap_args args){
     };
 
     //Load compiler modules
-    // yap_compiler_load_macro_eval_module(&compiler, "./modules/yap-macro/libyap_macro.so", "yap-c");
-    yap_compiler_load_front_module(&compiler, "./modules/yap-ts/libyap_ts.so", "yap-ts");
-    yap_compiler_load_back_module(&compiler, "./modules/yap-c/libyap_c.so", "yap-c");
+    // yap_compiler_load_macro_eval_module(&compiler, "./components/yap-macro/libyap_macro.so", "yap-c");
+    yap_compiler_load_front_module(&compiler, "./components/yap-ts/libyap_ts.so", "yap-ts");
+    yap_compiler_load_back_module(&compiler, "./components/yap-c/libyap_c.so", "yap-c");
 
 
-    // void* front_handle = yap_get_handle("./modules/yap-ts/libyap_ts.so");
-    // void* back_handle = yap_get_handle("./modules/yap-c/libyap_c.so");
+    // void* front_handle = yap_get_handle("./components/yap-ts/libyap_ts.so");
+    // void* back_handle = yap_get_handle("./components/yap-c/libyap_c.so");
     // yap_log("libyap_ts.so loaded at %p\n", front_handle);
     // void* sym = dlsym(front_handle, "yap_parse");
     // yap_log("yap_parse symbol at %p\n", sym);
@@ -160,7 +160,7 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
         args->command = "cflags";
         break;
     case 'm':
-        args->command = "modules_dir";
+        args->command = "components_dir";
         break;
     case 'i':
         args->command = "install";
@@ -183,10 +183,10 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
 
 static struct argp_option options[] = {
     //{"long_name", 'short_name', "value_name | NULL for no value", flags, "doc string", group},
-    {"cflags", 'c', NULL, 0, "Output cflags for modules.", 0},
-    {"modules", 'm', NULL, 0, "Output modules path.", 1},
+    {"cflags", 'c', NULL, 0, "Output cflags for components.", 0},
+    {"components", 'm', NULL, 0, "Output components path.", 1},
     {"output", 'o', "OUTPUT_FILE", 0, "The path to the result file.", 1},
-    {"install", 'i', NULL, 0, "Install modules (list module directories to be installed)", 2},
+    {"install", 'i', NULL, 0, "Install components (list component directories to be installed)", 2},
     {0}
 };
 
@@ -234,9 +234,9 @@ int main(int argc, char** argv) {
         yhd = yap_get_yap_home_path();
         printf("-I%s/include/ -L%s/lib/\n", yhd, yhd);
         free(yhd);
-    }strus_case(args.command, "modules_dir"){
+    }strus_case(args.command, "components_dir"){
         yhd = yap_get_yap_home_path();
-        printf("%s/modules/\n", yhd);
+        printf("%s/components/\n", yhd);
         free(yhd);
     }strus_case(args.command, "install"){
         printf("Installing...\n");
