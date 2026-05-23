@@ -12,6 +12,12 @@ typedef struct hashmap* map;
 #define base_type(PT) __typeof__(* ( (PT) 0 ))
 #define ptr_type(T) __typeof__(T)*
 
+//Node kinds
+#include "node_kinds.h"
+
+//Nodes (parsing output types)
+#include "nodes.h"
+
 // Forward declarations for recursive types
 typedef struct yap_expr yap_expr;
 typedef struct yap_statement yap_statement;
@@ -172,11 +178,7 @@ kenobi_new_struct_free(yap_var_declarator,
 );
 
 kenobi_new_struct_free(yap_literal,
-  enum {
-    yap_literal_error,
-    yap_literal_numerical,
-    yap_literal_blob,
-  } kind;
+  yap_literal_kind kind;
   union {
     yap_blob blob;
     char* text;
@@ -247,21 +249,7 @@ kenobi_new_struct_free(yap_member_access,
 );
 
 kenobi_new_struct_free(yap_expr,
-  enum {
-    yap_expr_error,
-    yap_expr_literal,
-    yap_expr_var,
-    yap_expr_bin,
-    yap_expr_assignment,
-    yap_expr_func_call,
-    yap_expr_cast,
-    yap_expr_at_op,
-    yap_expr_paren,
-    yap_expr_increment,
-    yap_expr_decrement,
-    yap_expr_ternary,
-    yap_expr_member_access,
-  } kind;
+  yap_expr_kind kind;
   union {
     yap_error err;
     yap_literal literal;
@@ -329,20 +317,7 @@ kenobi_new_struct_free(yap_block,
 );
 
 kenobi_new_struct_free(yap_statement,
-  enum {
-    yap_statement_error,
-    yap_statement_empty,
-    yap_statement_expr,
-    yap_statement_var_decl,
-    yap_statement_return,
-    yap_statement_if,
-    yap_statement_if_else,
-    yap_statement_while,
-    yap_statement_for,
-    yap_statement_break,
-    yap_statement_continue,
-    yap_statement_block
-  } kind;
+  yap_statement_kind kind;
   union {
     yap_error err;
     yap_expr expr;
@@ -402,12 +377,7 @@ kenobi_new_struct_free(yap_named_type_decl,
 );
 
 kenobi_new_struct_free(yap_decl,
-  enum {
-    yap_decl_error,
-    yap_decl_null,
-    yap_decl_func,
-    yap_decl_named_type,
-  } kind;
+  yap_decl_kind kind;
   union{
     yap_func_decl func_decl;
     yap_named_type_decl named_type_decl;

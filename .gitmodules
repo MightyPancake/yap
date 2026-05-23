@@ -1,3 +1,6 @@
+[submodule "components/yap-semantic"]
+	path = components/yap-semantic
+	url = https://github.com/mightypancake/yap-semantic.git
 [submodule "components/yap-c"]
 	path = components/yap-c
 	url = https://github.com/MightyPancake/yap-c
