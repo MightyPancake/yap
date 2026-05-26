@@ -7,6 +7,7 @@ kenobi_new_struct(yap_source,
   char* content; //Pointer to content
   size_t sz; //Size of the content
   void* ctx; //Context pointer
+  yap_module_node* ast; //Parsed AST for this source file
   yap_anon_id anon_id; //Counter for generating unique names for anonymous items
 );
 
