@@ -1,14 +1,11 @@
 #ifndef YAP_NODES_H
 #define YAP_NODES_H
 
-#include "types.h"
-
 //Forward declarations
 typedef struct yap_decl_node yap_decl_node;
 typedef struct yap_expr_node yap_expr_node;
 typedef struct yap_statement_node yap_statement_node;
 typedef struct yap_var_decl_node yap_var_decl_node;
-typedef struct yap_func_arg_node yap_func_arg_node;
 typedef struct yap_named_type_decl_node yap_named_type_decl_node;
 typedef struct yap_block_node yap_block_node;
 
@@ -42,7 +39,7 @@ kenobi_new_struct_free(yap_bin_op_node,
 );
 
 kenobi_new_struct_free(yap_assignment_node,
-    char op;
+    char op[3];
     yap_expr_node* left;
     yap_expr_node* right;
     yap_loc loc;
@@ -72,13 +69,11 @@ kenobi_new_struct_free(yap_paren_node,
 );
 
 kenobi_new_struct_free(yap_increment_node,
-    bool is_prefix;
     yap_expr_node* expr;
     yap_loc loc;
 );
 
 kenobi_new_struct_free(yap_decrement_node,
-    bool is_prefix;
     yap_expr_node* expr;
     yap_loc loc;
 );
@@ -177,17 +172,42 @@ kenobi_new_struct_free(yap_statement_node,
 
 //Declarations
 kenobi_new_struct_free(yap_func_arg_node,
+    union {
+        struct {
+            yap_identifier_node name;
+            bool has_type;
+            yap_identifier_node type_name;
+            bool has_default;
+            yap_expr_node default_value;
+        };
+        yap_error err;
+    };
+    bool is_valid;
+    yap_loc loc;
+);
+
+kenobi_new_struct_free(yap_enum_variant_node,
     yap_identifier_node name;
-    bool has_type;
-    yap_identifier_node type_name;
-    bool has_default;
-    yap_expr_node default_value;
+    bool has_value;
+    yap_expr_node value;
     yap_loc loc;
 );
 
 kenobi_new_struct_free(yap_named_type_decl_node,
     yap_named_type_decl_kind kind;
     yap_identifier_node name;
+    union {
+        struct {
+            darr(yap_var_decl_node) fields; // struct fields
+        } as_struct;
+        struct {
+            darr(yap_enum_variant_node) variants; // enum variants
+        } as_enum;
+        struct {
+            darr(yap_var_decl_node) variants; // union variants (as var_decl-like nodes)
+        } as_union;
+        yap_error err;
+    };
     yap_loc loc;
 );
 

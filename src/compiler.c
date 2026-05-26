@@ -76,21 +76,22 @@ int compile(yap_args args){
     //Function to print errors
     
     //Do the compilation procces here
-    //Step 1: Create a context
+    //Step 0: Create a context and attach callbacks
+    //Fresh context
     yap_ctx* ctx = yap_ctx_new();
+    //Printing errors callback
     ctx->print_error = compiler.front_module.print_error;
-
-    //Step 2: Attach macro eval function to context so it can be used during parsing
-
     
-    //Step 3: Parse the source files and fill the context with the results
+    //Step 1: Initial parse
     ctx = compiler.front_module.parse(ctx, args);
     if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
-    //at this point, ctx should be filled with sources, source codes, errors and types. We can check for errors and print them if needed.
 
-    //Step 4: Codegen and emition
+    //Step 2: Semantic analysis of macros
+    //Step 3: Execute macros
+    //Step 4: Semantic analysis of expanded code
+    //Step 5: Codegen and emition
     //TODO: Implement codegen and emition lol
-    compiler.back_module.codegen(ctx);
+    //compiler.back_module.codegen(ctx);
 
     //Handle possible errors
     for_darr(i, err, ctx->errors){
@@ -98,7 +99,7 @@ int compile(yap_args args){
     }
     int result = darr_len(ctx->errors) ? 1 : 0;
     
-    yap_log("Parsing finished with %ld error(s)", darr_len(ctx->errors));
+    yap_log("Compilation finished with %ld error(s)", darr_len(ctx->errors));
 
     //Cleanup
     yap_log("Freeing state and closing handles...");
