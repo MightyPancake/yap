@@ -22,6 +22,7 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
+              wasmtime
               gcc
               gnumake
               valgrind
