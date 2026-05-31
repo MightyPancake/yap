@@ -33,8 +33,6 @@ typedef struct hashmap* map;
 //Semantic tree types
 #include "semtree.h"
 
-#include "top_level_types.h"
-
 typedef struct yap_args{
   char* output_file;
   darr(char*) extra;
