@@ -145,7 +145,7 @@ kenobi_new_struct_free(yap_assignment,
     struct {
       yap_expr* left;
       yap_expr* right;
-      char op[3]; //'=', '+=', '>>' etc. stored as fixed-width bytes
+      char op[3]; //'=', '+=', '-=' etc. stored as fixed-width bytes
     };
   };
 );

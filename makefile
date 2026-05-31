@@ -69,6 +69,7 @@ test:
 	@make debug=true
 	@make yap_ts debug=true
 	@make yap_c debug=true
+	@make yap_semantic debug=true
 	@yap -c
 	@yap -m
 	@echo $(CYAN)Running tests$(RESET)
@@ -118,7 +119,7 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-rerun: yap_ts yap_c
+rerun: yap_ts yap_c yap_semantic
 	@make run test=$(test)
 	bat out.c
 

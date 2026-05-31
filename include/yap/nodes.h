@@ -20,11 +20,18 @@ kenobi_new_struct_free(yap_block_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_string_literal_node,
+    char prefix[4]; // e.g. L for wide string literals, currently unused
+    char* value;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_literal_node,
     yap_literal_kind kind;
     union {
         yap_error err;
         char* numerical;
+        yap_string_literal_node string;
         char* blob;
     };
     yap_loc loc;
@@ -220,11 +227,30 @@ kenobi_new_struct_free(yap_func_decl_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_file_import_node,
+    yap_string_literal_node path;
+    yap_loc loc;
+);
+
+kenobi_new_struct_free(yap_module_import_node,
+    yap_identifier_node module_name;
+    yap_loc loc;
+);
+
+kenobi_new_struct_free(yap_module_decl_node,
+    yap_identifier_node name;
+    yap_loc loc;
+    //TODO: Add module info
+);
+
 kenobi_new_struct_free(yap_decl_node,
     yap_decl_kind kind;
     union {
         yap_func_decl_node func_decl;
         yap_named_type_decl_node named_type_decl;
+        yap_module_import_node module_import;
+        yap_file_import_node file_import;
+        yap_module_decl_node module_decl;
         yap_error err;
     };
     yap_loc loc;
