@@ -7,7 +7,8 @@ yap_ctx* yap_ctx_new(){
     yap_log("Creating new ctx");
     yap_ctx* ctx = mem_one_cpy(((yap_ctx){
       .arena = quake_new(),
-      .sources=darr_new(yap_source),
+      .sources=darr_new(yap_source*),
+      .source_stack=darr_new(yap_source*),
       .scopes=darr_new(yap_scope*),
       .current_scopes=darr_new(yap_scope*),
       .errors=darr_new(yap_error),
@@ -16,12 +17,13 @@ yap_ctx* yap_ctx_new(){
       .types=darr_new(yap_type), //yap_type_id points to types in this array
       .named_types=new_named_type_map(),
     }));
+    yap_ctx_init_root_source(ctx);
     yap_ctx_push_new_scope(ctx); //Push global scope
     ctx->global_scope = yap_ctx_current_scope(ctx);
-    yap_ctx_create_new_module(ctx, "main", ""); //The main module lacks prefix for mangling since it's the root module
-    yap_ctx_switch_module(ctx, "main");
+    yap_ctx_create_new_module(ctx, "global", ""); //The global module lacks prefix for mangling since it's the root module
+    yap_ctx_switch_module(ctx, "global");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
-    ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
+    ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "internal_error_t", "ie_t", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
     ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
     yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
@@ -38,6 +40,26 @@ yap_ctx* yap_ctx_new(){
     ctx->untyped_byte_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->bool_type_id));
     
     return ctx;
+}
+
+void yap_ctx_init_root_source(yap_ctx* ctx){
+    if (!ctx) return;
+    yap_source root = (yap_source){
+      .kind=yap_source_root,
+      .identity="<root>",
+      .parent=NULL,
+      .label="<root>",
+      .origin="<root>",
+      .content=NULL,
+      .sz=0,
+      .source_node=NULL,
+      .ctx=ctx,
+      .anon_id=0,
+      .imports=darr_new(yap_import)
+    };
+    ctx->root_source = yap_ctx_one_cpy(ctx, root);
+    darr_push(ctx->sources, ctx->root_source);
+    yap_ctx_push_source(ctx, ctx->root_source);
 }
 
 yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name){
@@ -66,7 +88,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     .name = yap_ctx_strus_cpy(ctx, name),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .scope = module_scope,
-    .decls = darr_new(yap_decl)
+    .decls = darr_new(yap_decl_node),
+    .imports = darr_new(char*)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);
@@ -93,6 +116,11 @@ yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
   darr_push(ctx->current_scopes, module->scope);
   ctx->current_module = module;
   return module;
+}
+
+void yap_ctx_push_decl_node(yap_ctx* ctx, yap_decl_node decl){
+  if (!ctx || !ctx->current_module) return;
+  darr_push(ctx->current_module->decls, decl);
 }
 
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes){
@@ -189,12 +217,55 @@ yap_type yap_primitive_type(size_t bytes, bool is_signed, bool is_float, char* n
   
 }
 
-void yap_ctx_push_source(yap_ctx* ctx, yap_source src){
-  darr_push(ctx->sources, src);
+yap_source* yap_add_source(yap_ctx* ctx, yap_source src){
+  yap_source* src_p = yap_ctx_one_cpy(ctx, src);
+  darr_push(ctx->sources, src_p);
+  return src_p;
 }
 
-yap_source yap_ctx_pop_source(yap_ctx* ctx){
-  return darr_pop(ctx->sources);
+void yap_ctx_push_source(yap_ctx* ctx, yap_source* src){
+  darr_push(ctx->source_stack, src);
+}
+
+yap_source* yap_ctx_pop_source(yap_ctx* ctx){
+  return darr_pop(ctx->source_stack);
+}
+
+yap_source* yap_ctx_top_source(yap_ctx* ctx){
+  if (darr_len(ctx->source_stack) == 0) return NULL;
+  return darr_last(ctx->source_stack);
+}
+
+yap_source* yap_ctx_new_file_source(yap_ctx* ctx, yap_source* parent, char* label, char* absolute_path){
+    char *content = NULL;
+    char* identity = yap_ctx_strus_newf(ctx, "%s@%s", label, parent ? parent->origin : "<unknown>");
+    char* abs_path = yap_ctx_strus_cpy(ctx, absolute_path);
+    size_t size = yap_read_file_to_string(absolute_path, &content);
+    if (size == 0 || !content){
+      yap_log("Failed to read file '%s'", absolute_path);
+      return NULL;
+    }
+    if (parent){
+      yap_import parent_import = {
+        .kind = yap_import_file,
+        .identity = identity
+      };
+      darr_push(parent->imports, parent_import);
+    }
+    yap_source* src = yap_add_source(ctx, (yap_source){
+      .kind = yap_source_file,
+      .identity = identity,
+      .parent = parent,
+      .label = label,
+      .origin=abs_path,
+      .content=content,
+      .sz=size,
+      .ctx=ctx,
+      .source_node=NULL,
+      .anon_id=0,
+      .imports=darr_new(yap_import)
+    });
+    return src;
 }
 
 void yap_ctx_push_error(yap_ctx* ctx, yap_error err){
@@ -584,4 +655,52 @@ yap_type_id yap_push_blob_type(yap_ctx* ctx, size_t field_count){
 
 char* yap_ctx_get_anon_name(yap_ctx* ctx, const char* t_name, yap_anon_id anon_id){
   return yap_ctx_strus_newf(ctx, "__anon_%s_%lu", t_name, anon_id);
+}
+
+static yap_source* find_source_by_identity(yap_ctx* ctx, const char* identity){
+    if (!ctx || !identity) return NULL;
+    for (size_t i = 0; i < darr_len(ctx->sources); i++){
+        yap_source* s = ctx->sources[i];
+        if (s && s->identity && strcmp(s->identity, identity) == 0)
+            return s;
+    }
+    return NULL;
+}
+
+static void print_source_subtree(yap_ctx* ctx, yap_source* src, const char* prefix){
+    size_t n = darr_len(src->imports);
+    for (size_t i = 0; i < n; i++){
+        bool is_last = (i == n - 1);
+        yap_import imp = src->imports[i];
+
+        printf("%s%s── ", prefix, is_last ? "└" : "├");
+
+        if (imp.kind == yap_import_module){
+            printf("[module] %s\n", imp.module_name ? imp.module_name : "(unknown)");
+        } else {
+            // file import
+            yap_source* child = find_source_by_identity(ctx, imp.identity);
+            if (child){
+                const char* identity_label = child->identity ? child->identity : "(unknown)";
+                const char* path_label = child->label ? child->label : "(unknown)";
+                printf("%s [%s]\n", path_label, identity_label);
+                char child_prefix[4096];
+                snprintf(child_prefix, sizeof(child_prefix),
+                         "%s%s   ", prefix, is_last ? " " : "│");
+                print_source_subtree(ctx, child, child_prefix);
+            }else{
+              printf("error\n");
+            }
+        }
+    }
+}
+
+void yap_ctx_print_source_tree(yap_ctx* ctx){
+    if (!ctx || !ctx->root_source) return;
+
+    printf("\nSource tree:\n");
+    printf("%s\n", ctx->root_source->identity
+                      ? ctx->root_source->identity
+                      : "(root)");
+    print_source_subtree(ctx, ctx->root_source, "");
 }

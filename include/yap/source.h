@@ -1,17 +1,64 @@
 #ifndef YAP_SOURCE_H
 #define YAP_SOURCE_H
 
+typedef enum {
+  yap_import_module,
+  yap_import_file,
+} yap_import_kind;
+
+kenobi_new_struct_free(yap_import,
+  yap_import_kind kind;
+  union {
+    char* module_name; //For module imports
+    char* identity; //Identity for source
+  };
+);
+
+typedef enum {
+  yap_source_root,
+  yap_source_file,
+  yap_source_macro,
+  yap_source_stdin,
+  yap_source_string,
+} yap_source_kind;
+
 kenobi_new_struct(yap_source,
-  void* parent; //Parent scope; NULL for global scope
-  char* path; //File path of the source, used for error reporting
-  char* content; //Pointer to content
-  size_t sz; //Size of the content
-  void* ctx; //Context pointer
-  yap_module_node* ast; //Parsed AST for this source file
-  yap_anon_id anon_id; //Counter for generating unique names for anonymous items
+  //Kind of source
+  yap_source_kind kind;
+
+  //Unique identifier for the source.
+  //files: name + '@' + parent absolute path
+  char* identity;
+
+  //Parent scope; NULL for global scope
+  yap_source* parent; 
+
+  //Local label; it makes sense in context of the parent source
+  char* label;
+
+  //Absolute path for files; NULL for non-file sources
+  char* origin;
+
+  //Pointer to content
+  char* content;
+
+  //Size of the content
+  size_t sz;
+
+  //Context pointer
+  void* ctx;
+
+  //Result of parsing this source
+  yap_source_node* source_node;
+
+  //Counter for generating unique names for anonymous items
+  yap_anon_id anon_id;
+
+  //List of imports in this source
+  darr(yap_import) imports;
 );
 
 void yap_free_source(yap_source src);
 char* yap_pos_string(yap_source s, unsigned int line, unsigned int col);
-
+size_t yap_read_file_to_string(const char *path, char **out);
 #endif //YAP_SOURCE_H

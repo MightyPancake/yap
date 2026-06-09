@@ -44,7 +44,8 @@ kenobi_new_struct_free(yap_module,
   char* name;
   char* prefix; //Prefix for name mangling, usually derived from the module name
   yap_scope* scope; //Here live things declared in the module
-  darr(yap_decl) decls; //All declarations in the module, used for codegen
+  darr(char*) imports; //List of module names imported by this module.
+  darr(yap_decl_node) decls; //All declarations in the module, used for codegen.
 );
 
 typedef void (*yap_print_error_fn)(yap_error);
@@ -52,7 +53,11 @@ typedef void (*yap_print_error_fn)(yap_error);
 kenobi_new_struct_free(yap_ctx,
   //Arena
   quake arena; //Memory arena for all allocations in the compiler, freed at the end of compilation. Speeds up allocation and deallocation significantly.
-  darr(yap_source) sources; //darr of yap_source, represents the source files being compiled.
+  
+  //Sources
+  yap_source* root_source;
+  darr(yap_source*) sources; //darr of yap_source, represents the source files being compiled.
+  darr(yap_source*) source_stack;
   darr(yap_error) errors; //darr of yap_error
   //TODO: Do we make scopes dynamic and lose them after parsing or introduce a new 'scope'
   darr(yap_scope*) scopes; //Array holding all scopes
@@ -79,6 +84,8 @@ kenobi_new_struct_free(yap_ctx,
   //External
   yap_print_error_fn print_error;
 
+  //Parser ctx
+  void* parser_ctx;
 );
 
 //Hashmap functions for types

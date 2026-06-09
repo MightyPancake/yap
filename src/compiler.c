@@ -87,6 +87,9 @@ int compile(yap_args args){
     ctx = compiler.frontend.parse(ctx, args);
     yap_quit_if_errors(ctx, compiler);
 
+    //Print source tree for debugging
+    yap_ctx_print_source_tree(ctx);
+
     //Phase 2: Macro registration
     ctx = compiler.macro.register_macros(ctx);
     yap_quit_if_errors(ctx, compiler);
