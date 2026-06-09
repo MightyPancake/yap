@@ -3,7 +3,12 @@
 
 //Basic
 yap_ctx* yap_ctx_new();
+void yap_ctx_init_root_source(yap_ctx* ctx);
 void yap_ctx_push_var(yap_ctx* ctx, yap_var var);
+
+//Sources
+yap_source* yap_add_source(yap_ctx* ctx, yap_source src);
+
 
 //Scope manipulation
 yap_scope* yap_ctx_current_scope(yap_ctx* ctx);
@@ -16,10 +21,13 @@ yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
 yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name);
 yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix);
 yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name);
+void yap_ctx_push_decl_node(yap_ctx* ctx, yap_decl_node decl);
 
 //Source manipulation
-void yap_ctx_push_source(yap_ctx* st, yap_source src);
-yap_source yap_ctx_pop_source(yap_ctx* st);
+void yap_ctx_push_source(yap_ctx* st, yap_source* src);
+yap_source* yap_ctx_pop_source(yap_ctx* st);
+yap_source* yap_ctx_top_source(yap_ctx* st);
+yap_source* yap_ctx_new_file_source(yap_ctx* ctx, yap_source* parent, char* path, char* identity);
 
 //Types
 yap_type_id yap_ctx_push_type(yap_ctx* ctx, yap_type typ);
@@ -51,6 +59,9 @@ char* yap_ctx_get_anon_name(yap_ctx* ctx, const char* t_name, yap_anon_id anon_i
 //Errors
 void yap_ctx_push_error(yap_ctx* st, yap_error err);
 bool yap_ctx_dispatch_errors(yap_ctx* ctx);
+
+//Debug
+void yap_ctx_print_source_tree(yap_ctx* ctx);
 
 //Memory
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes);

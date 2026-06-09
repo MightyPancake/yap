@@ -68,3 +68,37 @@ char* yap_get_self_path() {
 #else
   #error 'yap_get_self_path' not yet implemented for platforms other than linux!
 #endif
+
+#ifdef __linux__
+char* yap_cwd() {
+    char *buf = malloc(YAP_PATH_MAX);
+    if (!buf) {
+        perror("malloc failed");
+        return NULL;
+    }
+
+    if (getcwd(buf, YAP_PATH_MAX) != NULL) {
+        return buf;
+    } else {
+        perror("Error getting current working directory");
+        free(buf);
+        return NULL;
+    }
+}
+#else
+  #error 'yap_cwd' not yet implemented for platforms other than linux!
+#endif
+
+#ifdef __linux__
+void yap_cd(const char* path) {
+    if (path == NULL) {
+        fprintf(stderr, "ERROR: yap_cd: path is NULL\n");
+        return;
+    }
+    if (chdir(path) != 0) {
+        perror("Error changing directory");
+    }
+}
+#else
+  #error 'yap_cd' not yet implemented for platforms other than linux!
+#endif
