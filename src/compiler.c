@@ -48,19 +48,20 @@ void yap_close_handle(void* handle){
     DL_SYM_RES; \
     })
 
+#define yap_quit_if_errors(ctx, compiler) if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1)
+
 int compile(yap_args args){
     yap_log("Source files count: %ld", darr_len(args.extra));
     //Chose front
-    yap_compiler compiler = (yap_compiler){
-        .back_handle = NULL,
-        .macro_eval_handle = NULL,
-        .front_handle = NULL,
-    };
+    yap_compiler compiler = (yap_compiler){0};
 
     //Load compiler modules
     // yap_compiler_load_macro_eval_module(&compiler, "./components/yap-macro/libyap_macro.so", "yap-c");
-    yap_compiler_load_front_module(&compiler, "./components/yap-ts/libyap_ts.so", "yap-ts");
-    yap_compiler_load_back_module(&compiler, "./components/yap-c/libyap_c.so", "yap-c");
+    yap_compiler_load_frontend_component(&compiler, "./components/yap-ts/libyap_ts.so", "yap-ts");
+    yap_compiler_load_backend_component(&compiler, "./components/yap-c/libyap_c.so", "yap-c");
+    yap_compiler_load_macro_component(&compiler, "./components/yap-c/libyap_c.so", "yap-c");
+    // Load internal semantic module (provides yap_build)
+    yap_compiler_load_internal_component(&compiler, "./components/yap-semantic/libyap_semantic.so", "yap-semantic");
 
 
     // void* front_handle = yap_get_handle("./components/yap-ts/libyap_ts.so");
@@ -76,29 +77,37 @@ int compile(yap_args args){
     //Function to print errors
     
     //Do the compilation procces here
-    //Step 1: Create a context
+    //Step 0: Create a context and attach callbacks
+    //Fresh context
     yap_ctx* ctx = yap_ctx_new();
-    ctx->print_error = compiler.front_module.print_error;
-
-    //Step 2: Attach macro eval function to context so it can be used during parsing
-
+    //Printing errors callback
+    ctx->print_error = compiler.frontend.print_error;
     
-    //Step 3: Parse the source files and fill the context with the results
-    ctx = compiler.front_module.parse(ctx, args);
-    if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
-    //at this point, ctx should be filled with sources, source codes, errors and types. We can check for errors and print them if needed.
+    //Phase 1: Parsing
+    ctx = compiler.frontend.parse(ctx, args);
+    yap_quit_if_errors(ctx, compiler);
 
-    //Step 4: Codegen and emition
+    //Print source tree for debugging
+    yap_ctx_print_source_tree(ctx);
+
+    //Phase 2: Macro registration
+    ctx = compiler.macro.register_macros(ctx);
+    yap_quit_if_errors(ctx, compiler);
+
+    // //TODO: Change this, right now we check semantic run because macros are not there yet
+    // ctx = compiler.internal_module.build(ctx, args);
+    // if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
+
+    //Step 2: Semantic analysis of macros
+    //Step 3: Execute macros
+    //Step 4: Semantic analysis of expanded code
+    //Step 5: Codegen and emition
     //TODO: Implement codegen and emition lol
-    compiler.back_module.codegen(ctx);
+    //compiler.back_module.codegen(ctx);
 
     //Handle possible errors
-    for_darr(i, err, ctx->errors){
-        compiler.front_module.print_error(err);
-    }
-    int result = darr_len(ctx->errors) ? 1 : 0;
-    
-    yap_log("Parsing finished with %ld error(s)", darr_len(ctx->errors));
+    yap_quit_if_errors(ctx, compiler);
+    int result = 0;
 
     //Cleanup
     yap_log("Freeing state and closing handles...");
@@ -126,27 +135,32 @@ int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int erro
 }
 
 void yap_free_compiler(yap_compiler compiler){
-    yap_close_handle(compiler.front_handle);
-    yap_close_handle(compiler.back_handle);
-    yap_close_handle(compiler.macro_eval_handle);
+    yap_close_handle(compiler.frontend_handle);
+    yap_close_handle(compiler.backend_handle);
+    yap_close_handle(compiler.internal_handle);
+    yap_close_handle(compiler.macro_handle);
 }
 
-void yap_compiler_load_macro_eval_module(yap_compiler* compiler, const char* path, const char* name){
-    (void)name;
-    compiler->macro_eval_handle = yap_get_handle(path);
-    compiler->macro_eval_module.macro_eval = load_func_dynamically(compiler->macro_eval_handle, name, yap_macro_eval_fn, "yap_eval_macro");
+void yap_compiler_load_macro_component(yap_compiler* compiler, const char* path, const char* name){
+    compiler->macro_handle = yap_get_handle(path);
+    compiler->macro.register_macros = load_func_dynamically(compiler->macro_handle, name, yap_register_macros_fn, "yap_register_macros");
+    // compiler->macro.macro_eval = load_func_dynamically(compiler->macro_handle, name, yap_macro_eval_fn, "yap_eval_macro");
 }
 
-void yap_compiler_load_front_module(yap_compiler* compiler, const char* path, const char* name){
-    compiler->front_handle = yap_get_handle(path);
-    compiler->front_module.parse = load_func_dynamically(compiler->front_handle, name, yap_parse_fn, "yap_parse");
-    compiler->front_module.print_error = load_func_dynamically(compiler->front_handle, name, yap_print_error_fn, "yap_print_error");
+void yap_compiler_load_frontend_component(yap_compiler* compiler, const char* path, const char* name){
+    compiler->frontend_handle = yap_get_handle(path);
+    compiler->frontend.parse = load_func_dynamically(compiler->frontend_handle, name, yap_parse_fn, "yap_parse");
+    compiler->frontend.print_error = load_func_dynamically(compiler->frontend_handle, name, yap_print_error_fn, "yap_print_error");
 }
 
-void yap_compiler_load_back_module(yap_compiler* compiler, const char* path, const char* name){
-    (void)name;
-    compiler->back_handle = yap_get_handle(path);
-    compiler->back_module.codegen = load_func_dynamically(compiler->back_handle, name, yap_codegen_fn, "yap_gen_code");
+void yap_compiler_load_internal_component(yap_compiler* compiler, const char* path, const char* name){
+    compiler->internal_handle = yap_get_handle(path);
+    compiler->internal.build = load_func_dynamically(compiler->internal_handle, name, yap_build_fn, "yap_build");
+}
+
+void yap_compiler_load_backend_component(yap_compiler* compiler, const char* path, const char* name){
+    compiler->backend_handle = yap_get_handle(path);
+    compiler->backend.codegen = load_func_dynamically(compiler->backend_handle, name, yap_codegen_fn, "yap_gen_code");
 }
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {

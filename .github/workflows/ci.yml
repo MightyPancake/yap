@@ -1,9 +1,7 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
+  push: {}
   pull_request:
 
 jobs:
@@ -24,6 +22,7 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive include/utils components/yap-ts
           git submodule update --init --recursive --remote components/yap-c
+          git submodule update --init --recursive --remote components/yap-semantic
           git -C components/yap-c submodule update --init --recursive tinycc
 
       - name: Ensure Valgrind headers are available

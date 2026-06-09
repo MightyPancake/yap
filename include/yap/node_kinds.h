@@ -6,6 +6,9 @@ typedef enum {
     yap_decl_error,
     yap_decl_func,
     yap_decl_named_type,
+    yap_decl_module_import,
+    yap_decl_file_import,
+    yap_decl_module_decl,
     //TODO: Add missing declaration kinds
 } yap_decl_kind;
 
@@ -44,6 +47,8 @@ typedef enum {
     yap_literal_error,
     yap_literal_numerical,
     yap_literal_blob,
+    yap_literal_string,
+    yap_literal_bool,
 } yap_literal_kind;
 
 typedef enum {
