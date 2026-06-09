@@ -13,6 +13,8 @@
 #include "ctx.h"
 #include "args.h"
 #include "code.h"
+#include "path.h"
+#include "imports.h"
 
 #include "os_dependant.h"
 

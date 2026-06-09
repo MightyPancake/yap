@@ -256,7 +256,7 @@ kenobi_new_struct_free(yap_decl_node,
     yap_loc loc;
 );
 
-kenobi_new_struct_free(yap_module_node,
+kenobi_new_struct_free(yap_source_node,
     darr(yap_decl_node) declarations;
     yap_loc loc;
 );

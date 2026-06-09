@@ -1,0 +1,18 @@
+module {
+
+}
+
+// Import a file
+import "file.yap"
+
+import math
+
+module my_module {
+    asdasdsadsa
+}
+
+//This will be a part of my_module
+fn my_func(){}
+
+//This will not be available outside of my_module
+fn _private_func(){}

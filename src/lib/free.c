@@ -28,12 +28,6 @@ void yap_block_free(yap_block block){
 }
 void yap_ctx_free(yap_ctx ctx){
   yap_log("Freeing state");
-  // Free sources
-  for_darr(i, src, ctx.sources){
-    yap_free_source(src);
-  }
-  darr_free(ctx.sources);
-
   // Free modules
   void* item;
   size_t iter = 0;
@@ -71,16 +65,25 @@ void yap_ctx_free(yap_ctx ctx){
   // }
   hashmap_free(ctx.named_types);
 
+  // Free sources
+  yap_log("Freeing %d sources", darr_len(ctx.sources));
+  for_darr(i, src, ctx.sources){
+    yap_free_source(*src);
+  }
+  darr_free(ctx.sources);
+  darr_free(ctx.source_stack);
+
   //Free arena
   quake_free(&ctx.arena);
 }
 
 void yap_module_free(yap_module module){
   yap_log("Freeing module '%s'", module.name);
-  for_darr(i, decl, module.decls){
-    yap_decl_free(decl);
-  }
+  // for_darr(i, decl, module.decls){
+  //   yap_decl_node_free(decl);
+  // }
   darr_free(module.decls);
+  darr_free(module.imports);
   // free(module.name);
   // free(module.prefix);
 }
@@ -177,4 +180,15 @@ void yap_var_free(yap_var var){
   (void)var;
   // yap_log("Freeing variable '%s'", var.name);
   // free(var.name);
+}
+
+void yap_free_source(yap_source s){
+  darr_free(s.imports);
+  switch (s.kind){
+    case yap_source_root:
+      return;
+    default:
+      free(s.content);
+      break;
+  }
 }
