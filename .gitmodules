@@ -1,15 +1,15 @@
 [submodule "components/yap-semantic"]
 	path = components/yap-semantic
 	url = https://github.com/mightypancake/yap-semantic.git
-	branch = phase-separation
+	branch = main
 [submodule "components/yap-c"]
 	path = components/yap-c
 	url = https://github.com/MightyPancake/yap-c
-	branch = phase-separation
+	branch = main
 [submodule "components/yap-ts"]
 	path = components/yap-ts
 	url = https://github.com/MightyPancake/yap-ts
-	branch = phase-separation
+	branch = main
 [submodule "include/utils"]
 	path = include/utils
 	url = https://github.com/MightyPancake/utils
