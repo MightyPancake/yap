@@ -81,15 +81,11 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     return NULL;
   }
 
-  yap_scope* module_scope = yap_ctx_new_scope(ctx, ctx->global_scope);
-  if (!module_scope) return NULL;
-
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
-    .scope = module_scope,
     .decls = darr_new(yap_decl_node),
-    .imports = darr_new(char*)
+    .module_ctx = NULL
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);
@@ -107,13 +103,6 @@ yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
     });
     return NULL;
   }
-
-  while (darr_len(ctx->current_scopes) > 0){
-    darr_pop(ctx->current_scopes);
-  }
-
-  darr_push(ctx->current_scopes, ctx->global_scope);
-  darr_push(ctx->current_scopes, module->scope);
   ctx->current_module = module;
   return module;
 }

@@ -94,6 +94,14 @@ int compile(yap_args args){
     ctx = compiler.macro.register_macros(ctx);
     yap_quit_if_errors(ctx, compiler);
 
+    //Phase X: Semantic analysis and macro expansion
+
+    //Phase Y: Building result tree
+    ctx = compiler.internal.build(ctx, args);
+
+    //Phase Z: Codegen and emission
+    ctx = compiler.backend.codegen(ctx);
+
     // //TODO: Change this, right now we check semantic run because macros are not there yet
     // ctx = compiler.internal_module.build(ctx, args);
     // if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
