@@ -43,9 +43,8 @@ typedef struct yap_args{
 kenobi_new_struct_free(yap_module,
   char* name;
   char* prefix; //Prefix for name mangling, usually derived from the module name
-  yap_scope* scope; //Here live things declared in the module
-  darr(char*) imports; //List of module names imported by this module.
-  darr(yap_decl_node) decls; //All declarations in the module, used for codegen.
+  darr(yap_decl_node) decls; //Declarations in this module
+  void* module_ctx; //This is specific to compiler back end
 );
 
 typedef void (*yap_print_error_fn)(yap_error);

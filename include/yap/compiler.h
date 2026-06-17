@@ -10,7 +10,7 @@ typedef void (*yap_print_error_fn)(yap_error);
 typedef yap_ctx* (*yap_register_macros_fn)(yap_ctx* ctx);
 typedef yap_macro_val (*yap_macro_eval_fn)(yap_ctx* ctx, yap_macro_val* args, uint32_t arg_count);
 
-typedef void (*yap_codegen_fn)(yap_ctx* ctx);
+typedef yap_ctx* (*yap_codegen_fn)(yap_ctx* ctx);
 typedef yap_ctx* (*yap_build_fn)(yap_ctx*, yap_args);
 
 typedef struct yap_compiler_front_component{
