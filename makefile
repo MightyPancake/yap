@@ -119,7 +119,11 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-rerun: yap_ts yap_c yap_semantic
+rerun:
+	@make debug=true
+	@make yap_ts debug=true
+	@make yap_c debug=true
+	@make yap_semantic debug=true
 	@make run test=$(test)
 	bat out.c
 

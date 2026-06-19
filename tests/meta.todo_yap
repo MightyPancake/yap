@@ -1,0 +1,8 @@
+//Test meta stuff
+
+yExpr add(yExpr a, yExpr b){
+    i32 a;
+    res := ast{
+        a + b
+    }
+}
