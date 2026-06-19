@@ -114,6 +114,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_decrement_node decrement;
         yap_ternary_node ternary;
         yap_member_access_node member_access;
+        yap_block_node block;
     };
     yap_loc loc;
 );

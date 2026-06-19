@@ -5,7 +5,7 @@ struct hello {
 
 enum my_enum {
     ea,
-    ab := 2,
+    ab = 2,
     ec
 }
 
@@ -19,8 +19,8 @@ struct giga_struct {
         i32 integer,
         f32 floating,
         struct {
-            f32 x := 6,
-            f32 y := 7
+            f32 x = 6,
+            f32 y = 7
         } anon_struct_field
     } anon_u,
     struct {

@@ -5,5 +5,5 @@ import "imports/foo_bar.yap"
 import math
 
 fn main(){
-    foo()
+    foo();
 }

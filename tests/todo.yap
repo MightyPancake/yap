@@ -1,5 +1,9 @@
 module hello {}
 
 fn main(){
-    ret 0
+    i32 a = ({
+        i32 res = 1;
+        res;
+    });
+    ret 0;
 }
