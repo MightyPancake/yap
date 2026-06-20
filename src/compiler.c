@@ -51,6 +51,7 @@ void yap_close_handle(void* handle){
 #define yap_quit_if_errors(ctx, compiler) if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1)
 
 int compile(yap_args args){
+    yap_log("YAP_HAS_VALGRIND: %d", YAP_HAS_VALGRIND);
     yap_log("Source files count: %ld", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){0};
@@ -123,14 +124,10 @@ int compile(yap_args args){
     yap_log("Freeing what remains of the context...\n\n");
     yap_ctx_free(*ctx);
     free(ctx);
-    
-    //This will force resolving debug symbols before closing the handle!
-    //Very important for valgrind to work correctly! :^)
-    //tldr; multiple hours wasted learning this
+    yap_free_args(args);
     #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
-    // end of stuff here
     yap_free_compiler(compiler);
     return result;
 }
@@ -256,14 +253,16 @@ int main(int argc, char** argv) {
         yhd = yap_get_yap_home_path();
         printf("-I%s/include/ -L%s/lib/\n", yhd, yhd);
         free(yhd);
+        yap_free_args(args);
     }strus_case(args.command, "components_dir"){
         yhd = yap_get_yap_home_path();
         printf("%s/components/\n", yhd);
         free(yhd);
+        yap_free_args(args);
     }strus_case(args.command, "install"){
         printf("Installing...\n");
+        yap_free_args(args);
     }
-    yap_free_args(args);
     return result;
 }
 
