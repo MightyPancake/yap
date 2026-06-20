@@ -65,6 +65,9 @@ void yap_ctx_free(yap_ctx ctx){
   // }
   hashmap_free(ctx.named_types);
 
+  // Free semantic declarations
+  darr_free(ctx.semantic_decls);
+
   // Free sources
   yap_log("Freeing %d sources", darr_len(ctx.sources));
   for_darr(i, src, ctx.sources){
@@ -83,7 +86,6 @@ void yap_module_free(yap_module module){
   //   yap_decl_node_free(decl);
   // }
   darr_free(module.decls);
-  darr_free(module.semantic_decls);
   // darr_free(module.imports);
   // free(module.name);
   // free(module.prefix);

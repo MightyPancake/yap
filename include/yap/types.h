@@ -44,7 +44,6 @@ kenobi_new_struct_free(yap_module,
   char* name;
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
-  darr(yap_decl) semantic_decls; //Semantic (built) declarations in this module
   void* module_ctx; //This is specific to compiler back end
 );
 
@@ -67,6 +66,9 @@ kenobi_new_struct_free(yap_ctx,
   //Modules
   map modules; //map of named modules
   yap_module* current_module;
+
+  //Semantic declarations (global, not per-module)
+  darr(yap_decl) semantic_decls;
 
   //Types
   darr(yap_type) types; //yap_type_id points to types in this array

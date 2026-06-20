@@ -14,6 +14,7 @@ yap_ctx* yap_ctx_new(){
       .errors=darr_new(yap_error),
       .modules=new_module_map(),
       .current_module=NULL,
+      .semantic_decls=darr_new(yap_decl),
       .types=darr_new(yap_type), //yap_type_id points to types in this array
       .named_types=new_named_type_map(),
     }));
