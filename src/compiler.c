@@ -231,7 +231,7 @@ int main(int argc, char** argv) {
     //Parse args
     yap_args args = (yap_args){
       .output_file = "a",
-            .extra = darr_new(char*),
+      .extra = darr_new(char*),
       .command = "compile"
     };
 

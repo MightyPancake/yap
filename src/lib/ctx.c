@@ -646,7 +646,7 @@ char* yap_ctx_get_anon_name(yap_ctx* ctx, const char* t_name, yap_anon_id anon_i
   return yap_ctx_strus_newf(ctx, "__anon_%s_%lu", t_name, anon_id);
 }
 
-static yap_source* find_source_by_identity(yap_ctx* ctx, const char* identity){
+yap_source* find_source_by_identity(yap_ctx* ctx, const char* identity){
     if (!ctx || !identity) return NULL;
     for (size_t i = 0; i < darr_len(ctx->sources); i++){
         yap_source* s = ctx->sources[i];

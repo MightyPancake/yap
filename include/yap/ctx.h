@@ -28,6 +28,7 @@ void yap_ctx_push_source(yap_ctx* st, yap_source* src);
 yap_source* yap_ctx_pop_source(yap_ctx* st);
 yap_source* yap_ctx_top_source(yap_ctx* st);
 yap_source* yap_ctx_new_file_source(yap_ctx* ctx, yap_source* parent, char* path, char* identity);
+yap_source* find_source_by_identity(yap_ctx* ctx, const char* identity);
 
 //Types
 yap_type_id yap_ctx_push_type(yap_ctx* ctx, yap_type typ);
