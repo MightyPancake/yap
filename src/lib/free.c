@@ -83,6 +83,7 @@ void yap_module_free(yap_module module){
   //   yap_decl_node_free(decl);
   // }
   darr_free(module.decls);
+  darr_free(module.semantic_decls);
   // darr_free(module.imports);
   // free(module.name);
   // free(module.prefix);
