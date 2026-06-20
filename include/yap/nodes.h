@@ -8,6 +8,7 @@ typedef struct yap_statement_node yap_statement_node;
 typedef struct yap_var_decl_node yap_var_decl_node;
 typedef struct yap_named_type_decl_node yap_named_type_decl_node;
 typedef struct yap_block_node yap_block_node;
+typedef struct yap_type_node yap_type_node;
 
 //Misc
 kenobi_new_struct_free(yap_identifier_node,
@@ -59,7 +60,7 @@ kenobi_new_struct_free(yap_func_call_node,
 );
 
 kenobi_new_struct_free(yap_cast_node,
-    yap_identifier_node type_name;
+    yap_type_node* type_node;
     yap_expr_node* expr;
     yap_loc loc;
 );
@@ -123,7 +124,7 @@ kenobi_new_struct_free(yap_expr_node,
 kenobi_new_struct_free(yap_var_decl_node,
     yap_identifier_node name;
     bool has_type;
-    yap_identifier_node type_name;
+    yap_type_node* type_node;  // NULL if no type (inferred)
     bool has_init;
     yap_expr_node init;
     yap_loc loc;
@@ -184,7 +185,7 @@ kenobi_new_struct_free(yap_func_arg_node,
         struct {
             yap_identifier_node name;
             bool has_type;
-            yap_identifier_node type_name;
+            yap_type_node* type_node;
             bool has_default;
             yap_expr_node default_value;
         };
@@ -223,7 +224,7 @@ kenobi_new_struct_free(yap_func_decl_node,
     yap_identifier_node name;
     darr(yap_func_arg_node) args;
     bool has_return_type;
-    yap_identifier_node return_type;
+    yap_type_node* return_type_node;
     yap_block_node body;
     yap_loc loc;
 );
@@ -259,6 +260,43 @@ kenobi_new_struct_free(yap_decl_node,
 
 kenobi_new_struct_free(yap_source_node,
     darr(yap_decl_node) declarations;
+    yap_loc loc;
+);
+
+typedef enum {
+    yap_type_node_error,
+    yap_type_node_identifier,
+    yap_type_node_pointer,
+    yap_type_node_const,
+    yap_type_node_paren,
+    yap_type_node_function,
+    yap_type_node_anon_struct,
+    yap_type_node_anon_enum,
+    yap_type_node_anon_union,
+} yap_type_node_kind;
+
+kenobi_new_struct_free(yap_type_node,
+    yap_type_node_kind kind;
+    union {
+        yap_error             err;
+        yap_identifier_node   identifier;
+        yap_type_node*        pointer_subtype;  // for pointer_type:  subtype @
+        yap_type_node*        const_subtype;    // for const_type:    subtype const
+        yap_type_node*        paren_subtype;    // for paren_type:    (subtype)
+        struct {
+            yap_type_node*    return_type;      // optional, NULL for void
+            darr(yap_type_node) params;         // func_type_params
+        } func_type;
+        struct {
+            darr(yap_var_decl_node) fields;     // anon struct fields
+        } anon_struct;
+        struct {
+            darr(yap_enum_variant_node) variants; // anon enum variants
+        } anon_enum;
+        struct {
+            darr(yap_var_decl_node) variants;   // anon union variants
+        } anon_union;
+    };
     yap_loc loc;
 );
 
