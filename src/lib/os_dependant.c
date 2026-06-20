@@ -102,3 +102,17 @@ void yap_cd(const char* path) {
 #else
   #error 'yap_cd' not yet implemented for platforms other than linux!
 #endif
+
+#ifdef __linux__
+char* yap_make_temp_dir(void) {
+    char template[] = "/tmp/yap_build_XXXXXX";
+    char* dir = mkdtemp(template);
+    if (!dir) {
+        perror("Failed to create temp directory");
+        return NULL;
+    }
+    return strdup(dir);
+}
+#else
+  #error 'yap_make_temp_dir' not yet implemented for platforms other than linux!
+#endif
