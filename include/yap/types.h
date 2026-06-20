@@ -43,7 +43,8 @@ typedef struct yap_args{
 kenobi_new_struct_free(yap_module,
   char* name;
   char* prefix; //Prefix for name mangling, usually derived from the module name
-  darr(yap_decl_node) decls; //Declarations in this module
+  darr(yap_decl_node) decls; //Parse-level declarations in this module
+  darr(yap_decl) semantic_decls; //Semantic (built) declarations in this module
   void* module_ctx; //This is specific to compiler back end
 );
 

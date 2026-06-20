@@ -38,6 +38,19 @@
    fun:dlopen@@GLIBC_2.34
 }
 
+# Leaks inside dlopen'd third-party shared libs (TinyCC, tree-sitter).
+# The ??? frames are from .so files loaded by compile().
+# We accept that a direct malloc leak inside compile() would also match —
+# but yap uses arena allocation (yap_ctx_malloc), never raw malloc.
+{
+   dlopen_tcc_ts_leak
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:compile
+   fun:main
+}
+
 {
    yap_args_extra_possible
    Memcheck:Leak
