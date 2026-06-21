@@ -20,7 +20,7 @@ kenobi_new_struct_free(yap_import,
 typedef enum {
   yap_source_root,
   yap_source_file,
-  yap_source_macro,
+  yap_source_incremental,
   yap_source_stdin,
   yap_source_string,
 } yap_source_kind;

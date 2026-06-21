@@ -1,5 +1,5 @@
 i32 fn test() {
-	//1. macro_statement
+	//1. incremental_statement
 	//TODO
 
 	//2. var_decl

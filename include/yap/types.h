@@ -48,6 +48,7 @@ kenobi_new_struct_free(yap_module,
 );
 
 typedef void (*yap_print_error_fn)(yap_error);
+typedef void (*yap_gen_decl_fn)(yap_ctx* ctx, yap_decl decl);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -85,9 +86,13 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id untyped_byte_type_id;  //cached type_id for untyped byte literals
   //External
   yap_print_error_fn print_error;
+  yap_gen_decl_fn gen_decl;
 
   //Parser ctx
   void* parser_ctx;
+
+  //Backend build state (e.g. TCCState for yap-c)
+  void* build_state;
 );
 
 //Hashmap functions for types
