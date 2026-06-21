@@ -45,6 +45,7 @@ bool yap_ctx_type_ids_eq(yap_ctx* ctx, yap_type_id left_id, yap_type_id right_id
 bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right);
 bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2);
 bool yap_ctx_type_id_compatible(yap_ctx* ctx, yap_type_id id1, yap_type_id id2);
+bool yap_ctx_type_id_assignable(yap_ctx* ctx, yap_type_id lhs_id, yap_type_id rhs_id);
 char* yap_ctx_type_id_to_string(yap_ctx* ctx, yap_type_id id);
 char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ);
 char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ); //Auto qualifier strings

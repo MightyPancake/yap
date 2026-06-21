@@ -1,6 +1,8 @@
 #ifndef YAP_SOURCE_H
 #define YAP_SOURCE_H
 
+#include "loc.h"
+
 typedef enum {
   yap_import_module,
   yap_import_file,
@@ -8,6 +10,7 @@ typedef enum {
 
 kenobi_new_struct_free(yap_import,
   yap_import_kind kind;
+  yap_loc loc; //Where this import was declared
   union {
     char* module_name; //For module imports
     char* identity; //Identity for source
@@ -21,6 +24,8 @@ typedef enum {
   yap_source_stdin,
   yap_source_string,
 } yap_source_kind;
+
+typedef struct yap_ctx yap_ctx;
 
 kenobi_new_struct(yap_source,
   //Kind of source
@@ -46,7 +51,7 @@ kenobi_new_struct(yap_source,
   size_t sz;
 
   //Context pointer
-  void* ctx;
+  yap_ctx* ctx;
 
   //Result of parsing this source
   yap_source_node* source_node;
@@ -56,6 +61,9 @@ kenobi_new_struct(yap_source,
 
   //List of imports in this source
   darr(yap_import) imports;
+
+  //Where this source was imported (loc of the import statement that triggered it)
+  yap_loc import_loc;
 );
 
 void yap_free_source(yap_source src);
