@@ -28,6 +28,9 @@
               valgrind
               pkg-config
               git
+              # TCC for incremental compilation; provides tcc binary and libtcc1.a
+              # On NixOS, tcc's libtcc1.a is at ${tcc}/lib/tcc/libtcc1.a
+              tcc
             ];
 
           };

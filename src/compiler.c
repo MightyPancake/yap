@@ -55,6 +55,7 @@ int compile(yap_args args){
     yap_log("Source files count: %ld", darr_len(args.extra));
     //Chose front
     yap_compiler compiler = (yap_compiler){0};
+    compiler.args = &args;
 
     //Load compiler modules
     yap_compiler_load_frontend_component(&compiler, "./components/yap-ts/libyap_ts.so", "yap-ts");
@@ -126,15 +127,16 @@ int compile(yap_args args){
         compiler.backend.free(ctx);
     yap_ctx_free(*ctx);
     free(ctx);
-    yap_free_args(args);
+    yap_free_compiler(compiler);
     #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
-    yap_free_compiler(compiler);
     return result;
 }
 
 int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int error_code){
+    if (compiler.backend.free)
+        compiler.backend.free(ctx);
     yap_free_compiler(compiler);
     yap_ctx_free(*ctx);
     free(ctx);
@@ -145,6 +147,7 @@ void yap_free_compiler(yap_compiler compiler){
     yap_close_handle(compiler.frontend_handle);
     yap_close_handle(compiler.backend_handle);
     yap_close_handle(compiler.semantic_handle);
+    if (compiler.args) yap_free_args(*compiler.args);
 }
 
 void yap_compiler_load_incremental_component(yap_compiler* compiler, const char* path, const char* name){
@@ -238,15 +241,15 @@ int main(int argc, char** argv) {
     int res = argp_parse(&argp, argc, argv, 0, 0, &args);
     if (res){
         fprintf(stderr, "Error while resolving arguments using argp.\n");
+        yap_free_args(args);
         return 1;
     }
     // printf("Command: %s\n", args.command);
     //Switch on command
     strus_switch(args.command, "compile"){
-        //do compile stuff here
         if (darr_len(args.extra) > 0){
             result = compile(args);
-            //compile will free args, so we don't need to do it here
+            // args freed by yap_free_compiler via compiler.args
         }else{
             printf("No sources to compile!\n");
             result = 1;
