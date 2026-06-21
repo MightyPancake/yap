@@ -36,6 +36,8 @@ typedef struct yap_compiler{
   yap_compiler_front_component frontend;
   yap_compiler_semantic_component semantic;
   yap_compiler_backend_component backend;
+  //State
+  yap_args* args; //Owned args, freed by yap_free_compiler
 }yap_compiler;
 
 char* yap_get_yap_home_path();
