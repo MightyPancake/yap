@@ -296,12 +296,12 @@ kenobi_new_struct_free(yap_decl,
   yap_code_range range;
 );
 
-kenobi_new_struct_free(yap_macro_val,
+kenobi_new_struct_free(yap_incremental_val,
   enum {
-    yap_macro_val_error,
-    yap_macro_val_expr,
-    yap_macro_val_decl,
-    yap_macro_val_stmt,
+    yap_incremental_val_error,
+    yap_incremental_val_expr,
+    yap_incremental_val_decl,
+    yap_incremental_val_stmt,
   } kind;
   union {
     yap_error err;

@@ -261,6 +261,7 @@ kenobi_new_struct_free(yap_decl_node,
 kenobi_new_struct_free(yap_source_node,
     darr(yap_decl_node) declarations;
     yap_loc loc;
+    bool was_built;
 );
 
 typedef enum {
