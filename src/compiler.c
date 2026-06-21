@@ -99,9 +99,11 @@ int compile(yap_args args){
 
     //Phase Y: Building result tree
     ctx = compiler.internal.build(ctx, args);
+    yap_quit_if_errors(ctx, compiler);
 
     //Phase Z: Codegen and emission
     ctx = compiler.backend.codegen(ctx);
+    yap_quit_if_errors(ctx, compiler);
 
     // //TODO: Change this, right now we check semantic run because macros are not there yet
     // ctx = compiler.internal_module.build(ctx, args);
@@ -124,7 +126,6 @@ int compile(yap_args args){
     yap_log("Freeing what remains of the context...\n\n");
     yap_ctx_free(*ctx);
     free(ctx);
-    yap_free_args(args);
     #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
@@ -247,6 +248,7 @@ int main(int argc, char** argv) {
             printf("No sources to compile!\n");
             result = 1;
         }
+        yap_free_args(args);
     }
     char* yhd;
     strus_switch(args.command, "cflags"){

@@ -390,6 +390,17 @@ bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
   return false;
 }
 
+//Check if a value of type 'rhs_id' can be assigned to a location of type 'lhs_id'.
+//Untyped types are coerced to their defaults before comparison.
+//This is stricter than type_compatible: untyped_int is NOT assignable to f32.
+bool yap_ctx_type_id_assignable(yap_ctx* ctx, yap_type_id lhs_id, yap_type_id rhs_id){
+  if (!ctx) return false;
+  // Coerce both sides (untocked types become their defaults)
+  lhs_id = yap_ctx_coerce_type_id_to_id(ctx, lhs_id);
+  rhs_id = yap_ctx_coerce_type_id_to_id(ctx, rhs_id);
+  return yap_ctx_type_ids_eq(ctx, lhs_id, rhs_id);
+}
+
 char* yap_ctx_type_id_to_string(yap_ctx* ctx, yap_type_id id){
   yap_type* typ = yap_ctx_get_type(ctx, id);
   if (!typ) return "(invalid type id)";
