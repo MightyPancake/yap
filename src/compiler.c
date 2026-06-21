@@ -126,6 +126,7 @@ int compile(yap_args args){
     yap_log("Freeing what remains of the context...\n\n");
     yap_ctx_free(*ctx);
     free(ctx);
+    yap_free_args(args);
     #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
@@ -244,11 +245,12 @@ int main(int argc, char** argv) {
         //do compile stuff here
         if (darr_len(args.extra) > 0){
             result = compile(args);
+            //compile will free args, so we don't need to do it here
         }else{
             printf("No sources to compile!\n");
             result = 1;
+            yap_free_args(args);
         }
-        yap_free_args(args);
     }
     char* yhd;
     strus_switch(args.command, "cflags"){
