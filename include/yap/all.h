@@ -11,6 +11,7 @@
 #include "source.h"
 #include "scope.h"
 #include "ctx.h"
+#include "ctx_api.h"
 #include "args.h"
 #include "code.h"
 #include "path.h"
