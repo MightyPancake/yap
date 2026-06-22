@@ -5,6 +5,8 @@ i32 fn add(i32 a, i32 b) {
 none fn foo() {}
 none fn bar() {}
 
+fn main(){}
+
 i32 fn some_func_using_funcs(
 	(fn) a,
 	(fn) a2,
@@ -21,9 +23,8 @@ i32 fn some_func_using_funcs(
 	//add(1,2,3)
 	//add(f, 1)
 	a();
-	ret add(6, 7);
-	ret;
 	if a foo();
 	else bar();
 	//_ add = (i32 fn i32 a, i32 b) {}
+	ret 0;
 }

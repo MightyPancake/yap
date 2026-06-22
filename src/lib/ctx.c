@@ -395,7 +395,12 @@ bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
 //This is stricter than type_compatible: untyped_int is NOT assignable to f32.
 bool yap_ctx_type_id_assignable(yap_ctx* ctx, yap_type_id lhs_id, yap_type_id rhs_id){
   if (!ctx) return false;
-  // Coerce both sides (untocked types become their defaults)
+  // null (void) is assignable to any pointer type
+  if (rhs_id == ctx->void_type_id) {
+    yap_type* lhs_typ = yap_ctx_get_type(ctx, lhs_id);
+    if (lhs_typ && lhs_typ->kind == yap_type_ptr) return true;
+  }
+  // Coerce both sides (untyped types become their defaults)
   lhs_id = yap_ctx_coerce_type_id_to_id(ctx, lhs_id);
   rhs_id = yap_ctx_coerce_type_id_to_id(ctx, rhs_id);
   return yap_ctx_type_ids_eq(ctx, lhs_id, rhs_id);
@@ -445,6 +450,12 @@ char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
       }
       strus_cat(res, ")");
       break;
+    case yap_type_struct:
+      return strus_newf("struct %s", typ.structure.name ? typ.structure.name : "(anon)");
+    case yap_type_union:
+      return strus_newf("union %s", typ.uni.name ? typ.uni.name : "(anon)");
+    case yap_type_enum:
+      return strus_newf("enum %s", typ.enumeration.name ? typ.enumeration.name : "(anon)");
     default:
       return strus_copy("(unimplemented type to string)");
   }
@@ -626,6 +637,13 @@ yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, c
   switch(object_type->kind){
     case yap_type_struct:
       for_darr(i, field, object_type->structure.fields){
+        // Anonymous embedded struct/union — flatten fields recursively
+        if (!field.name || field.name[0] == '\0'){
+          yap_type_id nested = yap_ctx_find_member_type(ctx, field.type, member_name);
+          if (nested != ctx->internal_error_type_id) return nested;
+          continue;
+        }
+        // Direct field match
         if (strus_eq(field.name, member_name)){
           return field.type;
         }
@@ -633,11 +651,18 @@ yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, c
       break;
     case yap_type_union:
       for_darr(i, variant, object_type->uni.variants){
+        // Anonymous embedded — flatten
+        if (!variant.name || variant.name[0] == '\0'){
+          yap_type_id nested = yap_ctx_find_member_type(ctx, variant.type, member_name);
+          if (nested != ctx->internal_error_type_id) return nested;
+          continue;
+        }
+        // Direct variant match
         if (strus_eq(variant.name, member_name)){
           return variant.type;
         }
       }
-      return ctx->internal_error_type_id;
+      break;
     default:
       return ctx->internal_error_type_id;
   }
