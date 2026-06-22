@@ -1,4 +1,4 @@
-i32 fn test() {
+i32 fn main() {
 	//1. incremental_statement
 	//TODO
 
@@ -43,4 +43,5 @@ i32 fn test() {
 		if a continue;
 		a+1;
 	}
+	ret 0;
 }
