@@ -121,6 +121,5 @@ fn main() {
 
     ast_node_data node;
     
-    //This should produce an error
     _ f = node.kind;
 }
