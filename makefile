@@ -65,6 +65,28 @@ lib:
 	$(RM) ./*.o
 	@echo $(GREEN)Done!$(RESET)
 
+# Smoke-test: builds bindgen_smoke, runs it (default: synthetic C header).
+#   make bindgen_smoke                             # synthetic header
+#   make bindgen_smoke bindgen_header="<stdio.h>"   # real system header
+# Binary kept at /tmp/bindgen_smoke for later manual runs.
+bindgen_smoke:
+	@echo $(PURPLE)Building bindgen smoke test$(RESET)
+	@BDG_INC="$$(pkg-config --cflags-only-I clang 2>/dev/null || true)"; \
+	BDG_INC=$${BDG_INC#-I}; \
+	BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null || true)"; \
+	[ -n "$${CLANG_INCDIR:-}" ] && BDG_INC="$$CLANG_INCDIR"; \
+	[ -n "$${CLANG_LIBDIR:-}" ] && BDG_LIB="$$CLANG_LIBDIR"; \
+	BDG_FLAGS=""; \
+	[ -n "$$BDG_INC" ] && BDG_FLAGS="$$BDG_FLAGS -I$$BDG_INC"; \
+	[ -n "$$BDG_LIB" ] && BDG_FLAGS="$$BDG_FLAGS -L$$BDG_LIB -Wl,-rpath,$$BDG_LIB"; \
+	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $$BDG_FLAGS -lclang
+	@echo $(CYAN)Running bindgen smoke test$(RESET)
+	@BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null || true)"; \
+	[ -n "$${CLANG_LIBDIR:-}" ] && BDG_LIB="$$CLANG_LIBDIR"; \
+	[ -n "$$BDG_LIB" ] && export LD_LIBRARY_PATH="$$BDG_LIB"; \
+	$(if $(bindgen_header),/tmp/bindgen_smoke '$(bindgen_header)',/tmp/bindgen_smoke)
+	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
+
 test:
 	@make debug=true
 	@make yap_ts debug=true
