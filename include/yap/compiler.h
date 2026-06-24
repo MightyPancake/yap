@@ -51,6 +51,7 @@ void yap_compiler_load_backend_component(yap_compiler* compiler, const char* pat
 void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* path, const char* name);
 
 void yap_free_compiler(yap_compiler compiler);
+void yap_free_compiler_handles(yap_compiler compiler);
 int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int error_code);
 
 #endif //YAP_COMPILER_H

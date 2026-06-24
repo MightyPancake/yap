@@ -133,6 +133,7 @@ int compile(yap_args args){
     #if defined(YAP_DEBUG) && YAP_HAS_VALGRIND
         VALGRIND_DO_LEAK_CHECK;
     #endif
+    yap_free_compiler_handles(compiler);
     return result;
 }
 
@@ -140,16 +141,20 @@ int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int erro
     if (compiler.backend.free)
         compiler.backend.free(ctx);
     yap_free_compiler(compiler);
+    yap_free_compiler_handles(compiler);
     yap_ctx_free(*ctx);
     free(ctx);
     return error_code;
 }
 
 void yap_free_compiler(yap_compiler compiler){
+    if (compiler.args) yap_free_args(*compiler.args);
+}
+
+void yap_free_compiler_handles(yap_compiler compiler){
     yap_close_handle(compiler.frontend_handle);
     yap_close_handle(compiler.backend_handle);
     yap_close_handle(compiler.semantic_handle);
-    if (compiler.args) yap_free_args(*compiler.args);
 }
 
 void yap_compiler_load_incremental_component(yap_compiler* compiler, const char* path, const char* name){
