@@ -1,7 +1,9 @@
 module io {
-    name: "io",
     version: "0.0.1",
-    prefix: "yap_io"
+    prefix: "yap_io_"
 }
 
 import "binds.yap"
+
+fn foo();
+fn foo2(){}

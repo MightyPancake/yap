@@ -47,6 +47,7 @@ kenobi_new_struct_free(yap_module,
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
+  yap_scope* scope; //Module-level scope for namespaced symbol lookup
 );
 
 typedef void (*yap_print_error_fn)(yap_error);
@@ -89,6 +90,9 @@ kenobi_new_struct_free(yap_ctx,
   //External
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;
+
+  //Module lookup paths
+  darr(char*) module_lookup_paths;
 
   //Args
   yap_args* args;

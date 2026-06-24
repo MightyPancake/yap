@@ -64,6 +64,9 @@ kenobi_new_struct(yap_source,
 
   //Where this source was imported (loc of the import statement that triggered it)
   yap_loc import_loc;
+
+  //Non-NULL if this source was loaded via a module import (stores the module name)
+  char* from_module_import;
 );
 
 void yap_free_source(yap_source src);

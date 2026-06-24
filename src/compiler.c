@@ -86,7 +86,13 @@ int compile(yap_args args){
     ctx->print_error = compiler.frontend.print_error;
     ctx->gen_decl = compiler.backend.gen_decl;
     ctx->args = compiler.args;
-    
+
+    //Module lookup paths
+    char* yap_home = yap_get_yap_home_path();
+    char* modules_path = strus_newf("%s/modules", yap_home);
+    darr_push(ctx->module_lookup_paths, modules_path);
+    free(yap_home);
+
     //Phase 1: Parsing (includes import resolution and building the source tree)
     ctx = compiler.frontend.parse(ctx, args);
     yap_quit_if_errors(ctx, compiler);
@@ -95,6 +101,11 @@ int compile(yap_args args){
 #ifdef YAP_DEBUG
     yap_ctx_print_source_tree(ctx);
 #endif
+
+    //Phase 0: Module declaration resolution (find and validate the module decl across all sources)
+    yap_resolve_module_decl(ctx);
+    yap_quit_if_errors(ctx, compiler);
+
     //Phase 2: Backend init (sets up TCC state, module contexts, etc.)
     if (compiler.backend.init)
         compiler.backend.init(ctx);

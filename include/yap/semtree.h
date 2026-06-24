@@ -98,6 +98,7 @@ kenobi_new_struct_free(yap_named_type,
 
 kenobi_new_struct_free(yap_var,
   char* name;
+  char* c_name;
   yap_type_id type;
 );
 
@@ -286,6 +287,7 @@ kenobi_new_struct_free(yap_func_arg,
 
 kenobi_new_struct_free(yap_func_decl,
   char* name;
+  char* c_name;
   darr(yap_func_arg) args;
   yap_type_id ret_typ;
   yap_block body;
@@ -299,6 +301,7 @@ kenobi_new_struct_free(yap_scope,
 
 kenobi_new_struct_free(yap_named_type_decl,
   char* name;
+  char* c_name;
   yap_named_type_decl_kind kind;
   yap_type_id type_id;
 );
