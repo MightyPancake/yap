@@ -26,7 +26,9 @@ static char *cx_spelling(CXType t) {
   return r;
 }
 
+// TODO: scaffolding for the full algorithm — unused until process_type is implemented
 /** Return a string copy of a cursor's USR (caller must free). */
+__attribute__((unused))
 static char *cx_usr(CXCursor c) {
   CXString s = clang_getCursorUSR(c);
   const char *u = clang_getCString(s);
@@ -42,12 +44,14 @@ typedef struct {
   size_t   cap;
 } usr_set;
 
+__attribute__((unused))
 static bool usr_set_has(usr_set *s, const char *usr) {
   for (size_t i = 0; i < s->len; i++)
     if (!strcmp(s->usrs[i], usr)) return true;
   return false;
 }
 
+__attribute__((unused))
 static void usr_set_add(usr_set *s, char *usr) {
   if (s->len == s->cap) {
     s->cap = s->cap ? s->cap * 2 : 8;
@@ -56,6 +60,7 @@ static void usr_set_add(usr_set *s, char *usr) {
   s->usrs[s->len++] = usr;
 }
 
+__attribute__((unused))
 static void usr_set_free(usr_set *s) {
   for (size_t i = 0; i < s->len; i++) free(s->usrs[i]);
   free(s->usrs);
@@ -68,7 +73,11 @@ static void usr_set_free(usr_set *s) {
 
 static void collect_exported(CXTranslationUnit tu, CXCursor cursor,
                              yap_ctx *ctx, usr_set *seen);
+// TODO: implement process_type — the core type-graph walker
+#if 0
+__attribute__((unused))
 static void process_type(CXType t, yap_ctx *ctx, usr_set *seen);
+#endif
 
 // ---------------------------------------------------------------------------
 // public API
@@ -117,7 +126,7 @@ void yap_bindgen_import(yap_ctx *ctx,
 /** Visit every top-level child, looking for FunctionDecl with external linkage. */
 static enum CXChildVisitResult bindgen_visitor(CXCursor c, CXCursor parent, CXClientData cd) {
   (void)parent;
-  struct { CXTranslationUnit tu; yap_ctx *ctx; usr_set *seen; } *d = cd;
+  (void)cd;
   if (clang_getCursorKind(c) == CXCursor_FunctionDecl) {
     enum CXLinkageKind lk = clang_getCursorLinkage(c);
     if (lk == CXLinkage_External || lk == CXLinkage_UniqueExternal) {

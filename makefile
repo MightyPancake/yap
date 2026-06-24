@@ -6,7 +6,7 @@ GREEN := [92m
 RED := [91m
 RESET := [0m
 
-debug ?= false
+debug ?= true
 ifeq ($(debug),true)
     CFLAGS += -g -O1 -fno-omit-frame-pointer -DYAP_DEBUG
 endif
@@ -94,11 +94,10 @@ bindgen_smoke:
 	@$(if $(CLANG_LIBDIR),LD_LIBRARY_PATH="$(CLANG_LIBDIR)" ,)/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',)
 	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
 
-test:
-	@make debug=true
-	@make yap_ts debug=true
-	@make yap_c debug=true
-	@make yap_semantic debug=true
+test: lib compiler
+	@make yap_ts debug=$(debug)
+	@make yap_c debug=$(debug)
+	@make yap_semantic debug=$(debug)
 	@yap -c
 	@yap -m
 	@echo $(CYAN)Running tests$(RESET)
@@ -148,11 +147,10 @@ test:
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-rerun:
-	@make debug=true
-	@make yap_ts debug=true
-	@make yap_c debug=true
-	@make yap_semantic debug=true
+rerun: lib compiler
+	@make yap_ts debug=$(debug)
+	@make yap_c debug=$(debug)
+	@make yap_semantic debug=$(debug)
 	@make run test=$(test)
 
 run:
