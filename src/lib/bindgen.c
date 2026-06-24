@@ -9,9 +9,100 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <clang-c/Index.h>
 #include "yap/all.h"
 #include "yap/bindgen.h"
+
+// ---------------------------------------------------------------------------
+// --gen-c-bind CLI command: parse a C header, write binds.yap to outdir.
+// ---------------------------------------------------------------------------
+
+int yap_gen_c_bind(yap_args args) {
+    if (!args.gen_c_bind_header || !args.gen_c_bind_header[0]) {
+        fprintf(stderr, "Error: --gen-c-bind requires a header argument (e.g. \"<stdio.h>\")\n");
+        return 1;
+    }
+    const char *header = args.gen_c_bind_header;
+    const char *outdir = args.output_file ? args.output_file : "binds";
+    yap_log("gen-c-bind: header=%s  output_dir=%s", header, outdir);
+
+    // 1. Create output directory
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "mkdir -p %s", outdir);
+    if (system(cmd) != 0) {
+        fprintf(stderr, "Error: failed to create directory '%s'\n", outdir);
+        return 1;
+    }
+
+    // 2. Write a temp .c file that #includes the header (so libclang can parse it)
+    FILE *tmp = fopen("/tmp/yap_bindgen_input.c", "w");
+    if (!tmp) {
+        fprintf(stderr, "Error: failed to create temp file\n");
+        return 1;
+    }
+    if (header[0] == '<')
+        fprintf(tmp, "#include %s\n", header);
+    else
+        fprintf(tmp, "#include \"%s\"\n", header);
+    fclose(tmp);
+
+    // 3. Parse with libclang and generate bindings
+    FILE *out = fopen("/tmp/yap_bindgen_output.yap", "w");
+    if (!out) {
+        fprintf(stderr, "Error: failed to create output temp file\n");
+        unlink("/tmp/yap_bindgen_input.c");
+        return 1;
+    }
+
+    // Create a fresh ctx (bindgen needs it for the type table)
+    yap_ctx *ctx = yap_ctx_new();
+
+    // On NixOS, clang needs help finding system headers
+    const char *glibc_inc = NULL;
+    char glibc_arg[512];
+    FILE *fp = popen("ls -d /nix/store/*-glibc-*-dev/include 2>/dev/null | head -1", "r");
+    if (fp) {
+        if (fgets(glibc_arg, sizeof(glibc_arg), fp)) {
+            glibc_arg[strcspn(glibc_arg, "\n")] = 0;
+            glibc_inc = glibc_arg;
+        }
+        pclose(fp);
+    }
+
+    const char *full_argv[4];
+    int full_argc = 0;
+    full_argv[full_argc++] = "-x";
+    full_argv[full_argc++] = "c";
+    if (glibc_inc) {
+        full_argv[full_argc++] = "-isystem";
+        full_argv[full_argc++] = glibc_inc;
+    }
+
+    yap_bindgen_import(ctx, "/tmp/yap_bindgen_input.c", full_argc, full_argv);
+
+    // 4. Write the generated decls to the output .yap file
+    fprintf(out, "// C bindings generated from %s\n// (bindgen not yet fully implemented)\n\n", header);
+    for (size_t i = 0; i < darr_len(ctx->semantic_decls); i++) {
+        yap_decl *d = &ctx->semantic_decls[i];
+        if (d->kind == yap_decl_func && d->func_decl.body.kind == yap_block_error) {
+            fprintf(out, "extern fn %s(...);  // imported\n", d->func_decl.name);
+        }
+    }
+    fclose(out);
+
+    // 5. Move output file to the target directory
+    snprintf(cmd, sizeof(cmd), "mv /tmp/yap_bindgen_output.yap %s/binds.yap", outdir);
+    int sysret = system(cmd); (void)sysret;
+
+    // Cleanup
+    yap_ctx_free(*ctx);
+    free(ctx);
+    unlink("/tmp/yap_bindgen_input.c");
+
+    printf("Generated %s/binds.yap\n", outdir);
+    return 0;
+}
 
 // ---------------------------------------------------------------------------
 // internal helpers

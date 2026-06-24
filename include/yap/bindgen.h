@@ -13,12 +13,12 @@ typedef struct yap_imported_func {
 } yap_imported_func;
 
 // Parse a C header file and return the collected exports.
-// 'header_path' is the header file to parse (e.g. "/usr/include/stdio.h").
-// 'clang_args' are extra arguments passed to libclang (-I, -D, …).
-// Populates 'ctx->semantic_decls' with yap_decl_extern_func entries.
 void yap_bindgen_import(yap_ctx *ctx,
                         const char *header_path,
                         int clang_argc,
                         const char **clang_argv);
+
+// --gen-c-bind CLI command: parse header, write binds.yap to outdir.
+int yap_gen_c_bind(yap_args args);
 
 #endif // YAP_BINDGEN_H

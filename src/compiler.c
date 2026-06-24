@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <dlfcn.h>
+#include <unistd.h>
 #include <argp.h>
 #include "yap/all.h"
 #include "yap/types.h"
@@ -190,6 +192,10 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
     case 'i':
         args->command = "install";
         break;
+    case 'g':
+        args->command = "gen_c_bind";
+        args->gen_c_bind_header = arg;
+        break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
@@ -212,6 +218,7 @@ static struct argp_option options[] = {
     {"components", 'm', NULL, 0, "Output components path.", 1},
     {"output", 'o', "OUTPUT_FILE", 0, "The path to the result file.", 1},
     {"install", 'i', NULL, 0, "Install components (list component directories to be installed)", 2},
+    {"gen-c-bind", 'g', "HEADER", 0, "Generate C bindings from a header (e.g. \"<stdio.h>\").  -o sets the output directory name.", 3},
     {0}
 };
 
@@ -269,6 +276,9 @@ int main(int argc, char** argv) {
         yap_free_args(args);
     }strus_case(args.command, "install"){
         printf("Installing...\n");
+        yap_free_args(args);
+    }strus_case(args.command, "gen_c_bind"){
+        result = yap_gen_c_bind(args);
         yap_free_args(args);
     }
     return result;

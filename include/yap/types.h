@@ -38,6 +38,8 @@ typedef struct yap_args{
   darr(char*) extra;
   bool show_modules_path;
   char* command;
+  // --gen-c-bind: header to generate bindings from (e.g. "<stdio.h>")
+  char* gen_c_bind_header;
 }yap_args;
 
 kenobi_new_struct_free(yap_module,
