@@ -1,4 +1,4 @@
-import "../stdio.yap"
+import "../modules/io/binds.yap"
 
 struct Vec3 {
     i32[3] v,
