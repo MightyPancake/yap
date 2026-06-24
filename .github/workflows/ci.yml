@@ -15,7 +15,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential make git valgrind tcc libclang-dev pkg-config
+          sudo apt-get install -y build-essential make git valgrind tcc clang pkg-config
 
       - name: Initialize submodules
         run: |
@@ -31,11 +31,5 @@ jobs:
       - name: Run workflow
         run: |
           make path
-          # Find libclang: on Ubuntu it's in /usr/lib/llvm-18, on Nix in the store.
-          # pkg-config gives us both include and lib paths.
-          export CLANG_INCDIR="$(pkg-config --variable=includedir clang)"
-          export CLANG_LIBDIR="$(pkg-config --variable=libdir clang)"
-          echo "CLANG_INCDIR=$CLANG_INCDIR"
-          echo "CLANG_LIBDIR=$CLANG_LIBDIR"
           make bindgen_smoke bindgen_header="<stdio.h>"
           make test detailed=true
