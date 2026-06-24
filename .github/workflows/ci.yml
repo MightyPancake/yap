@@ -31,5 +31,5 @@ jobs:
       - name: Run workflow
         run: |
           make path
-          make bindgen_smoke
+          make bindgen_smoke bindgen_header="<stdio.h>"
           make test detailed=true
