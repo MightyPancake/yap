@@ -1,6 +1,6 @@
-import "../modules/io/binds.yap"
+import io
 
 i32 fn main() {
-    puts(c"Hello, world!");
+    io->puts(c"Hello, world!");
     ret 0;
 }

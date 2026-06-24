@@ -44,6 +44,7 @@ typedef enum {
     yap_expr_member_access,
     yap_expr_index_access,
     yap_expr_block,
+    yap_expr_module_access,
 } yap_expr_kind;
 
 typedef enum {

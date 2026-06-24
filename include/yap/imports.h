@@ -2,5 +2,6 @@
 #define YAP_IMPORTS_H
 
 void yap_expand_imports(yap_ctx* ctx);
+void yap_resolve_module_decl(yap_ctx* ctx);
 
 #endif //YAP_IMPORTS_H

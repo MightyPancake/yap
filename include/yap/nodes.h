@@ -105,6 +105,12 @@ kenobi_new_struct_free(yap_index_access_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_module_access_node,
+    yap_identifier_node module;
+    yap_identifier_node field;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_expr_node,
     yap_expr_kind kind;
     union {
@@ -123,6 +129,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_member_access_node member_access;
         yap_index_access_node index_access;
         yap_block_node block;
+        yap_module_access_node module_access;
     };
     yap_loc loc;
 );
@@ -248,8 +255,9 @@ kenobi_new_struct_free(yap_module_import_node,
 
 kenobi_new_struct_free(yap_module_decl_node,
     yap_identifier_node name;
+    char* prefix;
+    char* version;
     yap_loc loc;
-    //TODO: Add module info
 );
 
 kenobi_new_struct_free(yap_decl_node,

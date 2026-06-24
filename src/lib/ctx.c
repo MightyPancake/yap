@@ -14,6 +14,7 @@ yap_ctx* yap_ctx_new(){
       .errors=darr_new(yap_error),
       .modules=new_module_map(),
       .current_module=NULL,
+      .module_lookup_paths=darr_new(char*),
       .semantic_decls=darr_new(yap_decl),
       .types=darr_new(yap_type), //yap_type_id points to types in this array
       .named_types=new_named_type_map(),
@@ -86,7 +87,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     .name = yap_ctx_strus_cpy(ctx, name),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .decls = darr_new(yap_decl_node),
-    .module_ctx = NULL
+    .module_ctx = NULL,
+    .scope = yap_ctx_new_scope(ctx, NULL)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);
@@ -253,7 +255,8 @@ yap_source* yap_ctx_new_file_source(yap_ctx* ctx, yap_source* parent, char* labe
       .ctx=ctx,
       .source_node=NULL,
       .anon_id=0,
-      .imports=darr_new(yap_import)
+      .imports=darr_new(yap_import),
+      .from_module_import = parent ? parent->from_module_import : NULL
     });
     return src;
 }
