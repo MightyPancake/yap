@@ -28,14 +28,17 @@ jobs:
       - name: Ensure Valgrind headers are available
         run: test -f /usr/include/valgrind/memcheck.h
 
-      - name: Run workflow
-        run: |
-          make path
-          make bindgen_smoke bindgen_header="<stdio.h>"
-          make test detailed=true
+      - name: Path setup
+        run: make path
+
+      - name: Bindgen smoke test
+        run: make bindgen_smoke bindgen_header="<stdio.h>"
 
       - name: Generate bindings
         run: make bindings
+
+      - name: Run tests
+        run: make test detailed=true
 
       - name: Hello world
         run: make hello
