@@ -23,6 +23,22 @@ YAP_PATH := $(shell pwd)
 export PATH := $(YAP_PATH):$(PATH)
 
 YAP_SHARED_FLAGS := -I./include -L./lib $(CFLAGS)
+
+# Resolve libclang include/lib dirs once.
+# On Nix: CLANG_INCDIR/CLANG_LIBDIR come from shellHook.
+# On Ubuntu: libclang-18-dev puts files under /usr/lib/llvm-18/.
+CLANG_INCDIR := $(or $(CLANG_INCDIR),$(shell [ -d /usr/lib/llvm-18/include ] && echo /usr/lib/llvm-18/include))
+CLANG_LIBDIR := $(or $(CLANG_LIBDIR),$(shell [ -d /usr/lib/llvm-18/lib     ] && echo /usr/lib/llvm-18/lib))
+ifneq ($(CLANG_INCDIR),)
+  CLANG_CFLAGS := -I$(CLANG_INCDIR)
+endif
+ifneq ($(CLANG_LIBDIR),)
+  CLANG_LDFLAGS := -L$(CLANG_LIBDIR) -Wl,-rpath,$(CLANG_LIBDIR)
+endif
+
+# Make these available to lib build (src/lib/bindgen.c needs clang-c/Index.h)
+YAP_SHARED_FLAGS += $(CLANG_CFLAGS)
+
 #Makes sure the compiler looks for yap.so in the lib dir
 YAP_COMPILER_LINKER_FLAGS := -Wl,-rpath,$(YAP_PATH)/lib
 YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap -o yap $(YAP_COMPILER_LINKER_FLAGS)
@@ -72,23 +88,9 @@ lib:
 # On Ubuntu: clang package puts headers/libs in system paths.
 bindgen_smoke:
 	@echo $(PURPLE)Building bindgen smoke test$(RESET)
-	@FLAGS=""; \
-	INC="$${CLANG_INCDIR:-}"; \
-	# On Ubuntu: libclang-18-dev puts headers in /usr/lib/llvm-18/include
-	[ -z "$$INC" ] && [ -d /usr/lib/llvm-18/include ] && INC="/usr/lib/llvm-18/include"; \
-	[ -n "$$INC" ] && FLAGS="$$FLAGS -I$$INC"; \
-	LIB="$${CLANG_LIBDIR:-}"; \
-	[ -z "$$LIB" ] && [ -d /usr/lib/llvm-18/lib ] && LIB="/usr/lib/llvm-18/lib"; \
-	[ -n "$$LIB" ] && FLAGS="$$FLAGS -L$$LIB -Wl,-rpath,$$LIB"; \
-	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $$FLAGS -lclang
+	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $(CLANG_CFLAGS) $(CLANG_LDFLAGS) -lclang
 	@echo $(CYAN)Running bindgen smoke test$(RESET)
-	@if [ -n "$${CLANG_LIBDIR:-}" ]; then \
-		LD_LIBRARY_PATH="$$CLANG_LIBDIR" /tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
-	elif [ -d /usr/lib/llvm-18/lib ]; then \
-		LD_LIBRARY_PATH="/usr/lib/llvm-18/lib" /tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
-	else \
-		/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
-	fi
+	@$(if $(CLANG_LIBDIR),LD_LIBRARY_PATH="$(CLANG_LIBDIR)" ,)/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',)
 	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
 
 test:
