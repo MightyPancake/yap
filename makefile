@@ -73,13 +73,22 @@ lib:
 bindgen_smoke:
 	@echo $(PURPLE)Building bindgen smoke test$(RESET)
 	@FLAGS=""; \
-	[ -n "$${CLANG_INCDIR:-}" ] && FLAGS="$$FLAGS -I$$CLANG_INCDIR"; \
-	[ -n "$${CLANG_LIBDIR:-}" ] && FLAGS="$$FLAGS -L$$CLANG_LIBDIR -Wl,-rpath,$$CLANG_LIBDIR"; \
+	INC="$${CLANG_INCDIR:-}"; \
+	# On Ubuntu: libclang-18-dev puts headers in /usr/lib/llvm-18/include
+	[ -z "$$INC" ] && [ -d /usr/lib/llvm-18/include ] && INC="/usr/lib/llvm-18/include"; \
+	[ -n "$$INC" ] && FLAGS="$$FLAGS -I$$INC"; \
+	LIB="$${CLANG_LIBDIR:-}"; \
+	[ -z "$$LIB" ] && [ -d /usr/lib/llvm-18/lib ] && LIB="/usr/lib/llvm-18/lib"; \
+	[ -n "$$LIB" ] && FLAGS="$$FLAGS -L$$LIB -Wl,-rpath,$$LIB"; \
 	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $$FLAGS -lclang
 	@echo $(CYAN)Running bindgen smoke test$(RESET)
-	@LD_PATH=""; \
-	[ -n "$${CLANG_LIBDIR:-}" ] && LD_PATH="$$CLANG_LIBDIR"; \
-	$(if $(LD_PATH),LD_LIBRARY_PATH="$(LD_PATH)" ,)/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',)
+	@if [ -n "$${CLANG_LIBDIR:-}" ]; then \
+		LD_LIBRARY_PATH="$$CLANG_LIBDIR" /tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
+	elif [ -d /usr/lib/llvm-18/lib ]; then \
+		LD_LIBRARY_PATH="/usr/lib/llvm-18/lib" /tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
+	else \
+		/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',); \
+	fi
 	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
 
 test:
