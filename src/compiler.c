@@ -89,9 +89,9 @@ int compile(yap_args args){
     yap_quit_if_errors(ctx, compiler);
 
     //Print source tree for debugging
-    if (YAP_DEBUG){
-        yap_ctx_print_source_tree(ctx);
-    }
+#ifdef YAP_DEBUG
+    yap_ctx_print_source_tree(ctx);
+#endif
     //Phase 2: Backend init (sets up TCC state, module contexts, etc.)
     if (compiler.backend.init)
         compiler.backend.init(ctx);
