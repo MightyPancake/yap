@@ -1,6 +1,8 @@
 #ifndef YAP_COMPILER_H
 #define YAP_COMPILER_H
 
+#include "yap/bindgen.h"
+
 //Parsing
 typedef yap_ctx* (*yap_parse_fn)(yap_ctx*, yap_args);
 //Error printing
