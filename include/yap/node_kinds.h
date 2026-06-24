@@ -4,7 +4,8 @@
 //Declarations
 typedef enum {
     yap_decl_error,
-    yap_decl_func,
+    yap_decl_func_def,
+    yap_decl_func_decl,
     yap_decl_named_type,
     yap_decl_module_import,
     yap_decl_file_import,

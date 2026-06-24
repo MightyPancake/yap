@@ -1,178 +1,112 @@
 // C bindings from <stdio.h>
 
-struct __va_list_tag {
-    gp_offset: i32,
-    fp_offset: i32,
-    overflow_arg_area: none@,
-    reg_save_area: none@,
-}
-
-struct __fsid_t {
-    __val: i32@,
-}
-
-struct __mbstate_t {
-    __count: i32,
-    __value: union anon,
-}
-
-union anon {
-    __wch: i32,
-    __wchb: byte@,
-}
-
-struct _G_fpos_t {
-    __pos: i64,
-    __state: struct __mbstate_t,
-}
-
-struct _G_fpos64_t {
-    __pos: i64,
-    __state: struct __mbstate_t,
-}
+type _IO_marker
+type _IO_codecvt
+type _IO_wide_data
 
 struct _IO_FILE {
-    _flags: i32,
-    _IO_read_ptr: byte@,
-    _IO_read_end: byte@,
-    _IO_read_base: byte@,
-    _IO_write_base: byte@,
-    _IO_write_ptr: byte@,
-    _IO_write_end: byte@,
-    _IO_buf_base: byte@,
-    _IO_buf_end: byte@,
-    _IO_save_base: byte@,
-    _IO_backup_base: byte@,
-    _IO_save_end: byte@,
-    _markers: struct _IO_marker@,
-    _chain: struct _IO_FILE@,
-    _fileno: i32,
-    _flags2: i32,
-    _short_backupbuf: byte@,
-    _old_offset: i64,
-    _cur_column: i32,
-    _vtable_offset: byte,
-    _shortbuf: byte@,
-    _lock: none@,
-    _offset: i64,
-    _codecvt: struct _IO_codecvt@,
-    _wide_data: struct _IO_wide_data@,
-    _freeres_list: struct _IO_FILE@,
-    _freeres_buf: none@,
-    _prevchain: struct _IO_FILE@@,
-    _mode: i32,
-    _unused3: i32,
-    _total_written: i64,
-    _unused2: byte@,
-}
-
-struct _IO_marker {
-}
-
-struct _IO_codecvt {
-}
-
-struct _IO_wide_data {
+    i32 _flags,
+    byte@ _IO_read_ptr,
+    byte@ _IO_read_end,
+    byte@ _IO_read_base,
+    byte@ _IO_write_base,
+    byte@ _IO_write_ptr,
+    byte@ _IO_write_end,
+    byte@ _IO_buf_base,
+    byte@ _IO_buf_end,
+    byte@ _IO_save_base,
+    byte@ _IO_backup_base,
+    byte@ _IO_save_end,
+    _IO_marker@ _markers,
+    _IO_FILE@ _chain,
+    i32 _fileno,
+    i32 _flags2,
+    byte@ _short_backupbuf,
+    i64 _old_offset,
+    i32 _cur_column,
+    byte _vtable_offset,
+    byte@ _shortbuf,
+    none@ _lock,
+    i64 _offset,
+    _IO_codecvt@ _codecvt,
+    _IO_wide_data@ _wide_data,
+    _IO_FILE@ _freeres_list,
+    none@ _freeres_buf,
+    _IO_FILE@@ _prevchain,
+    i32 _mode,
+    i32 _unused3,
+    i64 _total_written,
+    byte@ _unused2,
 }
 
 struct _IO_cookie_io_functions_t {
-    read: (i64 fn none@,  byte@,  i64)@,
-    write: (i64 fn none@,  byte@,  i64)@,
-    seek: (i32 fn none@,  i64@,  i32)@,
-    close: (i32 fn none@)@,
+    (i64 fn none@, byte@, i64)@ read,
+    (i64 fn none@, byte@, i64)@ write,
+    (i32 fn none@, i64@, i32)@ seek,
+    (i32 fn none@)@ close,
 }
 
-i32 fn remove(__filename: byte@) i32;
-i32 fn rename(__old: byte@, __new: byte@) i32;
-i32 fn renameat(__oldfd: i32, __old: byte@, __newfd: i32, __new: byte@) i32;
-i32 fn fclose(__stream: struct _IO_FILE@) i32;
-struct _IO_FILE@ fn tmpfile() struct _IO_FILE@;
-byte@ fn tmpnam(byte@) byte@;
-byte@ fn tmpnam_r(__s: byte@) byte@;
-byte@ fn tempnam(__dir: byte@, __pfx: byte@) byte@;
-i32 fn fflush(__stream: struct _IO_FILE@) i32;
-i32 fn fflush_unlocked(__stream: struct _IO_FILE@) i32;
-struct _IO_FILE@ fn fopen(__filename: byte@, __modes: byte@) struct _IO_FILE@;
-struct _IO_FILE@ fn freopen(__filename: byte@, __modes: byte@, __stream: struct _IO_FILE@) struct _IO_FILE@;
-struct _IO_FILE@ fn fdopen(__fd: i32, __modes: byte@) struct _IO_FILE@;
-struct _IO_FILE@ fn fopencookie(__magic_cookie: none@, __modes: byte@, __io_funcs: struct _IO_cookie_io_functions_t) struct _IO_FILE@;
-struct _IO_FILE@ fn fmemopen(__s: none@, __len: i64, __modes: byte@) struct _IO_FILE@;
-struct _IO_FILE@ fn open_memstream(__bufloc: byte@@, __sizeloc: i64@) struct _IO_FILE@;
-none fn setbuf(__stream: struct _IO_FILE@, __buf: byte@) none;
-i32 fn setvbuf(__stream: struct _IO_FILE@, __buf: byte@, __modes: i32, __n: i64) i32;
-none fn setbuffer(__stream: struct _IO_FILE@, __buf: byte@, __size: i64) none;
-none fn setlinebuf(__stream: struct _IO_FILE@) none;
-i32 fn fprintf(__stream: struct _IO_FILE@, __format: byte@) i32;
-i32 fn printf(__format: byte@) i32;
-i32 fn sprintf(__s: byte@, __format: byte@) i32;
-i32 fn vfprintf(__s: struct _IO_FILE@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vprintf(__format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vsprintf(__s: byte@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn snprintf(__s: byte@, __maxlen: i64, __format: byte@) i32;
-i32 fn vsnprintf(__s: byte@, __maxlen: i64, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vasprintf(__ptr: byte@@, __f: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn __asprintf(__ptr: byte@@, __fmt: byte@) i32;
-i32 fn asprintf(__ptr: byte@@, __fmt: byte@) i32;
-i32 fn vdprintf(__fd: i32, __fmt: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn dprintf(__fd: i32, __fmt: byte@) i32;
-i32 fn fscanf(__stream: struct _IO_FILE@, __format: byte@) i32;
-i32 fn scanf(__format: byte@) i32;
-i32 fn sscanf(__s: byte@, __format: byte@) i32;
-i32 fn fscanf(__stream: struct _IO_FILE@, __format: byte@) i32;
-i32 fn scanf(__format: byte@) i32;
-i32 fn sscanf(__s: byte@, __format: byte@) i32;
-i32 fn vfscanf(__s: struct _IO_FILE@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vscanf(__format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vsscanf(__s: byte@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vfscanf(__s: struct _IO_FILE@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vscanf(__format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn vsscanf(__s: byte@, __format: byte@, __arg: struct __va_list_tag@) i32;
-i32 fn fgetc(__stream: struct _IO_FILE@) i32;
-i32 fn getc(__stream: struct _IO_FILE@) i32;
-i32 fn getchar() i32;
-i32 fn getc_unlocked(__stream: struct _IO_FILE@) i32;
-i32 fn getchar_unlocked() i32;
-i32 fn fgetc_unlocked(__stream: struct _IO_FILE@) i32;
-i32 fn fputc(__c: i32, __stream: struct _IO_FILE@) i32;
-i32 fn putc(__c: i32, __stream: struct _IO_FILE@) i32;
-i32 fn putchar(__c: i32) i32;
-i32 fn fputc_unlocked(__c: i32, __stream: struct _IO_FILE@) i32;
-i32 fn putc_unlocked(__c: i32, __stream: struct _IO_FILE@) i32;
-i32 fn putchar_unlocked(__c: i32) i32;
-i32 fn getw(__stream: struct _IO_FILE@) i32;
-i32 fn putw(__w: i32, __stream: struct _IO_FILE@) i32;
-byte@ fn fgets(__s: byte@, __n: i32, __stream: struct _IO_FILE@) byte@;
-i64 fn __getdelim(__lineptr: byte@@, __n: i64@, __delimiter: i32, __stream: struct _IO_FILE@) i64;
-i64 fn getdelim(__lineptr: byte@@, __n: i64@, __delimiter: i32, __stream: struct _IO_FILE@) i64;
-i64 fn getline(__lineptr: byte@@, __n: i64@, __stream: struct _IO_FILE@) i64;
-i32 fn fputs(__s: byte@, __stream: struct _IO_FILE@) i32;
-i32 fn puts(__s: byte@) i32;
-i32 fn ungetc(__c: i32, __stream: struct _IO_FILE@) i32;
-i64 fn fread(__ptr: none@, __size: i64, __n: i64, __stream: struct _IO_FILE@) i64;
-i64 fn fwrite(__ptr: none@, __size: i64, __n: i64, __s: struct _IO_FILE@) i64;
-i64 fn fread_unlocked(__ptr: none@, __size: i64, __n: i64, __stream: struct _IO_FILE@) i64;
-i64 fn fwrite_unlocked(__ptr: none@, __size: i64, __n: i64, __stream: struct _IO_FILE@) i64;
-i32 fn fseek(__stream: struct _IO_FILE@, __off: i64, __whence: i32) i32;
-i64 fn ftell(__stream: struct _IO_FILE@) i64;
-none fn rewind(__stream: struct _IO_FILE@) none;
-i32 fn fseeko(__stream: struct _IO_FILE@, __off: i64, __whence: i32) i32;
-i64 fn ftello(__stream: struct _IO_FILE@) i64;
-i32 fn fgetpos(__stream: struct _IO_FILE@, __pos: struct _G_fpos_t@) i32;
-i32 fn fsetpos(__stream: struct _IO_FILE@, __pos: struct _G_fpos_t@) i32;
-none fn clearerr(__stream: struct _IO_FILE@) none;
-i32 fn feof(__stream: struct _IO_FILE@) i32;
-i32 fn ferror(__stream: struct _IO_FILE@) i32;
-none fn clearerr_unlocked(__stream: struct _IO_FILE@) none;
-i32 fn feof_unlocked(__stream: struct _IO_FILE@) i32;
-i32 fn ferror_unlocked(__stream: struct _IO_FILE@) i32;
-none fn perror(__s: byte@) none;
-i32 fn fileno(__stream: struct _IO_FILE@) i32;
-i32 fn fileno_unlocked(__stream: struct _IO_FILE@) i32;
-i32 fn pclose(__stream: struct _IO_FILE@) i32;
-struct _IO_FILE@ fn popen(__command: byte@, __modes: byte@) struct _IO_FILE@;
-byte@ fn ctermid(__s: byte@) byte@;
-none fn flockfile(__stream: struct _IO_FILE@) none;
-i32 fn ftrylockfile(__stream: struct _IO_FILE@) i32;
-none fn funlockfile(__stream: struct _IO_FILE@) none;
-i32 fn __uflow(struct _IO_FILE@) i32;
-i32 fn __overflow(struct _IO_FILE@, i32) i32;
+i32 fn remove(byte@ __filename);
+i32 fn rename(byte@ __old, byte@ __new);
+i32 fn renameat(i32 __oldfd, byte@ __old, i32 __newfd, byte@ __new);
+i32 fn fclose(_IO_FILE@ __stream);
+_IO_FILE@ fn tmpfile();
+byte@ fn tmpnam(byte@ _arg0);
+byte@ fn tmpnam_r(byte@ __s);
+byte@ fn tempnam(byte@ __dir, byte@ __pfx);
+i32 fn fflush(_IO_FILE@ __stream);
+i32 fn fflush_unlocked(_IO_FILE@ __stream);
+_IO_FILE@ fn fopen(byte@ __filename, byte@ __modes);
+_IO_FILE@ fn freopen(byte@ __filename, byte@ __modes, _IO_FILE@ __stream);
+_IO_FILE@ fn fdopen(i32 __fd, byte@ __modes);
+_IO_FILE@ fn fopencookie(none@ __magic_cookie, byte@ __modes, _IO_cookie_io_functions_t __io_funcs);
+_IO_FILE@ fn fmemopen(none@ __s, i64 __len, byte@ __modes);
+_IO_FILE@ fn open_memstream(byte@@ __bufloc, i64@ __sizeloc);
+none fn setbuf(_IO_FILE@ __stream, byte@ __buf);
+i32 fn setvbuf(_IO_FILE@ __stream, byte@ __buf, i32 __modes, i64 __n);
+none fn setbuffer(_IO_FILE@ __stream, byte@ __buf, i64 __size);
+none fn setlinebuf(_IO_FILE@ __stream);
+i32 fn fgetc(_IO_FILE@ __stream);
+i32 fn getc(_IO_FILE@ __stream);
+i32 fn getchar();
+i32 fn getc_unlocked(_IO_FILE@ __stream);
+i32 fn getchar_unlocked();
+i32 fn fgetc_unlocked(_IO_FILE@ __stream);
+i32 fn fputc(i32 __c, _IO_FILE@ __stream);
+i32 fn putc(i32 __c, _IO_FILE@ __stream);
+i32 fn putchar(i32 __c);
+i32 fn fputc_unlocked(i32 __c, _IO_FILE@ __stream);
+i32 fn putc_unlocked(i32 __c, _IO_FILE@ __stream);
+i32 fn putchar_unlocked(i32 __c);
+i32 fn getw(_IO_FILE@ __stream);
+i32 fn putw(i32 __w, _IO_FILE@ __stream);
+byte@ fn fgets(byte@ __s, i32 __n, _IO_FILE@ __stream);
+i64 fn getdelim(byte@@ __lineptr, i64@ __n, i32 __delimiter, _IO_FILE@ __stream);
+i64 fn getline(byte@@ __lineptr, i64@ __n, _IO_FILE@ __stream);
+i32 fn fputs(byte@ __s, _IO_FILE@ __stream);
+i32 fn puts(byte@ __s);
+i32 fn ungetc(i32 __c, _IO_FILE@ __stream);
+i64 fn fread(none@ __ptr, i64 __size, i64 __n, _IO_FILE@ __stream);
+i64 fn fwrite(none@ __ptr, i64 __size, i64 __n, _IO_FILE@ __s);
+i64 fn fread_unlocked(none@ __ptr, i64 __size, i64 __n, _IO_FILE@ __stream);
+i64 fn fwrite_unlocked(none@ __ptr, i64 __size, i64 __n, _IO_FILE@ __stream);
+i32 fn fseek(_IO_FILE@ __stream, i64 __off, i32 __whence);
+i64 fn ftell(_IO_FILE@ __stream);
+none fn rewind(_IO_FILE@ __stream);
+i32 fn fseeko(_IO_FILE@ __stream, i64 __off, i32 __whence);
+i64 fn ftello(_IO_FILE@ __stream);
+none fn clearerr(_IO_FILE@ __stream);
+i32 fn feof(_IO_FILE@ __stream);
+i32 fn ferror(_IO_FILE@ __stream);
+none fn clearerr_unlocked(_IO_FILE@ __stream);
+i32 fn feof_unlocked(_IO_FILE@ __stream);
+i32 fn ferror_unlocked(_IO_FILE@ __stream);
+none fn perror(byte@ __s);
+i32 fn fileno(_IO_FILE@ __stream);
+i32 fn fileno_unlocked(_IO_FILE@ __stream);
+i32 fn pclose(_IO_FILE@ __stream);
+_IO_FILE@ fn popen(byte@ __command, byte@ __modes);
+byte@ fn ctermid(byte@ __s);
+none fn flockfile(_IO_FILE@ __stream);
+i32 fn ftrylockfile(_IO_FILE@ __stream);
+none fn funlockfile(_IO_FILE@ __stream);

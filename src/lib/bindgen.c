@@ -6,6 +6,38 @@
 #include "yap/all.h"
 #include "yap/bindgen.h"
 
+/* Forward decl: inlines anonymous struct/union types in field output */
+static void print_type_inline(yap_ctx *ctx, FILE *out, yap_type_id id);
+
+static bool is_reserved_name(const char *name) {
+    return name && name[0] == '_' && name[1] == '_';
+}
+
+static bool type_uses_reserved_r(yap_ctx *ctx, yap_type_id id, int depth) {
+    if (depth > 16) return false;
+    yap_type *t = yap_ctx_get_type(ctx, id);
+    if (!t) return false;
+    if (t->kind == yap_type_struct) {
+        if (t->structure.name && is_reserved_name(t->structure.name)) return true;
+        for (size_t i = 0; t->structure.fields && i < darr_len(t->structure.fields); i++)
+            if (type_uses_reserved_r(ctx, t->structure.fields[i].type, depth + 1)) return true;
+        return false;
+    }
+    if (t->kind == yap_type_union) {
+        if (t->uni.name && is_reserved_name(t->uni.name)) return true;
+        for (size_t i = 0; t->uni.variants && i < darr_len(t->uni.variants); i++)
+            if (type_uses_reserved_r(ctx, t->uni.variants[i].type, depth + 1)) return true;
+        return false;
+    }
+    if (t->kind == yap_type_enum && t->enumeration.name) return is_reserved_name(t->enumeration.name);
+    if (t->kind == yap_type_ptr) return type_uses_reserved_r(ctx, t->pointer_type, depth + 1);
+    return false;
+}
+
+static bool type_uses_reserved(yap_ctx *ctx, yap_type_id id) {
+    return type_uses_reserved_r(ctx, id, 0);
+}
+
 int yap_gen_c_bind(yap_args args) {
     if (!args.gen_c_bind_header || !args.gen_c_bind_header[0]) {
         fprintf(stderr, "Error: --gen-c-bind requires a header argument\n");
@@ -43,23 +75,43 @@ int yap_gen_c_bind(yap_args args) {
 
     fprintf(out, "// C bindings from %s\n\n", header);
 
-    /* types */
+    /* forward declarations first */
+    for (size_t i = 0; i < darr_len(ctx->types); i++) {
+        yap_type *typ = &ctx->types[i];
+        if (typ->kind == yap_type_struct && typ->structure.name && !darr_len(typ->structure.fields) && !is_reserved_name(typ->structure.name))
+            fprintf(out, "type %s\n", typ->structure.name);
+        else if (typ->kind == yap_type_union && typ->uni.name && !darr_len(typ->uni.variants) && !is_reserved_name(typ->uni.name))
+            fprintf(out, "type %s\n", typ->uni.name);
+    }
+    fprintf(out, "\n");
+
+    /* full type definitions */
     for (size_t i = 0; i < darr_len(ctx->types); i++) {
         yap_type *typ = &ctx->types[i];
         if (typ->kind == yap_type_struct) {
-            fprintf(out, "struct %s {\n", typ->structure.name ? typ->structure.name : "(anon)");
+            if (!typ->structure.name || !darr_len(typ->structure.fields) || is_reserved_name(typ->structure.name)) continue;
+            bool has_reserved = false;
+            for (size_t j = 0; j < darr_len(typ->structure.fields); j++)
+                if (type_uses_reserved(ctx, typ->structure.fields[j].type)) { has_reserved = true; break; }
+            if (has_reserved) continue;
+            fprintf(out, "struct %s {\n", typ->structure.name);
             for (size_t j = 0; j < darr_len(typ->structure.fields); j++) {
-                char *tstr = yap_ctx_type_id_to_string(ctx, typ->structure.fields[j].type);
-                fprintf(out, "    %s: %s,\n", typ->structure.fields[j].name ? typ->structure.fields[j].name : "_", tstr);
-                free(tstr);
+                fprintf(out, "    ");
+                print_type_inline(ctx, out, typ->structure.fields[j].type);
+                fprintf(out, " %s,\n", typ->structure.fields[j].name ? typ->structure.fields[j].name : "_");
             }
             fprintf(out, "}\n\n");
         } else if (typ->kind == yap_type_union) {
-            fprintf(out, "union %s {\n", typ->uni.name ? typ->uni.name : "(anon)");
+            if (!typ->uni.name || !darr_len(typ->uni.variants) || is_reserved_name(typ->uni.name)) continue;
+            bool has_reserved_u = false;
+            for (size_t j = 0; j < darr_len(typ->uni.variants); j++)
+                if (type_uses_reserved(ctx, typ->uni.variants[j].type)) { has_reserved_u = true; break; }
+            if (has_reserved_u) continue;
+            fprintf(out, "union %s {\n", typ->uni.name);
             for (size_t j = 0; j < darr_len(typ->uni.variants); j++) {
-                char *tstr = yap_ctx_type_id_to_string(ctx, typ->uni.variants[j].type);
-                fprintf(out, "    %s: %s,\n", typ->uni.variants[j].name ? typ->uni.variants[j].name : "_", tstr);
-                free(tstr);
+                fprintf(out, "    ");
+                print_type_inline(ctx, out, typ->uni.variants[j].type);
+                fprintf(out, " %s,\n", typ->uni.variants[j].name ? typ->uni.variants[j].name : "_");
             }
             fprintf(out, "}\n\n");
         } else if (typ->kind == yap_type_enum) {
@@ -73,19 +125,23 @@ int yap_gen_c_bind(yap_args args) {
     /* functions */
     for (size_t i = 0; i < darr_len(ctx->semantic_decls); i++) {
         yap_decl *d = &ctx->semantic_decls[i];
-        if (d->kind == yap_decl_func && d->func_decl.body.kind == yap_block_none) {
-            char *ret = yap_ctx_type_id_to_string(ctx, d->func_decl.ret_typ);
-            fprintf(out, "%s fn %s(", ret, d->func_decl.name); free(ret);
+        if (d->kind == yap_decl_func_def && d->func_decl.body.kind == yap_block_none) {
+            if (is_reserved_name(d->func_decl.name)) continue;
+            if (type_uses_reserved(ctx, d->func_decl.ret_typ)) continue;
+            bool skip = false;
+            for (size_t j = 0; j < darr_len(d->func_decl.args); j++)
+                if (type_uses_reserved(ctx, d->func_decl.args[j].type)) { skip = true; break; }
+            if (skip) continue;
+            print_type_inline(ctx, out, d->func_decl.ret_typ);
+            fprintf(out, " fn %s(", d->func_decl.name);
             for (size_t j = 0; j < darr_len(d->func_decl.args); j++) {
                 if (j > 0) fprintf(out, ", ");
                 yap_func_arg *arg = &d->func_decl.args[j];
-                char *tstr = yap_ctx_type_id_to_string(ctx, arg->type);
-                if (arg->name && arg->name[0]) fprintf(out, "%s: %s", arg->name, tstr);
-                else fprintf(out, "%s", tstr);
-                free(tstr);
+                print_type_inline(ctx, out, arg->type);
+                if (arg->name && arg->name[0]) fprintf(out, " %s", arg->name);
+                else fprintf(out, " _arg%zu", j);
             }
-            ret = yap_ctx_type_id_to_string(ctx, d->func_decl.ret_typ);
-            fprintf(out, ") %s;\n", ret); free(ret);
+            fprintf(out, ");\n");
         }
     }
     fclose(out);
@@ -99,12 +155,52 @@ int yap_gen_c_bind(yap_args args) {
 
 /* ===== type-graph walker ===== */
 
-static char *cx_usr(CXCursor c) {
-  CXString s = clang_getCursorUSR(c); const char *u = clang_getCString(s);
-  char *r = u ? strdup(u) : NULL; clang_disposeString(s); return r;
-}
-
 static yap_type_id process_type(yap_ctx *ctx, CXType t);
+
+/* Print a type ID to the output file, inlining anonymous structs/unions */
+static void print_type_inline(yap_ctx *ctx, FILE *out, yap_type_id id) {
+  yap_type *typ = yap_ctx_get_type(ctx, id);
+  if (!typ) { fprintf(out, "(error)"); return; }
+  if (typ->kind == yap_type_struct && !typ->structure.name) {
+    fprintf(out, "struct {\n");
+    for (size_t j = 0; j < darr_len(typ->structure.fields); j++) {
+      fprintf(out, "        ");
+      print_type_inline(ctx, out, typ->structure.fields[j].type);
+      fprintf(out, " %s,\n", typ->structure.fields[j].name ? typ->structure.fields[j].name : "_");
+    }
+    fprintf(out, "    }");
+  } else if (typ->kind == yap_type_union && !typ->uni.name) {
+    fprintf(out, "union {\n");
+    for (size_t j = 0; j < darr_len(typ->uni.variants); j++) {
+      fprintf(out, "        ");
+      print_type_inline(ctx, out, typ->uni.variants[j].type);
+      fprintf(out, " %s,\n", typ->uni.variants[j].name ? typ->uni.variants[j].name : "_");
+    }
+    fprintf(out, "    }");
+  } else if (typ->kind == yap_type_struct && typ->structure.name) {
+    fprintf(out, "%s", typ->structure.name);
+  } else if (typ->kind == yap_type_union && typ->uni.name) {
+    fprintf(out, "%s", typ->uni.name);
+  } else if (typ->kind == yap_type_enum && typ->enumeration.name) {
+    fprintf(out, "%s", typ->enumeration.name);
+  } else if (typ->kind == yap_type_ptr) {
+    print_type_inline(ctx, out, typ->pointer_type);
+    fprintf(out, "@");
+  } else if (typ->kind == yap_type_func) {
+    yap_type *ret_typ = yap_ctx_get_type(ctx, typ->func.return_type);
+    if (ret_typ) { fprintf(out, "("); print_type_inline(ctx, out, typ->func.return_type); fprintf(out, " fn"); }
+    else fprintf(out, "(fn");
+    for (size_t i = 0; i < darr_len(typ->func.args); i++) {
+      fprintf(out, " "); print_type_inline(ctx, out, typ->func.args[i]);
+      if (i != darr_len(typ->func.args) - 1) fprintf(out, ",");
+    }
+    fprintf(out, ")");
+  } else {
+    char *tstr = yap_ctx_type_id_to_string(ctx, id);
+    fprintf(out, "%s", tstr);
+    free(tstr);
+  }
+}
 
 static enum CXChildVisitResult sf_visitor(CXCursor c, CXCursor parent, CXClientData cd) {
   (void)parent;
@@ -167,23 +263,38 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
       CXString ns = clang_getCursorSpelling(decl);
       const char *cname = clang_getCString(ns);
       bool is_union = (clang_getCursorKind(decl) == CXCursor_UnionDecl);
+      bool is_anon = false;
       const char *tn = (cname && *cname) ? cname : NULL;
       if (!tn) { clang_disposeString(ns); CXString sp = clang_getTypeSpelling(t); tn = clang_getCString(sp);
         if (!tn || !*tn) { clang_disposeString(sp); return ctx->internal_error_type_id; }
         ns = sp; }
-      // Sanitize: filter out anonymous/file-path type names
+      // Sanitize: detect anonymous/file-path type names
       if (strstr(tn, "/nix/store/") || strstr(tn, "(unnamed") || strstr(tn, "unnamed at"))
-        tn = "anon";
-      // Check by clang name first then by mangle name
+        { is_anon = true; tn = "anon"; }
+      // Check by clang name first, then by mangle name
       yap_type_id existing = yap_ctx_get_type_id_by_name(ctx, (char*)tn);
       if (existing) { clang_disposeString(ns); return existing; }
 
-      // Store opaque FIRST to break recursion. Use yap_ctx_push_named_type
-      // so the clang name (e.g. "_IO_FILE") is also registered.
+      // For anonymous types, generate a unique c_name for mangling.
+      // The .name stays NULL so the output loop can detect and skip it.
+      static int anon_counter = 0;
+      char *anon_c_name = NULL;
+      if (is_anon) {
+        anon_c_name = yap_ctx_strus_newf(ctx, "__anon_%s_%d", is_union ? "union" : "struct", anon_counter++);
+      }
+
+      // Store opaque FIRST to break recursion.
       yap_type opaque_ty = is_union
-        ? (yap_type){ .kind = yap_type_union, .uni = { .name = strdup(tn), .variants = darr_new(yap_struct_field) } }
-        : (yap_type){ .kind = yap_type_struct, .structure = { .name = strdup(tn), .fields = darr_new(yap_struct_field) } };
-      yap_type_id opaque_id = yap_ctx_push_named_type(ctx, (char*)tn, NULL, opaque_ty);
+        ? (yap_type){ .kind = yap_type_union, .uni = { .name = is_anon ? NULL : strdup(tn), .c_name = anon_c_name, .variants = darr_new(yap_struct_field) } }
+        : (yap_type){ .kind = yap_type_struct, .structure = { .name = is_anon ? NULL : strdup(tn), .c_name = anon_c_name, .fields = darr_new(yap_struct_field) } };
+      yap_type_id opaque_id = is_anon
+        ? yap_ctx_push_type(ctx, opaque_ty)
+        : yap_ctx_push_named_type(ctx, (char*)tn, NULL, opaque_ty);
+      if (anon_c_name) {
+        // Also register under the generated c_name for lookups
+        yap_named_type anon_named = { .id = opaque_id, .name = anon_c_name, .c_name = NULL };
+        hashmap_set(ctx->named_types, &anon_named);
+      }
 
       // Now walk fields — self-references will find the registered name
       if (clang_isCursorDefinition(decl)) {
@@ -223,6 +334,11 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
 static void push_imported_func(yap_ctx *ctx, CXCursor c) {
   CXString cs = clang_getCursorSpelling(c); const char *fname = clang_getCString(cs);
   if (!fname) { clang_disposeString(cs); return; }
+  CXType func_t = clang_getCursorType(c);
+  if (clang_isFunctionTypeVariadic(func_t)) {
+    yap_log("bindgen: skipping variadic function '%s'", fname);
+    clang_disposeString(cs); return;
+  }
   CXType ret_t = clang_getCursorResultType(c); yap_type_id ret_id = process_type(ctx, ret_t);
   darr(yap_func_arg) args = darr_new(yap_func_arg);
   int n = clang_Cursor_getNumArguments(c);
@@ -233,10 +349,11 @@ static void push_imported_func(yap_ctx *ctx, CXCursor c) {
     yap_func_arg arg = { .kind = yap_func_arg_valid, .name = pn ? strdup(pn) : NULL, .type = pid };
     darr_push(args, arg); clang_disposeString(ps);
   }
-  yap_decl decl = { .kind = yap_decl_func,
-    .func_decl = { .name = strdup(fname), .args = args, .ret_typ = ret_id,
-                    .body = { .kind = yap_block_none } },
-    .loc = (yap_loc){0}, .range = (yap_code_range){0} };
+  yap_block nobody = { .kind = yap_block_none };
+  yap_func_decl fd = { .name = strdup(fname), .args = args, .ret_typ = ret_id, .body = nobody };
+  yap_decl decl = {0};
+  decl.kind = yap_decl_func_def;
+  decl.func_decl = fd;
   darr_push(ctx->semantic_decls, decl); clang_disposeString(cs);
 }
 
