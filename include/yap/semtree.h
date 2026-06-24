@@ -226,7 +226,8 @@ kenobi_new_struct_free(yap_return_statement,
 kenobi_new_struct_free(yap_block,
   enum {
     yap_block_error,
-    yap_block_valid
+    yap_block_valid,
+    yap_block_none
   } kind;
   union {
     darr(yap_statement) statements;
