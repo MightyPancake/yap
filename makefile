@@ -35,13 +35,14 @@ endif
 ifneq ($(CLANG_LIBDIR),)
   CLANG_LDFLAGS := -L$(CLANG_LIBDIR) -Wl,-rpath,$(CLANG_LIBDIR)
 endif
+CLANG_LIBS := -lclang
 
 # Make these available to lib build (src/lib/bindgen.c needs clang-c/Index.h)
 YAP_SHARED_FLAGS += $(CLANG_CFLAGS)
 
 #Makes sure the compiler looks for yap.so in the lib dir
 YAP_COMPILER_LINKER_FLAGS := -Wl,-rpath,$(YAP_PATH)/lib
-YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap -o yap $(YAP_COMPILER_LINKER_FLAGS)
+YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap $(CLANG_LIBS) -o yap $(YAP_COMPILER_LINKER_FLAGS)
 
 YAP_LIB_FLAGS := $(YAP_SHARED_FLAGS) ./src/lib/*.c
 
@@ -77,7 +78,7 @@ static_lib:
 lib:
 	@echo $(PURPLE)Building libyap.so$(RESET)
 	$(CC) -fPIC -c $(YAP_LIB_FLAGS)
-	$(CC) -shared -o ./lib/libyap.so ./*.o
+	$(CC) -shared -o ./lib/libyap.so ./*.o $(CLANG_LDFLAGS) $(CLANG_LIBS)
 	$(RM) ./*.o
 	@echo $(GREEN)Done!$(RESET)
 
