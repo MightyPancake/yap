@@ -23,7 +23,7 @@
 
 void* yap_get_handle(const char* path){
     char* abs_path = yap_resolve_path(path);
-    printf("handle for: %s\n", abs_path);
+    yap_log("handle for: %s\n", abs_path);
     void *handle = dlopen(abs_path, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
         fprintf(stderr, "%s\n", dlerror());
@@ -246,7 +246,7 @@ int main(int argc, char** argv) {
     int result = 0;
     //Parse args
     yap_args args = (yap_args){
-      .output_file = "a",
+      .output_file = "a.out",
       .extra = darr_new(char*),
       .command = "compile"
     };

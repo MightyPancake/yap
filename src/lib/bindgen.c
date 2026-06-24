@@ -44,12 +44,8 @@ int yap_gen_c_bind(yap_args args) {
         return 1;
     }
     const char *header = args.gen_c_bind_header;
-    const char *outdir = args.output_file ? args.output_file : "binds";
-    yap_log("gen-c-bind: header=%s  output_dir=%s", header, outdir);
-
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "mkdir -p %s", outdir);
-    if (system(cmd) != 0) { fprintf(stderr, "Error: failed to create directory\n"); return 1; }
+    const char *outfile = args.output_file ? args.output_file : "binds.yap";
+    yap_log("gen-c-bind: header=%s  output=%s", header, outfile);
 
     FILE *tmp = fopen("/tmp/yap_bindgen_input.c", "w");
     if (!tmp) { return 1; }
@@ -57,8 +53,8 @@ int yap_gen_c_bind(yap_args args) {
     else fprintf(tmp, "#include \"%s\"\n", header);
     fclose(tmp);
 
-    FILE *out = fopen("/tmp/yap_bindgen_output.yap", "w");
-    if (!out) { unlink("/tmp/yap_bindgen_input.c"); return 1; }
+    FILE *out = fopen(outfile, "w");
+    if (!out) { fprintf(stderr, "Error: failed to open '%s' for writing\n", outfile); unlink("/tmp/yap_bindgen_input.c"); return 1; }
 
     yap_ctx *ctx = yap_ctx_new();
 
@@ -146,10 +142,8 @@ int yap_gen_c_bind(yap_args args) {
     }
     fclose(out);
 
-    snprintf(cmd, sizeof(cmd), "mv /tmp/yap_bindgen_output.yap %s/binds.yap", outdir);
-    int sysret = system(cmd); (void)sysret;
     yap_ctx_free(*ctx); free(ctx); unlink("/tmp/yap_bindgen_input.c");
-    printf("Generated %s/binds.yap\n", outdir);
+    printf("Generated %s\n", outfile);
     return 0;
 }
 

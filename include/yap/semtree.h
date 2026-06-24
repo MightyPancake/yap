@@ -56,6 +56,15 @@ kenobi_new_struct_free(yap_blob,
   unsigned int field_count;
 );
 
+typedef struct yap_array_type {
+  yap_type_id element_type;
+  size_t size;
+} yap_array_type;
+
+typedef struct yap_slice_type {
+  yap_type_id element_type;
+} yap_slice_type;
+
 kenobi_new_struct_free(yap_type,
   yap_type_kind kind;
   union {
@@ -67,6 +76,8 @@ kenobi_new_struct_free(yap_type,
     yap_union_type uni;
     yap_enum_type enumeration;
     yap_blob blob;
+    yap_array_type array;
+    yap_slice_type slice;
     yap_error err;
   };
   bool is_const;
@@ -166,6 +177,11 @@ kenobi_new_struct_free(yap_member_access,
   char* member;
 );
 
+kenobi_new_struct_free(yap_index_access,
+  yap_expr* object;
+  yap_expr* index;
+);
+
 kenobi_new_struct_free(yap_expr,
   yap_expr_kind kind;
   union {
@@ -178,6 +194,7 @@ kenobi_new_struct_free(yap_expr,
     char* var_name;
     yap_expr* subexpr;
     yap_member_access member_access;
+    yap_index_access index_access;
   };
   yap_type_id type;
   bool is_lvalue;

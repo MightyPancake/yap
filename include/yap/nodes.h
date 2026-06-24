@@ -99,6 +99,12 @@ kenobi_new_struct_free(yap_member_access_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_index_access_node,
+    yap_expr_node* object;
+    yap_expr_node* index;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_expr_node,
     yap_expr_kind kind;
     union {
@@ -115,6 +121,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_decrement_node decrement;
         yap_ternary_node ternary;
         yap_member_access_node member_access;
+        yap_index_access_node index_access;
         yap_block_node block;
     };
     yap_loc loc;
@@ -274,6 +281,8 @@ typedef enum {
     yap_type_node_anon_struct,
     yap_type_node_anon_enum,
     yap_type_node_anon_union,
+    yap_type_node_array,
+    yap_type_node_slice,
 } yap_type_node_kind;
 
 kenobi_new_struct_free(yap_type_node,
@@ -297,6 +306,11 @@ kenobi_new_struct_free(yap_type_node,
         struct {
             darr(yap_var_decl_node) variants;   // anon union variants
         } anon_union;
+        struct {
+            yap_type_node*    element_type;
+            yap_expr_node*    size_expr;         // compile-time size expression
+        } array_type;
+        yap_type_node*        slice_subtype;     // element type for slices
     };
     yap_loc loc;
 );
