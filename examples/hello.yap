@@ -1,10 +1,6 @@
-import "../stdio/binds.yap"
+import "../stdio.yap"
 
-fn main() {
-    putchar(72);
-    putchar(101);
-    putchar(108);
-    putchar(108);
-    putchar(111);
-    putchar(10);
+i32 fn main() {
+    puts(c"Hello, world!");
+    ret 0;
 }

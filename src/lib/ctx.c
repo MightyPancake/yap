@@ -456,6 +456,18 @@ char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
       return strus_newf("union %s", typ.uni.name ? typ.uni.name : "(anon)");
     case yap_type_enum:
       return strus_newf("enum %s", typ.enumeration.name ? typ.enumeration.name : "(anon)");
+    case yap_type_array: {
+      char* elem = yap_ctx_type_to_string(ctx, *yap_ctx_get_type(ctx, typ.array.element_type));
+      res = strus_newf("%s[%zu]", elem, typ.array.size);
+      free(elem);
+      break;
+    }
+    case yap_type_slice: {
+      char* elem = yap_ctx_type_to_string(ctx, *yap_ctx_get_type(ctx, typ.slice.element_type));
+      res = strus_newf("%s[]", elem);
+      free(elem);
+      break;
+    }
     default:
       return strus_copy("(unimplemented type to string)");
   }
@@ -583,6 +595,24 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
     case yap_type_untyped:
       yap_log("Getting mangle string for untyped type");
       return yap_ctx_type_to_mangle_string(ctx, yap_ctx_coerce_type(ctx, typ));
+    case yap_type_array: {
+      yap_type* elem = yap_ctx_get_type(ctx, typ.array.element_type);
+      if (!elem) return NULL;
+      char* elem_str = yap_ctx_type_to_mangle_string(ctx, *elem);
+      if (!elem_str) return NULL;
+      res = strus_newf("%sA%zu_%s", const_str, typ.array.size, elem_str);
+      free(elem_str);
+      return res;
+    }
+    case yap_type_slice: {
+      yap_type* elem = yap_ctx_get_type(ctx, typ.slice.element_type);
+      if (!elem) return NULL;
+      char* elem_str = yap_ctx_type_to_mangle_string(ctx, *elem);
+      if (!elem_str) return NULL;
+      res = strus_newf("%sS%s", const_str, elem_str);
+      free(elem_str);
+      return res;
+    }
     case yap_type_blob:
     default:
       return NULL;

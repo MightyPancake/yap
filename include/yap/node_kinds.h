@@ -42,6 +42,7 @@ typedef enum {
     yap_expr_decrement,
     yap_expr_ternary,
     yap_expr_member_access,
+    yap_expr_index_access,
     yap_expr_block,
 } yap_expr_kind;
 
@@ -50,6 +51,7 @@ typedef enum {
     yap_literal_numerical,
     yap_literal_blob,
     yap_literal_string,
+    yap_literal_cstring,
     yap_literal_bool,
     yap_literal_null,
 } yap_literal_kind;
@@ -71,6 +73,8 @@ typedef enum {
   yap_type_union,
   yap_type_enum,
   yap_type_blob,
+  yap_type_array,
+  yap_type_slice,
   yap_type_error,
 }yap_type_kind;
 
