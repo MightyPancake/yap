@@ -50,7 +50,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib test test_file path workflow
+.PHONY: default compiler lib test test_file path workflow bindings hello
 
 default: all
 
@@ -87,6 +87,18 @@ lib:
 #   make bindgen_smoke bindgen_header="<stdio.h>"   # real system header
 # On Nix: CLANG_INCDIR/CLANG_LIBDIR come from shellHook.
 # On Ubuntu: clang package puts headers/libs in system paths.
+bindings: lib compiler
+	@echo $(PURPLE)Generating C bindings$(RESET)
+	@mkdir -p modules/io
+	./yap --gen-c-bind '<stdio.h>' -o modules/io/binds.yap
+	@echo $(GREEN)Done!$(RESET)
+
+hello: bindings
+	@echo $(PURPLE)Building and running hello world$(RESET)
+	./yap -o hello examples/hello.yap
+	./hello
+	@echo $(GREEN)Done!$(RESET)
+
 bindgen_smoke:
 	@echo $(PURPLE)Building bindgen smoke test$(RESET)
 	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $(CLANG_CFLAGS) $(CLANG_LDFLAGS) -lclang

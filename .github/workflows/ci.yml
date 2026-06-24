@@ -33,3 +33,9 @@ jobs:
           make path
           make bindgen_smoke bindgen_header="<stdio.h>"
           make test detailed=true
+
+      - name: Generate bindings
+        run: make bindings
+
+      - name: Hello world
+        run: make hello

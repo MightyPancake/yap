@@ -3,3 +3,5 @@
 lib/libyap.so
 summary.md
 a.out
+/hello
+modules/*/binds.yap
