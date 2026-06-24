@@ -71,18 +71,27 @@ lib:
 # Binary kept at /tmp/bindgen_smoke for later manual runs.
 bindgen_smoke:
 	@echo $(PURPLE)Building bindgen smoke test$(RESET)
-	@BDG_INC="$$(pkg-config --cflags-only-I clang 2>/dev/null || true)"; \
-	BDG_INC=$${BDG_INC#-I}; \
-	BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null || true)"; \
-	[ -n "$${CLANG_INCDIR:-}" ] && BDG_INC="$$CLANG_INCDIR"; \
-	[ -n "$${CLANG_LIBDIR:-}" ] && BDG_LIB="$$CLANG_LIBDIR"; \
+	@BDG_INC="$${CLANG_INCDIR:-}"; \
+	BDG_LIB="$${CLANG_LIBDIR:-}"; \
+	# Try pkg-config only if env vars aren't set (Ubuntu CI)
+	if [ -z "$$BDG_INC" ]; then \
+	  BDG_INC="$$(pkg-config --variable=includedir clang 2>/dev/null || pkg-config --cflags-only-I clang 2>/dev/null | sed 's/^-I//;s/ .*//')"; \
+	fi; \
+	if [ -z "$$BDG_LIB" ]; then \
+	  BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null)"; \
+	fi; \
+	if [ -z "$$BDG_INC" ]; then \
+	  BDG_INC="$$(ls -d /usr/lib/llvm-*/include/clang-c 2>/dev/null | head -1 | xargs dirname)"; \
+	fi; \
 	BDG_FLAGS=""; \
 	[ -n "$$BDG_INC" ] && BDG_FLAGS="$$BDG_FLAGS -I$$BDG_INC"; \
 	[ -n "$$BDG_LIB" ] && BDG_FLAGS="$$BDG_FLAGS -L$$BDG_LIB -Wl,-rpath,$$BDG_LIB"; \
+	echo "  CLANG_INCDIR=$$BDG_INC"; \
+	echo "  CLANG_LIBDIR=$$BDG_LIB"; \
 	$(CC) tests/bindgen_smoke.c -o /tmp/bindgen_smoke $$BDG_FLAGS -lclang
 	@echo $(CYAN)Running bindgen smoke test$(RESET)
-	@BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null || true)"; \
-	[ -n "$${CLANG_LIBDIR:-}" ] && BDG_LIB="$$CLANG_LIBDIR"; \
+	@BDG_LIB="$${CLANG_LIBDIR:-}"; \
+	[ -z "$$BDG_LIB" ] && BDG_LIB="$$(pkg-config --variable=libdir clang 2>/dev/null || true)"; \
 	[ -n "$$BDG_LIB" ] && export LD_LIBRARY_PATH="$$BDG_LIB"; \
 	$(if $(bindgen_header),/tmp/bindgen_smoke '$(bindgen_header)',/tmp/bindgen_smoke)
 	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
