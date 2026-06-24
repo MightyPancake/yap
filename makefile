@@ -42,7 +42,7 @@ YAP_SHARED_FLAGS += $(CLANG_CFLAGS)
 
 #Makes sure the compiler looks for yap.so in the lib dir
 YAP_COMPILER_LINKER_FLAGS := -Wl,-rpath,$(YAP_PATH)/lib
-YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap $(CLANG_LIBS) -o yap $(YAP_COMPILER_LINKER_FLAGS)
+YAP_COMPILER_FLAGS := $(YAP_SHARED_FLAGS) ./src/*.c -rdynamic -lyap $(CLANG_LDFLAGS) $(CLANG_LIBS) -o yap $(YAP_COMPILER_LINKER_FLAGS)
 
 YAP_LIB_FLAGS := $(YAP_SHARED_FLAGS) ./src/lib/*.c
 
