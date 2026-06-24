@@ -31,10 +31,11 @@ jobs:
       - name: Run workflow
         run: |
           make path
-          # Find libclang include dir (Ubuntu installs to versioned LLVM path)
-          CLANG_INCDIR="$(pkg-config --cflags-only-I clang 2>/dev/null | head -c -1 | cut -c3- || true)"
-          [ -n "$CLANG_INCDIR" ] && export CLANG_INCDIR
-          CLANG_LIBDIR="$(pkg-config --variable=libdir clang 2>/dev/null || true)"
-          [ -n "$CLANG_LIBDIR" ] && export CLANG_LIBDIR
+          # Find libclang: on Ubuntu it's in /usr/lib/llvm-18, on Nix in the store.
+          # pkg-config gives us both include and lib paths.
+          export CLANG_INCDIR="$(pkg-config --variable=includedir clang)"
+          export CLANG_LIBDIR="$(pkg-config --variable=libdir clang)"
+          echo "CLANG_INCDIR=$CLANG_INCDIR"
+          echo "CLANG_LIBDIR=$CLANG_LIBDIR"
           make bindgen_smoke bindgen_header="<stdio.h>"
           make test detailed=true
