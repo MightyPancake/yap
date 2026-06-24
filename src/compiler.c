@@ -85,6 +85,7 @@ int compile(yap_args args){
     //Callbacks from loaded components
     ctx->print_error = compiler.frontend.print_error;
     ctx->gen_decl = compiler.backend.gen_decl;
+    ctx->args = compiler.args;
     
     //Phase 1: Parsing (includes import resolution and building the source tree)
     ctx = compiler.frontend.parse(ctx, args);

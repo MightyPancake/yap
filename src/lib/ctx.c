@@ -28,10 +28,10 @@ yap_ctx* yap_ctx_new(){
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
     ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
     yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
-    ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int32_t");
-    yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "uint32_t");
-    yap_ctx_push_new_primitive_type(ctx, 8, true, false, "i64", "i64", "int64_t");
-    yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "uint64_t");
+    ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int");
+    yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "unsigned int");
+    yap_ctx_push_new_primitive_type(ctx, 8, true, false, "i64", "i64", "long");
+    yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "unsigned long");
     ctx->float_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, true, "f32", "f32", "float");
     yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
 

@@ -3,8 +3,10 @@
 
 void yap_decl_free(yap_decl decl){
   switch(decl.kind){
-    case yap_decl_func:
+    case yap_decl_func_def:
       yap_func_decl_free(decl.func_decl);
+      break;
+    case yap_decl_func_decl:
       break;
     default: break;
   }

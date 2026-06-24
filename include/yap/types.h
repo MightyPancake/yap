@@ -90,6 +90,9 @@ kenobi_new_struct_free(yap_ctx,
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;
 
+  //Args
+  yap_args* args;
+
   //Parser ctx
   void* parser_ctx;
 
