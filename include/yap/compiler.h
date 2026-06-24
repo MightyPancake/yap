@@ -1,7 +1,10 @@
 #ifndef YAP_COMPILER_H
 #define YAP_COMPILER_H
 
-#include "yap/bindgen.h"
+#include "yap/types.h"
+
+//Forward declarations for bindgen (avoids pulling clang-c/Index.h everywhere)
+int yap_gen_c_bind(yap_args args);
 
 //Parsing
 typedef yap_ctx* (*yap_parse_fn)(yap_ctx*, yap_args);

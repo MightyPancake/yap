@@ -1,7 +1,6 @@
 #ifndef YAP_BINDGEN_H
 #define YAP_BINDGEN_H
 
-#include <clang-c/Index.h>  // libclang
 #include "yap/types.h"
 
 // A single imported C function, ready to be turned into a yap extern decl.
