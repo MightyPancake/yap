@@ -70,6 +70,12 @@ void yap_ctx_free(yap_ctx ctx){
   // Free semantic declarations
   darr_free(ctx.semantic_decls);
 
+  // Free module lookup paths
+  for_darr(i, p, ctx.module_lookup_paths){
+    free(p);
+  }
+  darr_free(ctx.module_lookup_paths);
+
   // Free sources
   yap_log("Freeing %d sources", darr_len(ctx.sources));
   for_darr(i, src, ctx.sources){
