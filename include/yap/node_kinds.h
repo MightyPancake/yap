@@ -55,6 +55,7 @@ typedef enum {
     yap_literal_cstring,
     yap_literal_bool,
     yap_literal_null,
+    yap_literal_byte,
 } yap_literal_kind;
 
 typedef enum {

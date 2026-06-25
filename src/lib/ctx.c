@@ -39,7 +39,8 @@ yap_ctx* yap_ctx_new(){
     //Untyped default types for literal coercion
     ctx->untyped_int_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->int_type_id));
     ctx->untyped_float_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->float_type_id));
-    ctx->untyped_byte_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->bool_type_id));
+    yap_type_id byte_id = yap_ctx_get_type_id_by_name(ctx, "byte");
+    ctx->untyped_byte_type_id = yap_ctx_push_type(ctx, yap_untyped_type(byte_id));
     
     return ctx;
 }

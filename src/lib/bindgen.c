@@ -191,6 +191,16 @@ int yap_gen_c_bind(yap_args args) {
 
             bindgen_wrapper_entry *we = &s_wrapper_entries[i];
 
+            bool duplicate = false;
+            for (size_t k = 0; k < i; k++) {
+                yap_decl *dk = &ctx->semantic_decls[k];
+                if (dk->kind == yap_decl_func_def && dk->func_decl.body.kind == yap_block_none
+                    && dk->func_decl.name && strcmp(dk->func_decl.name, d->func_decl.name) == 0) {
+                    duplicate = true; break;
+                }
+            }
+            if (duplicate) continue;
+
             bool has_fnptr = strstr(we->c_ret_spelling, "(*)") != NULL;
             for (size_t j = 0; !has_fnptr && j < darr_len(we->c_param_types); j++)
                 if (strstr(we->c_param_types[j], "(*)")) has_fnptr = true;
