@@ -89,8 +89,8 @@ lib:
 # On Ubuntu: clang package puts headers/libs in system paths.
 bindings: lib compiler
 	@echo $(PURPLE)Generating C bindings$(RESET)
-	@mkdir -p modules/io
 	./yap --gen-c-bind '<stdio.h>' --prefix io_ -o modules/io/binds.yap
+	./yap --gen-c-bind '<stdlib.h>' --prefix stdlib_ -o modules/stdlib/binds.yap
 	@echo $(GREEN)Done!$(RESET)
 
 hello: bindings
