@@ -98,7 +98,6 @@ kenobi_new_struct_free(yap_named_type,
 
 kenobi_new_struct_free(yap_var,
   char* name;
-  char* c_name;
   yap_type_id type;
 );
 
@@ -287,7 +286,6 @@ kenobi_new_struct_free(yap_func_arg,
 
 kenobi_new_struct_free(yap_func_decl,
   char* name;
-  char* c_name;
   darr(yap_func_arg) args;
   yap_type_id ret_typ;
   yap_block body;
@@ -315,6 +313,7 @@ kenobi_new_struct_free(yap_decl,
   };
   yap_loc loc;
   yap_code_range range;
+  char* module_prefix;
 );
 
 kenobi_new_struct_free(yap_incremental_val,

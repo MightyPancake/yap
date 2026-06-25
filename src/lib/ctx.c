@@ -88,7 +88,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .decls = darr_new(yap_decl_node),
     .module_ctx = NULL,
-    .scope = yap_ctx_new_scope(ctx, NULL)
+    .scope = yap_ctx_new_scope(ctx, NULL),
+    .lib_paths = darr_new(char*)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);
