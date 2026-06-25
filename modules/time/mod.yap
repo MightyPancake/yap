@@ -1,0 +1,6 @@
+module time {
+    version: "0.0.1",
+    prefix: "time_"
+}
+
+import "binds.yap"

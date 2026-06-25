@@ -124,7 +124,9 @@ int yap_gen_c_bind(yap_args args) {
             }
             fprintf(out, "}\n\n");
         } else if (typ->kind == yap_type_enum) {
-            fprintf(out, "enum %s {\n", typ->enumeration.name ? typ->enumeration.name : "(anon)");
+            if (!typ->enumeration.name || is_reserved_name(typ->enumeration.name)
+                || strchr(typ->enumeration.name, '(') || strchr(typ->enumeration.name, '/')) continue;
+            fprintf(out, "enum %s {\n", typ->enumeration.name);
             for (size_t j = 0; j < darr_len(typ->enumeration.variants); j++)
                 fprintf(out, "    %s,\n", typ->enumeration.variants[j].name);
             fprintf(out, "}\n\n");

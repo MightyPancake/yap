@@ -121,7 +121,13 @@ kenobi_new_struct_free(yap_bin_expr,
     yap_bin_expr_sub = '-',
     yap_bin_expr_mul = '*',
     yap_bin_expr_div = '/',
-    yap_bin_expr_mod = '%'
+    yap_bin_expr_mod = '%',
+    yap_bin_expr_eq = 128,
+    yap_bin_expr_neq,
+    yap_bin_expr_lt,
+    yap_bin_expr_gt,
+    yap_bin_expr_le,
+    yap_bin_expr_ge
   } op;
   union {
     struct {
