@@ -91,6 +91,8 @@ bindings: lib compiler
 	@echo $(PURPLE)Generating C bindings$(RESET)
 	./yap --gen-c-bind '<stdio.h>' --prefix io_ -o modules/io/binds.yap
 	./yap --gen-c-bind '<stdlib.h>' --prefix stdlib_ -o modules/stdlib/binds.yap
+	./yap --gen-c-bind '<math.h>' --prefix math_ -o modules/math/binds.yap
+	./yap --gen-c-bind '<time.h>' --prefix time_ -o modules/time/binds.yap
 	@echo $(GREEN)Done!$(RESET)
 
 hello: bindings
