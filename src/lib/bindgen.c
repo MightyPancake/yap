@@ -2,12 +2,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include <clang-c/Index.h>
 #include "yap/all.h"
 #include "yap/bindgen.h"
 
 /* Forward decl: inlines anonymous struct/union types in field output */
 static void print_type_inline(yap_ctx *ctx, FILE *out, yap_type_id id);
+
+typedef struct {
+    char *c_name;
+    char *c_ret_spelling;
+    darr(char*) c_param_types;
+    darr(char*) c_param_names;
+} bindgen_wrapper_entry;
+
+static darr(bindgen_wrapper_entry) s_wrapper_entries = NULL;
 
 static bool is_reserved_name(const char *name) {
     return name && name[0] == '_' && name[1] == '_';
@@ -57,6 +67,9 @@ int yap_gen_c_bind(yap_args args) {
     if (!out) { fprintf(stderr, "Error: failed to open '%s' for writing\n", outfile); unlink("/tmp/yap_bindgen_input.c"); return 1; }
 
     yap_ctx *ctx = yap_ctx_new();
+
+    bool gen_wrapper = args.gen_c_bind_prefix && args.gen_c_bind_prefix[0];
+    if (gen_wrapper) s_wrapper_entries = darr_new(bindgen_wrapper_entry);
 
     const char *glibc_inc = NULL;
     char glibc_arg[512];
@@ -141,6 +154,102 @@ int yap_gen_c_bind(yap_args args) {
         }
     }
     fclose(out);
+
+    if (gen_wrapper) {
+        const char *prefix = args.gen_c_bind_prefix;
+
+        char outdir[PATH_MAX / 2];
+        strncpy(outdir, outfile, sizeof(outdir) - 1);
+        outdir[sizeof(outdir) - 1] = '\0';
+        char *last_slash = strrchr(outdir, '/');
+        if (last_slash) *(last_slash + 1) = '\0';
+        else strcpy(outdir, "./");
+
+        char libname[256];
+        strncpy(libname, prefix, sizeof(libname) - 1);
+        libname[sizeof(libname) - 1] = '\0';
+        size_t plen = strlen(libname);
+        if (plen > 0 && libname[plen - 1] == '_') libname[plen - 1] = '\0';
+
+        char wrapper_path[PATH_MAX];
+        snprintf(wrapper_path, sizeof(wrapper_path), "%swrapper.c", outdir);
+        FILE *wf = fopen(wrapper_path, "w");
+        if (!wf) { fprintf(stderr, "Error: failed to open '%s'\n", wrapper_path); goto wrapper_cleanup; }
+
+        if (header[0] == '<') fprintf(wf, "#include %s\n\n", header);
+        else fprintf(wf, "#include \"%s\"\n\n", header);
+
+        for (size_t i = 0; i < darr_len(ctx->semantic_decls); i++) {
+            yap_decl *d = &ctx->semantic_decls[i];
+            if (d->kind != yap_decl_func_def || d->func_decl.body.kind != yap_block_none) continue;
+            if (is_reserved_name(d->func_decl.name)) continue;
+            if (type_uses_reserved(ctx, d->func_decl.ret_typ)) continue;
+            bool skip = false;
+            for (size_t j = 0; j < darr_len(d->func_decl.args); j++)
+                if (type_uses_reserved(ctx, d->func_decl.args[j].type)) { skip = true; break; }
+            if (skip) continue;
+
+            bindgen_wrapper_entry *we = &s_wrapper_entries[i];
+
+            bool has_fnptr = strstr(we->c_ret_spelling, "(*)") != NULL;
+            for (size_t j = 0; !has_fnptr && j < darr_len(we->c_param_types); j++)
+                if (strstr(we->c_param_types[j], "(*)")) has_fnptr = true;
+            if (has_fnptr) {
+                yap_log("bindgen: skipping wrapper for '%s' (function pointer type)", we->c_name);
+                continue;
+            }
+
+            bool is_void = strcmp(we->c_ret_spelling, "void") == 0;
+
+            fprintf(wf, "__attribute__((visibility(\"default\")))\n");
+            fprintf(wf, "%s %s%s(", we->c_ret_spelling, prefix, we->c_name);
+            if (darr_len(we->c_param_types) == 0) fprintf(wf, "void");
+            for (size_t j = 0; j < darr_len(we->c_param_types); j++) {
+                if (j > 0) fprintf(wf, ", ");
+                fprintf(wf, "%s %s", we->c_param_types[j], we->c_param_names[j]);
+            }
+            fprintf(wf, ") {\n    %s%s(", is_void ? "" : "return ", we->c_name);
+            for (size_t j = 0; j < darr_len(we->c_param_names); j++) {
+                if (j > 0) fprintf(wf, ", ");
+                fprintf(wf, "%s", we->c_param_names[j]);
+            }
+            fprintf(wf, ");\n}\n\n");
+        }
+        fclose(wf);
+        printf("Generated %s\n", wrapper_path);
+
+        char obj_path[PATH_MAX], so_path[PATH_MAX], a_path[PATH_MAX], cmd[PATH_MAX * 3];
+        snprintf(obj_path, sizeof(obj_path), "%swrapper.o", outdir);
+        snprintf(so_path, sizeof(so_path), "%slib%s.so", outdir, libname);
+        snprintf(a_path, sizeof(a_path), "%slib%s.a", outdir, libname);
+
+        snprintf(cmd, sizeof(cmd), "gcc -fPIC -fvisibility=hidden -c \"%s\" -o \"%s\"", wrapper_path, obj_path);
+        if (system(cmd) != 0) { fprintf(stderr, "Error: failed to compile wrapper\n"); goto wrapper_cleanup; }
+
+        snprintf(cmd, sizeof(cmd), "ar rcs \"%s\" \"%s\"", a_path, obj_path);
+        if (system(cmd) != 0) { fprintf(stderr, "Error: failed to create static library\n"); goto wrapper_cleanup; }
+
+        snprintf(cmd, sizeof(cmd), "gcc -shared -o \"%s\" \"%s\"", so_path, obj_path);
+        if (system(cmd) != 0) { fprintf(stderr, "Error: failed to create shared library\n"); goto wrapper_cleanup; }
+
+        unlink(obj_path);
+        printf("Generated %s\n", a_path);
+        printf("Generated %s\n", so_path);
+
+wrapper_cleanup:
+        for (size_t i = 0; i < darr_len(s_wrapper_entries); i++) {
+            free(s_wrapper_entries[i].c_name);
+            free(s_wrapper_entries[i].c_ret_spelling);
+            for (size_t j = 0; j < darr_len(s_wrapper_entries[i].c_param_types); j++) {
+                free(s_wrapper_entries[i].c_param_types[j]);
+                free(s_wrapper_entries[i].c_param_names[j]);
+            }
+            darr_free(s_wrapper_entries[i].c_param_types);
+            darr_free(s_wrapper_entries[i].c_param_names);
+        }
+        darr_free(s_wrapper_entries);
+        s_wrapper_entries = NULL;
+    }
 
     yap_ctx_free(*ctx); free(ctx); unlink("/tmp/yap_bindgen_input.c");
     printf("Generated %s\n", outfile);
@@ -336,19 +445,57 @@ static void push_imported_func(yap_ctx *ctx, CXCursor c) {
   CXType ret_t = clang_getCursorResultType(c); yap_type_id ret_id = process_type(ctx, ret_t);
   darr(yap_func_arg) args = darr_new(yap_func_arg);
   int n = clang_Cursor_getNumArguments(c);
+
+  bool collect_wrapper = (s_wrapper_entries != NULL);
+  bindgen_wrapper_entry wentry = {0};
+  if (collect_wrapper) {
+    CXString ret_sp = clang_getTypeSpelling(ret_t);
+    wentry.c_name = strdup(fname);
+    wentry.c_ret_spelling = strdup(clang_getCString(ret_sp));
+    wentry.c_param_types = darr_new(char*);
+    wentry.c_param_names = darr_new(char*);
+    clang_disposeString(ret_sp);
+  }
+
   for (int i = 0; i < n; i++) {
     CXCursor param = clang_Cursor_getArgument(c, i);
     CXType pt = clang_getCursorType(param); yap_type_id pid = process_type(ctx, pt);
     CXString ps = clang_getCursorSpelling(param); const char *pn = clang_getCString(ps);
     yap_func_arg arg = { .kind = yap_func_arg_valid, .name = pn ? strdup(pn) : NULL, .type = pid };
-    darr_push(args, arg); clang_disposeString(ps);
+    darr_push(args, arg);
+
+    if (collect_wrapper) {
+      CXType canon_pt = clang_getCanonicalType(pt);
+      char *type_str;
+      if (canon_pt.kind == CXType_ConstantArray || canon_pt.kind == CXType_IncompleteArray) {
+        CXType elem = clang_getArrayElementType(canon_pt);
+        CXString elem_sp = clang_getTypeSpelling(elem);
+        size_t len = strlen(clang_getCString(elem_sp)) + 3;
+        type_str = malloc(len);
+        snprintf(type_str, len, "%s *", clang_getCString(elem_sp));
+        clang_disposeString(elem_sp);
+      } else {
+        CXString pt_sp = clang_getTypeSpelling(pt);
+        type_str = strdup(clang_getCString(pt_sp));
+        clang_disposeString(pt_sp);
+      }
+      darr_push(wentry.c_param_types, type_str);
+      char *pname;
+      if (pn && *pn) pname = strdup(pn);
+      else { char buf[32]; snprintf(buf, sizeof(buf), "_arg%d", i); pname = strdup(buf); }
+      darr_push(wentry.c_param_names, pname);
+    }
+
+    clang_disposeString(ps);
   }
   yap_block nobody = { .kind = yap_block_none };
   yap_func_decl fd = { .name = strdup(fname), .args = args, .ret_typ = ret_id, .body = nobody };
   yap_decl decl = {0};
   decl.kind = yap_decl_func_def;
   decl.func_decl = fd;
-  darr_push(ctx->semantic_decls, decl); clang_disposeString(cs);
+  darr_push(ctx->semantic_decls, decl);
+  if (collect_wrapper) darr_push(s_wrapper_entries, wentry);
+  clang_disposeString(cs);
 }
 
 /* ===== walker + public API ===== */

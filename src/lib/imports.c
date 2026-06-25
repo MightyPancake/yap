@@ -1,4 +1,5 @@
 #include "yap/all.h"
+#include <dirent.h>
 
 void yap_resolve_module_decl(yap_ctx* ctx){
     yap_log("\n\nPhase 0: Module declaration resolution\n");
@@ -80,6 +81,31 @@ void yap_resolve_module_decl(yap_ctx* ctx){
             if (!yap_ctx_get_module(ctx, imp_name)){
                 yap_log("Registering imported module: name='%s' prefix='%s'", imp_name, imp_prefix);
                 yap_ctx_create_new_module(ctx, imp_name, imp_prefix);
+
+                yap_module* imp_mod = yap_ctx_get_module(ctx, imp_name);
+                if (imp_mod) {
+                    for_darr(pi, lookup_path, ctx->module_lookup_paths){
+                        char* mod_dir = strus_newf("%s/%s", lookup_path, imp_name);
+                        DIR* dir = opendir(mod_dir);
+                        if (dir) {
+                            struct dirent* ent;
+                            while ((ent = readdir(dir)) != NULL) {
+                                size_t nlen = strlen(ent->d_name);
+                                bool is_lib = (nlen > 3 && strcmp(ent->d_name + nlen - 2, ".a") == 0
+                                               && ent->d_name[0] == 'l' && ent->d_name[1] == 'i' && ent->d_name[2] == 'b')
+                                           || (nlen > 4 && strcmp(ent->d_name + nlen - 3, ".so") == 0
+                                               && ent->d_name[0] == 'l' && ent->d_name[1] == 'i' && ent->d_name[2] == 'b');
+                                if (is_lib) {
+                                    char* lib_path = strus_newf("%s/%s", mod_dir, ent->d_name);
+                                    darr_push(imp_mod->lib_paths, lib_path);
+                                    yap_log("Module '%s': found library '%s'", imp_name, lib_path);
+                                }
+                            }
+                            closedir(dir);
+                        }
+                        free(mod_dir);
+                    }
+                }
             }
         }
     }

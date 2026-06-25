@@ -213,6 +213,9 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
         args->command = "gen_c_bind";
         args->gen_c_bind_header = arg;
         break;
+    case 'p':
+        args->gen_c_bind_prefix = arg;
+        break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
@@ -236,6 +239,7 @@ static struct argp_option options[] = {
     {"output", 'o', "OUTPUT_FILE", 0, "The path to the result file.", 1},
     {"install", 'i', NULL, 0, "Install components (list component directories to be installed)", 2},
     {"gen-c-bind", 'g', "HEADER", 0, "Generate C bindings from a header (e.g. \"<stdio.h>\").  -o sets the output directory name.", 3},
+    {"prefix", 'p', "PREFIX", 0, "Symbol prefix for generated wrapper library (e.g. \"yap_io_\").", 3},
     {0}
 };
 

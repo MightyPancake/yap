@@ -90,7 +90,7 @@ lib:
 bindings: lib compiler
 	@echo $(PURPLE)Generating C bindings$(RESET)
 	@mkdir -p modules/io
-	./yap --gen-c-bind '<stdio.h>' -o modules/io/binds.yap
+	./yap --gen-c-bind '<stdio.h>' --prefix io_ -o modules/io/binds.yap
 	@echo $(GREEN)Done!$(RESET)
 
 hello: bindings

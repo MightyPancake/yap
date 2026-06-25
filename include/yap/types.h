@@ -40,6 +40,8 @@ typedef struct yap_args{
   char* command;
   // --gen-c-bind: header to generate bindings from (e.g. "<stdio.h>")
   char* gen_c_bind_header;
+  // --prefix: symbol prefix for wrapper library (e.g. "yap_io_")
+  char* gen_c_bind_prefix;
 }yap_args;
 
 kenobi_new_struct_free(yap_module,
@@ -48,6 +50,7 @@ kenobi_new_struct_free(yap_module,
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
   yap_scope* scope; //Module-level scope for namespaced symbol lookup
+  darr(char*) lib_paths; //Paths to static/shared libraries for this module
 );
 
 typedef void (*yap_print_error_fn)(yap_error);
