@@ -1,0 +1,6 @@
+module stdlib {
+    version: "0.0.1",
+    prefix: "stdlib_"
+}
+
+import "binds.yap"
