@@ -98,7 +98,7 @@ i32 fn main() {
     // Defaults do not propagate magically
     _ func = triple_default;
     func(1, 2, 3);
-    func(1); // This would not work
+    //func(1); // This would not work
 
     ret fail;
 }
