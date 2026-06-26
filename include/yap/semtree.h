@@ -52,7 +52,8 @@ kenobi_new_struct_free(yap_fn_type,
 );
 
 kenobi_new_struct_free(yap_blob,
-  //TODO: Finish blobs aka literals for structs and arrays
+  darr(yap_expr) elements;
+  darr(char*) names;
   unsigned int field_count;
 );
 

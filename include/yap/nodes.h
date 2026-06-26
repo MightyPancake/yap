@@ -27,13 +27,20 @@ kenobi_new_struct_free(yap_string_literal_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_blob_element_node,
+    bool is_named;
+    yap_identifier_node name;
+    yap_expr_node* value;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_literal_node,
     yap_literal_kind kind;
     union {
         yap_error err;
         char* numerical;
         yap_string_literal_node string;
-        char* blob;
+        darr(yap_blob_element_node) blob_elements;
     };
     yap_loc loc;
 );

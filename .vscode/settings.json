@@ -1,4 +1,6 @@
 {
     "cmake.ignoreCMakeListsMissing": true,
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "tinymist.onPaste": "/$root/$dir/../img",
+    "tinymist.rootPath": "/home/mightypancake/yap/thesis"
 }
