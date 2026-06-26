@@ -473,6 +473,8 @@ char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
       free(elem);
       break;
     }
+    case yap_type_blob:
+      return strus_newf("blob(%u)", typ.blob.field_count);
     default:
       return strus_copy("(unimplemented type to string)");
   }
@@ -619,6 +621,7 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
       return res;
     }
     case yap_type_blob:
+      return strus_newf("%sB%u", const_str, typ.blob.field_count);
     default:
       return NULL;
   }
