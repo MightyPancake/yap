@@ -4,6 +4,3 @@ module io {
 }
 
 import "binds.yap"
-
-fn foo();
-fn foo2(){}
