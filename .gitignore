@@ -8,3 +8,4 @@ modules/*/binds.yap
 modules/*/*.a
 modules/*/*.so
 modules/*/*.c
+thesis
