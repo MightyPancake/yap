@@ -118,6 +118,34 @@ kenobi_new_struct_free(yap_module_access_node,
     yap_loc loc;
 );
 
+typedef enum {
+    yap_macro_param_unnamed,
+    yap_macro_param_named,
+    yap_macro_param_statement,
+    yap_macro_param_ident_add,
+    yap_macro_param_mut,
+} yap_macro_param_kind;
+
+typedef struct yap_macro_param_node yap_macro_param_node;
+kenobi_new_struct_free(yap_macro_param_node,
+    yap_macro_param_kind kind;
+    union {
+        yap_expr_node* expr;
+        struct { yap_identifier_node name; yap_expr_node* value; } named;
+        yap_statement_node* statement;
+        yap_identifier_node ident_add;
+        yap_expr_node* mut_expr;
+    };
+    yap_loc loc;
+);
+
+kenobi_new_struct_free(yap_macro_call_node,
+    bool is_paramless;
+    yap_expr_node* caller;
+    darr(yap_macro_param_node) params;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_expr_node,
     yap_expr_kind kind;
     union {
@@ -137,6 +165,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_index_access_node index_access;
         yap_block_node block;
         yap_module_access_node module_access;
+        yap_macro_call_node macro_call;
     };
     yap_loc loc;
 );
@@ -196,6 +225,7 @@ kenobi_new_struct_free(yap_statement_node,
         yap_while_node while_stmt;
         yap_for_node for_stmt;
         yap_block_node block;
+        yap_macro_call_node macro_call;
     };
     yap_loc loc;
 );
@@ -275,6 +305,7 @@ kenobi_new_struct_free(yap_decl_node,
         yap_module_import_node module_import;
         yap_file_import_node file_import;
         yap_module_decl_node module_decl;
+        yap_macro_call_node macro_call;
         yap_error err;
     };
     yap_loc loc;
@@ -298,6 +329,7 @@ typedef enum {
     yap_type_node_anon_union,
     yap_type_node_array,
     yap_type_node_slice,
+    yap_type_node_macro,
 } yap_type_node_kind;
 
 kenobi_new_struct_free(yap_type_node,
@@ -326,6 +358,7 @@ kenobi_new_struct_free(yap_type_node,
             yap_expr_node*    size_expr;         // compile-time size expression
         } array_type;
         yap_type_node*        slice_subtype;     // element type for slices
+        yap_macro_call_node   macro_call;        // macro returning a type
     };
     yap_loc loc;
 );

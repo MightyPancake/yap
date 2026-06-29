@@ -10,7 +10,7 @@ typedef enum {
     yap_decl_module_import,
     yap_decl_file_import,
     yap_decl_module_decl,
-    //TODO: Add missing declaration kinds
+    yap_decl_macro,
 } yap_decl_kind;
 
 typedef enum {
@@ -25,7 +25,8 @@ typedef enum {
     yap_statement_for,
     yap_statement_break,
     yap_statement_continue,
-    yap_statement_block
+    yap_statement_block,
+    yap_statement_macro
 } yap_statement_kind;
 
 typedef enum {
@@ -45,6 +46,7 @@ typedef enum {
     yap_expr_index_access,
     yap_expr_block,
     yap_expr_module_access,
+    yap_expr_macro,
 } yap_expr_kind;
 
 typedef enum {

@@ -23,6 +23,7 @@ typedef enum {
   yap_source_incremental,
   yap_source_stdin,
   yap_source_string,
+  yap_source_comptime,
 } yap_source_kind;
 
 typedef struct yap_ctx yap_ctx;

@@ -30,6 +30,7 @@ typedef struct yap_compiler_backend_component{
   yap_backend_free_fn free;
   yap_gen_decl_fn gen_decl;
   yap_emit_fn emit;
+  yap_ensure_symbol_fn ensure_symbol;
 }yap_compiler_backend_component;
 
 typedef struct yap_compiler{
