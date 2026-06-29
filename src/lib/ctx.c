@@ -41,6 +41,22 @@ yap_ctx* yap_ctx_new(){
     ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "void*");
     ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
     ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
+    ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
+
+    //yTypeEmission struct: { yType type, bool was_emitted }
+    {
+        darr(yap_struct_field) te_fields = yap_ctx_darr_new(ctx, yap_struct_field, .cap=2, .len=0);
+        yap_struct_field f1 = {0}; f1.kind = yap_struct_field_valid; f1.name = "type"; f1.type = ctx->ytype_type_id;
+        yap_struct_field f2 = {0}; f2.kind = yap_struct_field_valid; f2.name = "was_emitted"; f2.type = ctx->bool_type_id;
+        darr_push(te_fields, f1);
+        darr_push(te_fields, f2);
+        yap_type te_type = {
+            .kind = yap_type_struct,
+            .structure = { .fields = te_fields, .c_name = "yTypeEmission", .name = "yTypeEmission" },
+        };
+        yap_ctx_push_named_type(ctx, "yTypeEmission", "yTypeEmission", te_type);
+    }
+    yap_type_id yte_id = yap_ctx_get_type_id_by_name(ctx, "yTypeEmission");
 
     //Comptime builder module: yapi
     {
@@ -51,16 +67,37 @@ yap_ctx* yap_ctx_new(){
         yap_type_id f  = yap_ctx_get_type_id_by_name(ctx, "f64");
         yap_type_id b  = ctx->bool_type_id;
         yap_type_id bp = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+        yap_type_id yt = ctx->ytype_type_id;
+        yap_type_id yi = ctx->yident_type_id;
+        yap_type_id ys = ctx->ystatement_type_id;
+        yap_type_id v  = ctx->void_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } builtins[] = {
-            { "int",         ye, {i},          1 },
-            { "float",       ye, {f},          1 },
-            { "string",      ye, {bp},         1 },
-            { "bool",        ye, {b},          1 },
-            { "var",         ye, {bp},         1 },
-            { "bin",         ye, {ye, i, ye},  3 },
-            { "kind",        i,  {ye},         1 },
-            { "is_comptime", i,  {ye},         1 },
+            { "int",           ye,      {i},          1 },
+            { "float",         ye,      {f},          1 },
+            { "string",        ye,      {bp},         1 },
+            { "bool",          ye,      {b},          1 },
+            { "var",           ye,      {bp},         1 },
+            { "bin",           ye,      {ye, i, ye},  3 },
+            { "kind",          i,       {ye},         1 },
+            { "is_comptime",   i,       {ye},         1 },
+            { "var_decl",      ys,      {yi, yt, ye}, 3 },
+            { "expr_stmt",     ys,      {ye},         1 },
+            { "uniq",          ye,      {ye},         0 },
+            { "uniq_name",     yi,      {ye},         0 },
+            { "struct_new",    ye,      {bp},         1 },
+            { "struct_field",  ye,      {ye, bp, yt}, 3 },
+            { "enum_new",      ye,      {bp},         1 },
+            { "enum_variant",  ye,      {ye, bp, ye}, 3 },
+            { "union_new",     ye,      {bp},         1 },
+            { "union_variant", ye,      {ye, bp, yt}, 3 },
+            { "emit_type",     yte_id,  {ye},         1 },
+            { "type_id",       yt,      {bp},         1 },
+            { "type_exists",   b,       {bp},         1 },
+            { "func_exists",   b,       {bp},         1 },
+            { "log",           v,       {bp},         1 },
+            { "error",         v,       {bp},         1 },
+            { "warn",          v,       {bp},         1 },
         };
         int n = sizeof(builtins) / sizeof(builtins[0]);
         for (int bi = 0; bi < n; bi++){

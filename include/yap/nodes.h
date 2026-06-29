@@ -124,6 +124,7 @@ typedef enum {
     yap_macro_param_statement,
     yap_macro_param_ident_add,
     yap_macro_param_mut,
+    yap_macro_param_ast,
 } yap_macro_param_kind;
 
 typedef struct yap_macro_param_node yap_macro_param_node;
@@ -140,7 +141,6 @@ kenobi_new_struct_free(yap_macro_param_node,
 );
 
 kenobi_new_struct_free(yap_macro_call_node,
-    bool is_paramless;
     yap_expr_node* caller;
     darr(yap_macro_param_node) params;
     yap_loc loc;

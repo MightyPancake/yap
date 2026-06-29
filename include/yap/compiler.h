@@ -31,6 +31,9 @@ typedef struct yap_compiler_backend_component{
   yap_gen_decl_fn gen_decl;
   yap_emit_fn emit;
   yap_ensure_symbol_fn ensure_symbol;
+  yap_set_macro_name_fn set_macro_name;
+  yap_set_macro_loc_fn set_macro_loc;
+  yap_pop_macro_loc_fn pop_macro_loc;
 }yap_compiler_backend_component;
 
 typedef struct yap_compiler{

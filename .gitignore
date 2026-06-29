@@ -9,3 +9,5 @@ modules/*/*.a
 modules/*/*.so
 modules/*/*.c
 thesis
+foo
+foo/*
