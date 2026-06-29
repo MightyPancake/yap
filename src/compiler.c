@@ -85,6 +85,7 @@ int compile(yap_args args){
     //Callbacks from loaded components
     ctx->print_error = compiler.frontend.print_error;
     ctx->gen_decl = compiler.backend.gen_decl;
+    ctx->ensure_symbol = compiler.backend.ensure_symbol;
     ctx->args = compiler.args;
 
     //Module lookup paths
@@ -186,6 +187,7 @@ void yap_compiler_load_backend_component(yap_compiler* compiler, const char* pat
     compiler->backend.free = load_func_dynamically(compiler->backend_handle, name, yap_backend_free_fn, "yap_backend_free");
     compiler->backend.gen_decl = load_func_dynamically(compiler->backend_handle, name, yap_gen_decl_fn, "yap_gen_decl");
     compiler->backend.emit = load_func_dynamically(compiler->backend_handle, name, yap_emit_fn, "yap_emit");
+    compiler->backend.ensure_symbol = load_func_dynamically(compiler->backend_handle, name, yap_ensure_symbol_fn, "yap_c_ensure_symbol");
 }
 
 void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* path, const char* name){

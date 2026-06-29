@@ -55,6 +55,7 @@ kenobi_new_struct_free(yap_module,
 
 typedef void (*yap_print_error_fn)(yap_error);
 typedef void (*yap_gen_decl_fn)(yap_ctx* ctx, yap_decl decl);
+typedef void* (*yap_ensure_symbol_fn)(yap_ctx* ctx, const char* name);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -90,9 +91,15 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id untyped_int_type_id;  //cached type_id for untyped integer literals
   yap_type_id untyped_float_type_id; //cached type_id for untyped float literals
   yap_type_id untyped_byte_type_id;  //cached type_id for untyped byte literals
+  //Comptime types (opaque handles for metaprogramming)
+  yap_type_id yexpr_type_id;
+  yap_type_id ytype_type_id;
+  yap_type_id ystatement_type_id;
+  yap_type_id yfunc_type_id;
   //External
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;
+  yap_ensure_symbol_fn ensure_symbol;
 
   //Module lookup paths
   darr(char*) module_lookup_paths;

@@ -36,6 +36,47 @@ yap_ctx* yap_ctx_new(){
     ctx->float_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, true, "f32", "f32", "float");
     yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
 
+    //Comptime types (opaque pointer handles for metaprogramming)
+    ctx->yexpr_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExpr",      "yExpr",      "void*");
+    ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "void*");
+    ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
+    ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
+
+    //Comptime builder module: yapi
+    {
+        yap_module* yapi = yap_ctx_create_new_module(ctx, "yapi", "yapi_");
+
+        yap_type_id ye = ctx->yexpr_type_id;
+        yap_type_id i  = ctx->int_type_id;
+        yap_type_id f  = yap_ctx_get_type_id_by_name(ctx, "f64");
+        yap_type_id b  = ctx->bool_type_id;
+        yap_type_id bp = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+
+        struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } builtins[] = {
+            { "int",         ye, {i},          1 },
+            { "float",       ye, {f},          1 },
+            { "string",      ye, {bp},         1 },
+            { "bool",        ye, {b},          1 },
+            { "var",         ye, {bp},         1 },
+            { "bin",         ye, {ye, i, ye},  3 },
+            { "kind",        i,  {ye},         1 },
+            { "is_comptime", i,  {ye},         1 },
+        };
+        int n = sizeof(builtins) / sizeof(builtins[0]);
+        for (int bi = 0; bi < n; bi++){
+            darr(yap_type_id) arg_ids = yap_ctx_darr_new(ctx, yap_type_id,
+                .cap = builtins[bi].argc, .len = 0);
+            for (int ai = 0; ai < builtins[bi].argc; ai++)
+                darr_push(arg_ids, builtins[bi].args[ai]);
+            yap_type ft = {
+                .kind = yap_type_func,
+                .func = { .args = arg_ids, .return_type = builtins[bi].ret },
+            };
+            yap_type_id ftid = yap_ctx_insert_type_if_not_exists(ctx, ft);
+            yap_scope_set_var(yapi->scope, (yap_var){ .name = (char*)builtins[bi].name, .type = ftid });
+        }
+    }
+
     //Untyped default types for literal coercion
     ctx->untyped_int_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->int_type_id));
     ctx->untyped_float_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->float_type_id));
