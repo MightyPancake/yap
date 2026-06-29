@@ -59,11 +59,15 @@ int compile(yap_args args){
     yap_compiler compiler = (yap_compiler){0};
     compiler.args = &args;
 
-    //Load compiler modules
-    yap_compiler_load_frontend_component(&compiler, "./components/yap-ts/libyap_ts.so", "yap-ts");
-    yap_compiler_load_backend_component(&compiler, "./components/yap-c/libyap_c.so", "yap-c");
-    // Load semantic module (build) from yap-semantic into the backend
-    yap_compiler_load_semantic_component(&compiler, "./components/yap-semantic/libyap_semantic.so", "yap-semantic");
+    //Load compiler modules (paths relative to yap executable, not CWD)
+    char* _yh = yap_get_yap_home_path();
+    char* _ts  = strus_newf("%s/components/yap-ts/libyap_ts.so", _yh);
+    char* _c   = strus_newf("%s/components/yap-c/libyap_c.so", _yh);
+    char* _sem = strus_newf("%s/components/yap-semantic/libyap_semantic.so", _yh);
+    yap_compiler_load_frontend_component(&compiler, _ts, "yap-ts");
+    yap_compiler_load_backend_component(&compiler, _c, "yap-c");
+    yap_compiler_load_semantic_component(&compiler, _sem, "yap-semantic");
+    free(_ts); free(_c); free(_sem); free(_yh);
 
 
     // void* front_handle = yap_get_handle("./components/yap-ts/libyap_ts.so");
@@ -86,6 +90,9 @@ int compile(yap_args args){
     ctx->print_error = compiler.frontend.print_error;
     ctx->gen_decl = compiler.backend.gen_decl;
     ctx->ensure_symbol = compiler.backend.ensure_symbol;
+    ctx->set_macro_name = compiler.backend.set_macro_name;
+    ctx->set_macro_loc = compiler.backend.set_macro_loc;
+    ctx->pop_macro_loc = compiler.backend.pop_macro_loc;
     ctx->args = compiler.args;
 
     //Module lookup paths
@@ -188,6 +195,9 @@ void yap_compiler_load_backend_component(yap_compiler* compiler, const char* pat
     compiler->backend.gen_decl = load_func_dynamically(compiler->backend_handle, name, yap_gen_decl_fn, "yap_gen_decl");
     compiler->backend.emit = load_func_dynamically(compiler->backend_handle, name, yap_emit_fn, "yap_emit");
     compiler->backend.ensure_symbol = load_func_dynamically(compiler->backend_handle, name, yap_ensure_symbol_fn, "yap_c_ensure_symbol");
+    compiler->backend.set_macro_name = load_func_dynamically(compiler->backend_handle, name, yap_set_macro_name_fn, "yap_c_set_macro_name");
+    compiler->backend.set_macro_loc = load_func_dynamically(compiler->backend_handle, name, yap_set_macro_loc_fn, "yap_c_set_macro_loc");
+    compiler->backend.pop_macro_loc = load_func_dynamically(compiler->backend_handle, name, yap_pop_macro_loc_fn, "yap_c_pop_macro_loc");
 }
 
 void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* path, const char* name){

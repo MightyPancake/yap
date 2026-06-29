@@ -56,6 +56,9 @@ kenobi_new_struct_free(yap_module,
 typedef void (*yap_print_error_fn)(yap_error);
 typedef void (*yap_gen_decl_fn)(yap_ctx* ctx, yap_decl decl);
 typedef void* (*yap_ensure_symbol_fn)(yap_ctx* ctx, const char* name);
+typedef void (*yap_set_macro_name_fn)(const char* name);
+typedef void (*yap_set_macro_loc_fn)(yap_source* src, yap_loc loc);
+typedef void (*yap_pop_macro_loc_fn)(void);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -96,10 +99,14 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id ytype_type_id;
   yap_type_id ystatement_type_id;
   yap_type_id yfunc_type_id;
+  yap_type_id yident_type_id;
   //External
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;
   yap_ensure_symbol_fn ensure_symbol;
+  yap_set_macro_name_fn set_macro_name;
+  yap_set_macro_loc_fn set_macro_loc;
+  yap_pop_macro_loc_fn pop_macro_loc;
 
   //Module lookup paths
   darr(char*) module_lookup_paths;
