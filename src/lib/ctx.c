@@ -44,6 +44,7 @@ yap_ctx* yap_ctx_new(){
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
 
     //yTypeEmission struct: { yType type, bool was_emitted }
+    //Defined in ct_builder_decls header, registered here for member access
     {
         darr(yap_struct_field) te_fields = yap_ctx_darr_new(ctx, yap_struct_field, .cap=2, .len=0);
         yap_struct_field f1 = {0}; f1.kind = yap_struct_field_valid; f1.name = "type"; f1.type = ctx->ytype_type_id;
