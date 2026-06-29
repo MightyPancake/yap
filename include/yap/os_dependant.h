@@ -12,5 +12,7 @@ void yap_cd(const char* path);
 // Creates a temp directory and returns its path (caller frees).
 // On Linux uses mkdtemp with a template in /tmp.
 char* yap_make_temp_dir(void);
+void yap_rmdir_recursive(const char* path);
+int yap_mkdir(const char* path);
 
 #endif //YAP_OS_DEPENDANT_H

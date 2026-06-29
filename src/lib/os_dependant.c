@@ -104,6 +104,33 @@ void yap_cd(const char* path) {
 #endif
 
 #ifdef __linux__
+#include <dirent.h>
+#include <sys/stat.h>
+
+void yap_rmdir_recursive(const char* path){
+    if (!path || !path[0]) return;
+    DIR* d = opendir(path);
+    if (!d){ remove(path); return; }
+    struct dirent* entry;
+    char child[PATH_MAX];
+    while ((entry = readdir(d)) != NULL){
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        snprintf(child, sizeof(child), "%s/%s", path, entry->d_name);
+        struct stat st;
+        if (stat(child, &st) == 0 && S_ISDIR(st.st_mode))
+            yap_rmdir_recursive(child);
+        else
+            remove(child);
+    }
+    closedir(d);
+    rmdir(path);
+}
+
+int yap_mkdir(const char* path){
+    if (!path) return -1;
+    return mkdir(path, 0755);
+}
+
 char* yap_make_temp_dir(void) {
     char template[] = "/tmp/yap_build_XXXXXX";
     char* dir = mkdtemp(template);
