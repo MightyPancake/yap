@@ -4,3 +4,4 @@ module io {
 }
 
 import "binds.yap"
+import "sugar.yap"
