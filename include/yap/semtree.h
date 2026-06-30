@@ -12,6 +12,8 @@ typedef struct yap_prim_type{
   char* mangled_name;
 }yap_prim_type;
 
+typedef struct yap_block yap_block; //forward declared: yap_expr holds a block* (block_expr), yap_block itself is defined after yap_expr (it holds statements, which hold exprs)
+
 kenobi_new_struct_free(yap_struct_field,
   enum {
     yap_struct_field_error,
@@ -202,6 +204,7 @@ kenobi_new_struct_free(yap_expr,
     yap_expr* subexpr;
     yap_member_access member_access;
     yap_index_access index_access;
+    yap_block* block;
   };
   yap_type_id type;
   bool is_lvalue;

@@ -106,6 +106,12 @@ kenobi_new_struct_free(yap_member_access_node,
     yap_loc loc;
 );
 
+kenobi_new_struct_free(yap_method_access_node,
+    yap_expr_node* caller;
+    yap_identifier_node name;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_deref_node,
     yap_expr_node* expr;
     yap_loc loc;
@@ -167,6 +173,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_decrement_node decrement;
         yap_ternary_node ternary;
         yap_member_access_node member_access;
+        yap_method_access_node method_access;
         yap_deref_node deref;
         yap_index_access_node index_access;
         yap_block_node block;
