@@ -10,15 +10,15 @@ struct Vector {
     i32 y,
 }
 
-i32 fn len(Point p) {
+i32 fn Point p:len() {
     ret p.x + p.y;
 }
 
-i32 fn len(Vector v) {
+i32 fn Vector v:len() {
     ret v.x * v.y;
 }
 
-Point fn scaled(Point p, i32 factor) {
+Point fn Point p:scaled(i32 factor) {
     ret [p.x * factor, p.y * factor].(Point);
 }
 

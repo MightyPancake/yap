@@ -5,7 +5,7 @@ struct Point {
     i32 y,
 }
 
-i32 fn sum_point(Point p) {
+i32 fn Point p:sum_point() {
     ret p.x + p.y;
 }
 
@@ -60,7 +60,7 @@ i32 fn main() {
     io->putchar(r + 48);
     io->putchar(10);
 
-    // Method call (receiver's first arg is mangled into the function name)
+    // Method call (declared with an explicit 'Point p:' subject, mangled to Point_sum_point)
     Point p4 = [3, 4];
     _ r2 = p4:sum_point();
     io->putchar(r2 + 48);
