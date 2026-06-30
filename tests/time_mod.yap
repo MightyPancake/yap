@@ -12,11 +12,11 @@ i32 fn main() {
     _ d = time->difftime(t, t);
 
     // difftime(t, t) should be 0
-    if d == 0.0 io->putchar('O');
+    if (d == 0.0) io->putchar('O');
     else io->putchar('X');
 
     // time() should return nonzero (unix timestamp)
-    if t != 0 io->putchar('K');
+    if (t != 0) io->putchar('K');
     else io->putchar('X');
 
     io->putchar('\n');
