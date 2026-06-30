@@ -10,7 +10,7 @@ i32 fn get_count() {
 yExpr fn add_n(yExpr base) {
     _ n = get_count();
     _ result = base;
-    for i32 i = 0;, i < n, i = i + 1 {
+    for i32 i = 0; i < n; i = i + 1 {
         _ one = yapi->int(1);
         result = yapi->bin(result, 43, one);
     }

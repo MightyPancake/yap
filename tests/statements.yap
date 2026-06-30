@@ -26,7 +26,7 @@ i32 fn main() {
 		a;
 	
 	//8. for_loop
-	for _ a = 0;, a, a+1
+	for _ a = 0; a; a+1
 		a;
 
 	//9. return_statement
