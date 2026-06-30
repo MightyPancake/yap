@@ -23,7 +23,7 @@ i32 fn some_func_using_funcs(
 	//add(1,2,3)
 	//add(f, 1)
 	a();
-	if a foo();
+	if (a) foo();
 	else bar();
 	//_ add = (i32 fn i32 a, i32 b) {}
 	ret 0;

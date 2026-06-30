@@ -43,6 +43,8 @@ typedef enum {
     yap_expr_decrement,
     yap_expr_ternary,
     yap_expr_member_access,
+    yap_expr_optional_member_access,
+    yap_expr_deref,
     yap_expr_index_access,
     yap_expr_block,
     yap_expr_module_access,

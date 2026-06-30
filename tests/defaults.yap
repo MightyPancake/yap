@@ -22,7 +22,7 @@ i32 fn triple_default(i32 a = 1, i32 b = 2, i32 c = 3) {
 }
 
 i32 fn assert_eq(i32 a, i32 b, i32 test_num) {
-    if a != b {
+    if (a != b) {
         io->putchar(70); // 'F'
         io->putchar(test_num + 48);
         io->putchar(10);
@@ -89,7 +89,7 @@ i32 fn main() {
     // Module function with default, override default
     fail = fail + assert_eq(foo_test_module->add_default(5, 3), 8, 1);
 
-    if fail == 0 {
+    if (fail == 0) {
         io->putchar(79); // 'O'
         io->putchar(75); // 'K'
         io->putchar(10);
