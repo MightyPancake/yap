@@ -50,7 +50,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib test test_file path workflow bindings hello
+.PHONY: default compiler lib build test test_file path workflow bindings hello
 
 default: all
 
@@ -108,12 +108,14 @@ bindgen_smoke:
 	@$(if $(CLANG_LIBDIR),LD_LIBRARY_PATH="$(CLANG_LIBDIR)" ,)/tmp/bindgen_smoke $(if $(bindgen_header),'$(bindgen_header)',)
 	@echo $(GREEN)Bindgen smoke test passed!  binary: /tmp/bindgen_smoke$(RESET)
 
-test: lib compiler
+build: lib compiler
 	@make yap_ts debug=$(debug)
 	@make yap_c debug=$(debug)
 	@make yap_semantic debug=$(debug)
 	@yap -c
 	@yap -m
+
+test: build
 	@echo $(CYAN)Running tests$(RESET)
 	@set -e; \
 	failed=0; \
@@ -161,10 +163,7 @@ test: lib compiler
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
 
-rerun: lib compiler
-	@make yap_ts debug=$(debug)
-	@make yap_c debug=$(debug)
-	@make yap_semantic debug=$(debug)
+rerun: build
 	@make run test=$(test)
 
 run:

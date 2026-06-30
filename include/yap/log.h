@@ -14,7 +14,7 @@
   #endif
   #define yap_log(F, ...) yap_logf(YAP_LOG_TAG, YAP_LOG_TAG_COLOR, YAP_LOG_MSG_COLOR, F, ##__VA_ARGS__)
 #else
-  #define yap_log(F, ...)
+  #define yap_log(F, ...) do {} while(0)
 #endif
 void yap_logf(const char tag[], const char tag_col[], const char msg_col[], const char* fmt, ...);
 
