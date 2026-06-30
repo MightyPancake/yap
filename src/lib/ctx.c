@@ -42,6 +42,8 @@ yap_ctx* yap_ctx_new(){
     ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
     ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
+    ctx->yexprlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprList",  "yExprList",  "void*");
+    ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
 
     //yTypeEmission struct: { yType type, bool was_emitted }
     //Defined in ct_builder_decls header, registered here for member access
@@ -72,6 +74,8 @@ yap_ctx* yap_ctx_new(){
         yap_type_id yi = ctx->yident_type_id;
         yap_type_id ys = ctx->ystatement_type_id;
         yap_type_id v  = ctx->void_type_id;
+        yap_type_id yel = ctx->yexprlist_type_id;
+        yap_type_id ysl = ctx->ystmtlist_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } builtins[] = {
             { "int",           ye,      {i},          1 },
@@ -80,12 +84,20 @@ yap_ctx* yap_ctx_new(){
             { "bool",          ye,      {b},          1 },
             { "var",           ye,      {bp},         1 },
             { "bin",           ye,      {ye, i, ye},  3 },
+            { "call",          ye,      {ye, yel},    2 },
             { "kind",          i,       {ye},         1 },
             { "is_comptime",   i,       {ye},         1 },
             { "var_decl",      ys,      {yi, yt, ye}, 3 },
             { "expr_stmt",     ys,      {ye},         1 },
+            { "block",         ys,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
             { "uniq_name",     yi,      {ye},         0 },
+            { "list_new",      yel,     {ye},         0 },
+            { "list_push",     yel,     {yel, ye},    2 },
+            { "list_len",      i,       {yel},        1 },
+            { "list_get",      ye,      {yel, i},     2 },
+            { "stmt_list_new",  ysl,    {ys},         0 },
+            { "stmt_list_push", ysl,    {ysl, ys},    2 },
             { "struct_new",    ye,      {bp},         1 },
             { "struct_field",  ye,      {ye, bp, yt}, 3 },
             { "enum_new",      ye,      {bp},         1 },
