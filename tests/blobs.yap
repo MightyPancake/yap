@@ -9,6 +9,10 @@ i32 fn sum_point(Point p) {
     ret p.x + p.y;
 }
 
+i32 fn sum_point_offset(i32 base, Point p) {
+    ret base + p.x + p.y;
+}
+
 i32 fn main() {
     // Blob cast to struct (positional)
     _ p1 = [1, 2].(Point);
@@ -52,8 +56,14 @@ i32 fn main() {
     io->putchar(10);
 
     // Blob as function argument (auto-cast)
-    _ r = sum_point([3, 4]);
+    _ r = sum_point_offset(0, [3, 4]);
     io->putchar(r + 48);
+    io->putchar(10);
+
+    // Method call (receiver's first arg is mangled into the function name)
+    Point p4 = [3, 4];
+    _ r2 = p4:sum_point();
+    io->putchar(r2 + 48);
     io->putchar(10);
 
     ret 0;

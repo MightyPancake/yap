@@ -580,18 +580,29 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
       }
       return yap_ctx_type_ids_eq(ctx, left.func.return_type, right.func.return_type);
     case yap_type_struct:
+      /* Named structs are nominally typed: a forward-declaration placeholder
+       * (fields not yet built) and the fully-built struct of the same name
+       * both get registered as separate type ids, so structural comparison
+       * would either dereference a NULL fields array or wrongly call them
+       * distinct types. Compare by name when both are named. */
+      if (left.structure.name && right.structure.name)
+        return strus_eq(left.structure.name, right.structure.name);
       if (darr_len(left.structure.fields) != darr_len(right.structure.fields)) return false;
       for (size_t i = 0; i < darr_len(left.structure.fields); i++){
         if (!yap_ctx_type_ids_eq(ctx, left.structure.fields[i].type, right.structure.fields[i].type)) return false;
       }
       return true;
     case yap_type_union:
+      if (left.uni.name && right.uni.name)
+        return strus_eq(left.uni.name, right.uni.name);
       if (darr_len(left.uni.variants) != darr_len(right.uni.variants)) return false;
       for (size_t i = 0; i < darr_len(left.uni.variants); i++){
         if (!yap_ctx_type_ids_eq(ctx, left.uni.variants[i].type, right.uni.variants[i].type)) return false;
       }
       return true;
     case yap_type_enum:
+      if (left.enumeration.name && right.enumeration.name)
+        return strus_eq(left.enumeration.name, right.enumeration.name);
       if (darr_len(left.enumeration.variants) != darr_len(right.enumeration.variants)) return false;
       for (size_t i = 0; i < darr_len(left.enumeration.variants); i++){
         if (!strus_eq(left.enumeration.variants[i].name, right.enumeration.variants[i].name)) return false;
