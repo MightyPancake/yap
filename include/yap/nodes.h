@@ -289,6 +289,9 @@ kenobi_new_struct_free(yap_func_decl_node,
     darr(yap_func_arg_node) args;
     bool has_return_type;
     yap_type_node* return_type_node;
+    bool has_subject;
+    yap_type_node* subject_type_node;
+    yap_identifier_node subject_name;
     yap_block_node body;
     yap_loc loc;
 );
