@@ -113,7 +113,7 @@ build: lib compiler
 	@make yap_c debug=$(debug)
 	@make yap_semantic debug=$(debug)
 	@yap -c
-	@yap -m
+	@yap -C
 
 test: build
 	@echo $(CYAN)Running tests$(RESET)

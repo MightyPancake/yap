@@ -5,4 +5,6 @@ void yap_free_args(yap_args args){
   //   free(arg);
   // }
   darr_free(args.extra);
+  darr_free(args.backend_flags);
+  darr_free(args.frontend_flags);
 }

@@ -140,6 +140,49 @@ char* yap_make_temp_dir(void) {
     }
     return strdup(dir);
 }
+
+int yap_copy_dir_recursive(const char* src, const char* dst){
+    if (!src || !dst) return -1;
+
+    struct stat dst_st;
+    if (stat(dst, &dst_st) == 0 && S_ISDIR(dst_st.st_mode))
+        yap_rmdir_recursive(dst);
+    if (yap_mkdir(dst) != 0) return -1;
+
+    DIR* d = opendir(src);
+    if (!d) return -1;
+
+    int result = 0;
+    struct dirent* entry;
+    char src_child[PATH_MAX];
+    char dst_child[PATH_MAX];
+    while ((entry = readdir(d)) != NULL){
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) continue;
+        snprintf(src_child, sizeof(src_child), "%s/%s", src, entry->d_name);
+        snprintf(dst_child, sizeof(dst_child), "%s/%s", dst, entry->d_name);
+
+        struct stat child_st;
+        if (stat(src_child, &child_st) != 0){ result = -1; continue; }
+
+        if (S_ISDIR(child_st.st_mode)){
+            if (yap_copy_dir_recursive(src_child, dst_child) != 0) result = -1;
+            continue;
+        }
+
+        FILE* in = fopen(src_child, "rb");
+        if (!in){ result = -1; continue; }
+        FILE* out = fopen(dst_child, "wb");
+        if (!out){ fclose(in); result = -1; continue; }
+        char buf[8192];
+        size_t n;
+        while ((n = fread(buf, 1, sizeof(buf), in)) > 0)
+            fwrite(buf, 1, n, out);
+        fclose(in);
+        fclose(out);
+    }
+    closedir(d);
+    return result;
+}
 #else
   #error 'yap_make_temp_dir' not yet implemented for platforms other than linux!
 #endif
