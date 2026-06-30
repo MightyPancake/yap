@@ -42,6 +42,12 @@ typedef struct yap_args{
   char* gen_c_bind_header;
   // --prefix: symbol prefix for wrapper library (e.g. "yap_io_")
   char* gen_c_bind_prefix;
+  bool run;
+  darr(char*) backend_flags;
+  darr(char*) frontend_flags;
+  char* backend_component;
+  char* frontend_component;
+  char* semantic_component;
 }yap_args;
 
 kenobi_new_struct_free(yap_module,
@@ -119,6 +125,8 @@ kenobi_new_struct_free(yap_ctx,
 
   //Backend build state (e.g. TCCState for yap-c)
   void* build_state;
+
+  int run_exit_code;
 );
 
 //Hashmap functions for types

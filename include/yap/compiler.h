@@ -16,6 +16,13 @@ typedef yap_ctx* (*yap_emit_fn)(yap_ctx* ctx);
 typedef void (*yap_backend_init_fn)(yap_ctx* ctx);
 typedef void (*yap_backend_free_fn)(yap_ctx* ctx);
 
+typedef struct yap_flag_desc{
+  const char* flag;
+  const char* description;
+}yap_flag_desc;
+
+typedef const yap_flag_desc* (*yap_describe_flags_fn)(int* count);
+
 typedef struct yap_compiler_front_component{
   yap_parse_fn parse;
   yap_print_error_fn print_error;

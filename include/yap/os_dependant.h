@@ -15,4 +15,6 @@ char* yap_make_temp_dir(void);
 void yap_rmdir_recursive(const char* path);
 int yap_mkdir(const char* path);
 
+int yap_copy_dir_recursive(const char* src, const char* dst);
+
 #endif //YAP_OS_DEPENDANT_H

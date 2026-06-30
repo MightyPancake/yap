@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <dlfcn.h>
 #include <unistd.h>
 #include <argp.h>
@@ -52,6 +53,50 @@ void yap_close_handle(void* handle){
 
 #define yap_quit_if_errors(ctx, compiler) if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1)
 
+static char* yap_component_so_path(const char* yap_home, const char* component_name){
+    char* underscored = strus_copy((char*)component_name);
+    for (char* p = underscored; *p; p++)
+        if (*p == '-') *p = '_';
+    char* path = strus_newf("%s/components/%s/lib%s.so", yap_home, component_name, underscored);
+    free(underscored);
+    return path;
+}
+
+static void yap_describe_component_flags_section(FILE* out, const char* yap_home, const char* role, const char* component_name, char flag_letter){
+    char* path = yap_component_so_path(yap_home, component_name);
+    void* handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
+    free(path);
+
+    fprintf(out, "  " aesc_bold_on aesc_cyan "%s" aesc_reset " (-%c<FLAG>, component: " aesc_yellow "%s" aesc_reset "):\n",
+        role, flag_letter, component_name);
+    if (!handle){
+        fprintf(out, "    " aesc_red "could not load component" aesc_reset "\n\n");
+        return;
+    }
+    dlerror();
+    yap_describe_flags_fn describe = (yap_describe_flags_fn)dlsym(handle, "yap_describe_flags");
+    dlerror();
+
+    int count = 0;
+    const yap_flag_desc* flags = describe ? describe(&count) : NULL;
+    if (!flags || count == 0){
+        fprintf(out, "    (no flags documented)\n\n");
+    } else {
+        for (int i = 0; i < count; i++)
+            fprintf(out, "    " aesc_green "-%c%s" aesc_reset "\t%s\n", flag_letter, flags[i].flag, flags[i].description);
+        fprintf(out, "\n");
+    }
+    dlclose(handle);
+}
+
+static void yap_describe_all_component_flags(FILE* out, yap_args* args){
+    char* yap_home = yap_get_yap_home_path();
+    fprintf(out, aesc_bold_on "Component flags" aesc_reset " (resolved by each component; pick a component with -s, e.g. -sback=yap-c):\n\n");
+    yap_describe_component_flags_section(out, yap_home, "Backend", args->backend_component, 'b');
+    yap_describe_component_flags_section(out, yap_home, "Frontend", args->frontend_component, 'f');
+    free(yap_home);
+}
+
 int compile(yap_args args){
     yap_log("YAP_HAS_VALGRIND: %d", YAP_HAS_VALGRIND);
     yap_log("Source files count: %ld", darr_len(args.extra));
@@ -61,12 +106,12 @@ int compile(yap_args args){
 
     //Load compiler modules (paths relative to yap executable, not CWD)
     char* _yh = yap_get_yap_home_path();
-    char* _ts  = strus_newf("%s/components/yap-ts/libyap_ts.so", _yh);
-    char* _c   = strus_newf("%s/components/yap-c/libyap_c.so", _yh);
-    char* _sem = strus_newf("%s/components/yap-semantic/libyap_semantic.so", _yh);
-    yap_compiler_load_frontend_component(&compiler, _ts, "yap-ts");
-    yap_compiler_load_backend_component(&compiler, _c, "yap-c");
-    yap_compiler_load_semantic_component(&compiler, _sem, "yap-semantic");
+    char* _ts  = yap_component_so_path(_yh, args.frontend_component);
+    char* _c   = yap_component_so_path(_yh, args.backend_component);
+    char* _sem = yap_component_so_path(_yh, args.semantic_component);
+    yap_compiler_load_frontend_component(&compiler, _ts, args.frontend_component);
+    yap_compiler_load_backend_component(&compiler, _c, args.backend_component);
+    yap_compiler_load_semantic_component(&compiler, _sem, args.semantic_component);
     free(_ts); free(_c); free(_sem); free(_yh);
 
 
@@ -139,7 +184,7 @@ int compile(yap_args args){
 
     //Handle possible errors
     yap_quit_if_errors(ctx, compiler);
-    int result = 0;
+    int result = args.run ? ctx->run_exit_code : 0;
 
     //Cleanup
     yap_log("Freeing state and closing handles...");
@@ -205,21 +250,23 @@ void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* pa
     compiler->semantic.build = load_func_dynamically(compiler->semantic_handle, name, yap_build_fn, "yap_build");
 }
 
+#define OPT_COMPONENT_FLAGS 0x1000
+
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
     yap_args* args = state->input;
 
     switch(key) {
+    case OPT_COMPONENT_FLAGS:
+        args->command = "component_flags";
+        break;
     case 'o':
         args->output_file = arg;
         break;
     case 'c':
         args->command = "cflags";
         break;
-    case 'm':
+    case 'C':
         args->command = "components_dir";
-        break;
-    case 'i':
-        args->command = "install";
         break;
     case 'g':
         args->command = "gen_c_bind";
@@ -228,6 +275,36 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
     case 'p':
         args->gen_c_bind_prefix = arg;
         break;
+    case 'r':
+        args->run = true;
+        break;
+    case 'b':
+        darr_push(args->backend_flags, arg);
+        break;
+    case 'f':
+        darr_push(args->frontend_flags, arg);
+        break;
+    case 'h':
+        args->command = "help";
+        break;
+    case 's': {
+        char* eq = strchr(arg, '=');
+        if (!eq || eq == arg || eq[1] == '\0'){
+            argp_error(state, "Invalid -s value '%s' (expected -s<component>=<name>, e.g. -sback=yap-c)", arg);
+            break;
+        }
+        size_t key_len = (size_t)(eq - arg);
+        char* name = eq + 1;
+        if (key_len == 4 && strncmp(arg, "back", 4) == 0)
+            args->backend_component = name;
+        else if (key_len == 5 && strncmp(arg, "front", 5) == 0)
+            args->frontend_component = name;
+        else if (key_len == 3 && strncmp(arg, "sem", 3) == 0)
+            args->semantic_component = name;
+        else
+            argp_error(state, "Unknown component selector '-s%.*s' (expected back, front, or sem)", (int)key_len, arg);
+        break;
+    }
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
@@ -247,16 +324,46 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
 static struct argp_option options[] = {
     //{"long_name", 'short_name', "value_name | NULL for no value", flags, "doc string", group},
     {"cflags", 'c', NULL, 0, "Output cflags for components.", 0},
-    {"components", 'm', NULL, 0, "Output components path.", 1},
+    {"components", 'C', NULL, 0, "Output components path.", 1},
     {"output", 'o', "OUTPUT_FILE", 0, "The path to the result file.", 1},
-    {"install", 'i', NULL, 0, "Install components (list component directories to be installed)", 2},
     {"gen-c-bind", 'g', "HEADER", 0, "Generate C bindings from a header (e.g. \"<stdio.h>\").  -o sets the output directory name.", 3},
     {"prefix", 'p', "PREFIX", 0, "Symbol prefix for generated wrapper library (e.g. \"yap_io_\").", 3},
+    {"run", 'r', NULL, 0, "Compile and immediately run the resulting program (executed in-memory via TCC).", 1},
+    {"backend-flag", 'b', "FLAG", 0, "Raw flag forwarded to the backend component, e.g. -bO2 for optimization level, -bc to stop after emitting C (copied to ./out), -bcc=clang to pick the C compiler (gcc, clang, tcc supported), -bf=-Wall to forward a raw flag to that compiler. Resolved by the backend, not the core compiler.", 1},
+    {"frontend-flag", 'f', "FLAG", 0, "Raw flag forwarded to the frontend component. Resolved by the frontend.", 1},
+    {"select-component", 's', "COMPONENT=NAME", 0, "Select which directory under components/ implements a compiler stage, e.g. -sback=yap-c, -sfront=yap-ts, -ssem=yap-semantic.", 1},
+    {"component-flags", OPT_COMPONENT_FLAGS, NULL, 0, "List the raw -b/-f flags supported by the currently selected components (also shown under --help).", 1},
+    {"help", 'h', NULL, 0, "Give this help list.", 4},
     {0}
 };
 
 static char doc[] = "The tool for yap programming language.";
 static char args_doc[] = "source file(s)";
+
+static void yap_print_help(yap_args* args){
+    printf(aesc_bold_on "Usage:" aesc_reset " yap [OPTION...] %s\n\n", args_doc);
+    printf("%s\n\n", doc);
+
+    for (int i = 0; options[i].name != NULL || options[i].key != 0; i++){
+        const struct argp_option* opt = &options[i];
+        bool has_short = opt->key > 0 && opt->key < 128 && isprint(opt->key);
+
+        printf("  " aesc_bold_on aesc_cyan);
+        if (has_short)
+            printf("-%c, --%s", opt->key, opt->name);
+        else
+            printf("    --%s", opt->name);
+        if (opt->arg)
+            printf("=%s", opt->arg);
+        printf(aesc_reset "\n");
+
+        if (opt->doc && opt->doc[0])
+            printf("      %s\n", opt->doc);
+        printf("\n");
+    }
+
+    yap_describe_all_component_flags(stdout, args);
+}
 
 static struct argp argp = { options, parse_args, args_doc, doc, .children=NULL};
 
@@ -271,14 +378,28 @@ char* yap_get_yap_home_path(){
 
 int main(int argc, char** argv) {
     int result = 0;
+
+    bool run_subcommand = false;
+    if (argc > 1 && strcmp(argv[1], "run") == 0){
+        run_subcommand = true;
+        for (int i = 1; i < argc - 1; i++) argv[i] = argv[i + 1];
+        argc--;
+    }
+
     //Parse args
     yap_args args = (yap_args){
       .output_file = "a.out",
       .extra = darr_new(char*),
-      .command = "compile"
+      .command = "compile",
+      .run = run_subcommand,
+      .backend_flags = darr_new(char*),
+      .frontend_flags = darr_new(char*),
+      .frontend_component = "yap-ts",
+      .backend_component = "yap-c",
+      .semantic_component = "yap-semantic"
     };
 
-    int res = argp_parse(&argp, argc, argv, 0, 0, &args);
+    int res = argp_parse(&argp, argc, argv, ARGP_NO_HELP, 0, &args);
     if (res){
         fprintf(stderr, "Error while resolving arguments using argp.\n");
         yap_free_args(args);
@@ -307,11 +428,14 @@ int main(int argc, char** argv) {
         printf("%s/components/\n", yhd);
         free(yhd);
         yap_free_args(args);
-    }strus_case(args.command, "install"){
-        printf("Installing...\n");
-        yap_free_args(args);
     }strus_case(args.command, "gen_c_bind"){
         result = yap_gen_c_bind(args);
+        yap_free_args(args);
+    }strus_case(args.command, "component_flags"){
+        yap_describe_all_component_flags(stdout, &args);
+        yap_free_args(args);
+    }strus_case(args.command, "help"){
+        yap_print_help(&args);
         yap_free_args(args);
     }
     return result;
