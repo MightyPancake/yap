@@ -49,23 +49,17 @@ none fn print_i32(i32 v) {
 // dereferences the pointer (a plain 'ptr.'), then indexes the resulting
 // slice ('expr:[idx]') — both native slice operations, no yapi->list_* or
 // yExprList methods needed anymore.
-yStatement fn print(byte@ fmt, yExprList@ args) {
+// `fmt` bytes are already escape-decoded (the frontend resolves '\n' etc.
+// once, when the string literal is parsed), so this walk only has to look
+// for '%' specifiers -- every other byte, including a decoded '\n', is
+// printed as-is.
+yStatement fn print(byte@ fmt, yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;
     i32 i = 0;
     while (fmt:[i] != 0) {
         i32 ch = fmt:[i].(i32);
-        if (ch == 92) { // '\' — the lexer keeps escapes un-decoded in the
-                         // raw text the macro walks, so decode them here
-            i32 esc = fmt:[i + 1].(i32);
-            i32 decoded = esc;
-            if (esc == 110) decoded = 10;      // \n
-            else if (esc == 116) decoded = 9;  // \t
-            else if (esc == 114) decoded = 13; // \r
-            _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(decoded));
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
-            i = i + 2;
-        } else if (ch == 37) { // '%'
+        if (ch == 37) { // '%'
             i32 spec = fmt:[i + 1].(i32);
             if (spec == 100) { // %d
                 _ call_expr = yapi->call1(yapi->var_value(c"io_print_i32"), args.:[ai]);
