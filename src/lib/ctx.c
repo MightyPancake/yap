@@ -103,6 +103,8 @@ yap_ctx* yap_ctx_new(){
             { "var_decl",      ys,      {yt, yi},     2 },
             { "expr_stmt",     ys,      {ye},         1 },
             { "return_stmt",   ys,      {ye},         1 },
+            { "if_stmt",       ys,      {ye, ys},     2 },
+            { "if_else_stmt",  ys,      {ye, ys, ys}, 3 },
             { "block",         ys,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
             { "uniq_name",     yi,      {ye},         0 },

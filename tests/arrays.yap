@@ -27,18 +27,15 @@ i32 fn main() {
     io->putchar(pos.v:[2] + 48);
     io->putchar(10);
 
-    // Generic growable array (modules/arr), built via the yapi.md builder
-    // API on top of a realloc-based C backend; see modules/arr/arr.yap.
+    // Generic growable array (modules/arr), built entirely in yap via the
+    // yapi.md builder API -- no C backend; see modules/arr/arr.yap.
     arr->arr:(i32) gnums;
     gnums:init();
     gnums:push(10);
     gnums:push(20);
     gnums:push(12);
 
-    _ g0 = gnums:at(0);
-    _ g1 = gnums:at(1);
-    _ g2 = gnums:at(2);
-    _ gtotal = g0 + g1 + g2;
+    _ gtotal = gnums:at(0) + gnums:at(1) + gnums:at(2);
     if (gnums:len() == 3) io->puts(c"Generic array len OK");
     if (gtotal == 42) io->puts(c"Generic array push/at OK");
     gnums:free();
