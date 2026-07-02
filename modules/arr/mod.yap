@@ -3,5 +3,5 @@ module arr {
     prefix: "arr_"
 }
 
-import "binds.yap"
+import stdlib
 import "arr.yap"
