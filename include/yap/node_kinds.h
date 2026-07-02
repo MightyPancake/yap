@@ -34,6 +34,7 @@ typedef enum {
     yap_expr_literal,
     yap_expr_var,
     yap_expr_bin,
+    yap_expr_unary,
     yap_expr_assignment,
     yap_expr_func_call,
     yap_expr_cast,
