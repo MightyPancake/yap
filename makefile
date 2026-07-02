@@ -119,8 +119,8 @@ test: build
 	@echo $(CYAN)Running tests$(RESET)
 	@set -e; \
 	failed=0; \
-	for test_file in tests/*.yap; do \
-		[ -e "$$test_file" ] || { echo "No test files found in ./tests"; exit 1; }; \
+	run_one() { \
+		test_file="$$1"; expect="$$2"; err_file="$$3"; \
 		vg_log=$$(mktemp); \
 		cmd_log=$$(mktemp); \
 		test_failed=0; \
@@ -132,11 +132,24 @@ test: build
 			--suppressions=valgrind_suppressions.supp \
 			--log-file="$$vg_log" \
 			./yap "$$test_file" >"$$cmd_log" 2>&1; then \
-			status="$(GREEN)passed$(RESET)"; \
+			run_exit=0; \
 		else \
-			status="$(RED)failed$(RESET)"; \
-			test_failed=1; \
-			failed=1; \
+			run_exit=1; \
+		fi; \
+		if [ "$$expect" = "pass" ]; then \
+			if [ "$$run_exit" -eq 0 ]; then \
+				status="$(GREEN)passed$(RESET)"; \
+			else \
+				status="$(RED)failed$(RESET)"; \
+				test_failed=1; \
+			fi; \
+		else \
+			if [ "$$run_exit" -ne 0 ] && grep -qF -- "$$(cat "$$err_file")" "$$cmd_log"; then \
+				status="$(GREEN)passed$(RESET)"; \
+			else \
+				status="$(RED)failed$(RESET)"; \
+				test_failed=1; \
+			fi; \
 		fi; \
 		leaks=""; \
 		if grep -Eq 'definitely lost:[[:space:]]*[1-9][0-9]* bytes|indirectly lost:[[:space:]]*[1-9][0-9]* bytes|possibly lost:[[:space:]]*[1-9][0-9]* bytes' "$$vg_log"; then \
@@ -159,6 +172,16 @@ test: build
 			cat "$$vg_log"; \
 		fi; \
 		rm -f "$$vg_log" "$$cmd_log"; \
+		if [ "$$test_failed" -eq 1 ]; then failed=1; fi; \
+		if [ "$$expect" = "pass" ] && [ "$$leak_found" -eq 1 ]; then failed=1; fi; \
+	}; \
+	for test_file in tests/pass/*.yap; do \
+		[ -e "$$test_file" ] || { echo "No pass test files found in ./tests/pass"; exit 1; }; \
+		run_one "$$test_file" pass; \
+	done; \
+	for fail_dir in tests/fail/*/; do \
+		[ -d "$$fail_dir" ] || continue; \
+		run_one "$${fail_dir}test.yap" fail "$${fail_dir}err.txt"; \
 	done; \
 	test $$failed -eq 0
 	@echo $(GREEN)Tests passed!$(RESET)
@@ -167,7 +190,7 @@ rerun: build
 	@make run test=$(test)
 
 run:
-	@[ -n "$(test)" ] || { echo "Usage: make run test=<name>.yap"; exit 1; }
+	@[ -n "$(test)" ] || { echo "Usage: make run test=pass/<name> | test=fail/<name>/test"; exit 1; }
 	valgrind \
 		--track-origins=yes \
 		--leak-check=full \
