@@ -1,0 +1,1 @@
+Cannot initialize variable of type 'i32' with value of type 'byte[]'
