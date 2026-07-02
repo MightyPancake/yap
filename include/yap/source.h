@@ -57,9 +57,6 @@ kenobi_new_struct(yap_source,
   //Result of parsing this source
   yap_source_node* source_node;
 
-  //Counter for generating unique names for anonymous items
-  yap_anon_id anon_id;
-
   //List of imports in this source
   darr(yap_import) imports;
 

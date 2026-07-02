@@ -9,6 +9,7 @@ typedef struct yap_var_decl_node yap_var_decl_node;
 typedef struct yap_named_type_decl_node yap_named_type_decl_node;
 typedef struct yap_block_node yap_block_node;
 typedef struct yap_type_node yap_type_node;
+typedef struct yap_func_arg_node yap_func_arg_node;
 
 //Misc
 kenobi_new_struct_free(yap_identifier_node,
@@ -34,6 +35,18 @@ kenobi_new_struct_free(yap_blob_element_node,
     yap_loc loc;
 );
 
+/* Anonymous function literal: (<optional return_type> fn(<params>) { <body> }).
+ * Same shape as yap_func_decl_node minus name/subject; params reuse
+ * yap_func_arg_node (has_default is always false — literal params are just
+ * type+name). */
+kenobi_new_struct_free(yap_func_literal_node,
+    darr(yap_func_arg_node) args;
+    bool has_return_type;
+    yap_type_node* return_type_node;
+    yap_block_node body;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_literal_node,
     yap_literal_kind kind;
     union {
@@ -41,6 +54,7 @@ kenobi_new_struct_free(yap_literal_node,
         char* numerical;
         yap_string_literal_node string;
         darr(yap_blob_element_node) blob_elements;
+        yap_func_literal_node func_literal;
     };
     yap_loc loc;
 );

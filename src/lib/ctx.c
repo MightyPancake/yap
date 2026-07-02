@@ -105,6 +105,7 @@ yap_ctx* yap_ctx_new(){
             { "return_stmt",   ys,      {ye},         1 },
             { "if_stmt",       ys,      {ye, ys},     2 },
             { "if_else_stmt",  ys,      {ye, ys, ys}, 3 },
+            { "while_stmt",    ys,      {ye, ys},     2 },
             { "block",         ys,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
             { "uniq_name",     yi,      {ye},         0 },
@@ -115,6 +116,10 @@ yap_ctx* yap_ctx_new(){
             { "union_t",       yun,     {i},          0 },
             { "func_t",        yft,     {i},          0 },
             { "type",          yt,      {bp},         1 },
+            { "func_type0",    yt,      {yt},             1 },
+            { "func_type1",    yt,      {yt, yt},         2 },
+            { "func_type2",    yt,      {yt, yt, yt},     3 },
+            { "func_type3",    yt,      {yt, yt, yt, yt}, 4 },
             { "type_exists",   b,       {bp},         1 },
             { "func_exists",   b,       {bp},         1 },
             { "log",           v,       {bp},         1 },
@@ -216,7 +221,6 @@ void yap_ctx_init_root_source(yap_ctx* ctx){
       .sz=0,
       .source_node=NULL,
       .ctx=ctx,
-      .anon_id=0,
       .imports=darr_new(yap_import)
     };
     ctx->root_source = yap_ctx_one_cpy(ctx, root);
@@ -423,7 +427,6 @@ yap_source* yap_ctx_new_file_source(yap_ctx* ctx, yap_source* parent, char* labe
       .sz=size,
       .ctx=ctx,
       .source_node=NULL,
-      .anon_id=0,
       .imports=darr_new(yap_import),
       .from_module_import = parent ? parent->from_module_import : NULL
     });
