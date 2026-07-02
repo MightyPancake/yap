@@ -7,39 +7,38 @@ yExpr fn identity(yExpr a) {
 yExpr fn plus_one(yExpr a) {
     _ one = yapi->int(1);
     // '+' == 43
-    ret yapi->bin(a, 43, one);
+    ret yapi->bin_op(a, 43, one);
 }
 
 yType fn pair(yType t1, yType t2){
-    _ res = yapi->struct_new(c"pair");
-    yapi->struct_field(res, c"first", t1);
-    yapi->struct_field(res, c"second", t2);
-    _ emission = yapi->emit_type(res);
-    ret emission.type;
+    _ st = yapi->struct_t();
+    st:add_field(t1, c"first");
+    st:add_field(t2, c"second");
+    ret st:finish(c"pair");
 }
 
 yExpr fn emit_and_add(yExpr x_val, yExpr y_val) {
-    _ i32_id = yapi->type_id(c"i32");
-    _ sb = yapi->struct_new(c"test_struct");
-    yapi->struct_field(sb, c"x", i32_id);
-    yapi->struct_field(sb, c"y", i32_id);
-    yapi->emit_type(sb);
+    _ i32_id = yapi->type(c"i32");
+    _ sb = yapi->struct_t();
+    sb:add_field(i32_id, c"x");
+    sb:add_field(i32_id, c"y");
+    sb:finish(c"test_struct");
     // '+' == 43
-    ret yapi->bin(x_val, 43, y_val);
+    ret yapi->bin_op(x_val, 43, y_val);
 }
 
 yExpr fn add_via_uniq(yExpr a, yExpr b) {
     _ uname = yapi->uniq_name();
-    ret yapi->bin(a, 43, b);
+    ret yapi->bin_op(a, 43, b);
 }
 
 yExpr fn with_ident(yIdent name, yExpr val) {
     ret val;
 }
 
-yStatement fn declare_int(yIdent name, yExpr value) {
-    _ tid = yapi->type_id(c"i32");
-    ret yapi->var_decl(name, tid, value);
+yStatement fn declare_int(yIdent name) {
+    _ tid = yapi->type(c"i32");
+    ret yapi->var_decl(tid, name);
 }
 
 // Void comptime call for side effects
@@ -63,8 +62,9 @@ i32 fn main() {
     _ u = add_via_uniq:(#3, #4);
     _ w = with_ident:(+myvar, #99);
 
-    // Statement macro
-    declare_int:(+answer, #100);
+    // Statement macro: introduces the var, plain code initializes it
+    declare_int:(+answer);
+    answer = 100;
 
     // Void comptime call (raw args, side effect only)
     ct_greet:();

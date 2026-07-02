@@ -1,10 +1,11 @@
 import io
+import arr
 
 struct Vec3 {
     i32[3] v,
 }
 
-fn main() {
+i32 fn main() {
     i32[5] nums;
     nums:[0] = 72;
     nums:[1] = 101;
@@ -25,4 +26,22 @@ fn main() {
     pos.v:[2] = pos.v:[0] + pos.v:[1];
     io->putchar(pos.v:[2] + 48);
     io->putchar(10);
+
+    // Generic growable array (modules/arr), built via the yapi.md builder
+    // API on top of a realloc-based C backend; see modules/arr/arr.yap.
+    arr->arr:(i32) gnums;
+    gnums:init();
+    gnums:push(10);
+    gnums:push(20);
+    gnums:push(12);
+
+    _ g0 = gnums:at(0);
+    _ g1 = gnums:at(1);
+    _ g2 = gnums:at(2);
+    _ gtotal = g0 + g1 + g2;
+    if (gnums:len() == 3) io->puts(c"Generic array len OK");
+    if (gtotal == 42) io->puts(c"Generic array push/at OK");
+    gnums:free();
+
+    ret gtotal - 42;
 }

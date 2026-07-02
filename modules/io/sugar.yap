@@ -42,7 +42,14 @@ none fn print_i32(i32 v) {
 // single returned block. `args` may be omitted entirely at the call site
 // (defaults to an empty yExprList) when the format string has no
 // specifiers, e.g. io->print:(c"hello\n");
-yStatement fn print(byte@ fmt, yExprList args) {
+// 'args' is yExprList@ (pointer to a real slice of yExpr), not a bare
+// yExprList value — see project memory on why: the macro-call blob-literal
+// marshalling that populates it can only pass one pointer-sized value per
+// argument slot, and a genuine by-value slice is two words. 'args.:[ai]'
+// dereferences the pointer (a plain 'ptr.'), then indexes the resulting
+// slice ('expr:[idx]') — both native slice operations, no yapi->list_* or
+// yExprList methods needed anymore.
+yStatement fn print(byte@ fmt, yExprList@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;
     i32 i = 0;
@@ -55,45 +62,33 @@ yStatement fn print(byte@ fmt, yExprList args) {
             if (esc == 110) decoded = 10;      // \n
             else if (esc == 116) decoded = 9;  // \t
             else if (esc == 114) decoded = 13; // \r
-            _ a = yapi->list_new();
-            a = yapi->list_push(a, yapi->int(decoded));
-            _ call_expr = yapi->call(yapi->var(c"io_print_char"), a);
+            _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(decoded));
             stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
             i = i + 2;
         } else if (ch == 37) { // '%'
             i32 spec = fmt:[i + 1].(i32);
             if (spec == 100) { // %d
-                _ a = yapi->list_new();
-                a = yapi->list_push(a, yapi->list_get(args, ai));
-                _ call_expr = yapi->call(yapi->var(c"io_print_i32"), a);
+                _ call_expr = yapi->call1(yapi->var_value(c"io_print_i32"), args.:[ai]);
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 ai = ai + 1;
                 i = i + 2;
             } else if (spec == 115) { // %s
-                _ a = yapi->list_new();
-                a = yapi->list_push(a, yapi->list_get(args, ai));
-                _ call_expr = yapi->call(yapi->var(c"io_print_str"), a);
+                _ call_expr = yapi->call1(yapi->var_value(c"io_print_str"), args.:[ai]);
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 ai = ai + 1;
                 i = i + 2;
             } else if (spec == 99) { // %c
-                _ a = yapi->list_new();
-                a = yapi->list_push(a, yapi->list_get(args, ai));
-                _ call_expr = yapi->call(yapi->var(c"io_print_char"), a);
+                _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), args.:[ai]);
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 ai = ai + 1;
                 i = i + 2;
             } else { // %% or unknown -> print literally
-                _ a = yapi->list_new();
-                a = yapi->list_push(a, yapi->int(spec));
-                _ call_expr = yapi->call(yapi->var(c"io_print_char"), a);
+                _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(spec));
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 i = i + 2;
             }
         } else {
-            _ a = yapi->list_new();
-            a = yapi->list_push(a, yapi->int(ch));
-            _ call_expr = yapi->call(yapi->var(c"io_print_char"), a);
+            _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(ch));
             stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
             i = i + 1;
         }

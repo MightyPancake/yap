@@ -12,7 +12,7 @@ yExpr fn add_n(yExpr base) {
     _ result = base;
     for (i32 i = 0; i < n; i = i + 1) {
         _ one = yapi->int(1);
-        result = yapi->bin(result, 43, one);
+        result = yapi->bin_op(result, 43, one);
     }
     ret result;
 }
