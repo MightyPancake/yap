@@ -42,24 +42,22 @@ yap_ctx* yap_ctx_new(){
     ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
     ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
-    ctx->yexprlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprList",  "yExprList",  "void*");
+    //yExprList is a real slice of yExpr (not an opaque handle) so it gets native
+    //'.len' and ':[i]' -- see yap_build_member_access_expr's slice case and
+    //yap_exec_macro_call's blob-literal marshalling (both in build.c) for the
+    //two places that had to learn about slices specifically because of this.
+    {
+        yap_type yexprlist_slice = { .kind = yap_type_slice, .slice = { .element_type = ctx->yexpr_type_id }, .is_const = false };
+        ctx->yexprlist_type_id = yap_ctx_push_named_type(ctx, "yExprList", NULL, yexprlist_slice);
+    }
     ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
 
-    //yTypeEmission struct: { yType type, bool was_emitted }
-    //Defined in ct_builder_decls header, registered here for member access
-    {
-        darr(yap_struct_field) te_fields = yap_ctx_darr_new(ctx, yap_struct_field, .cap=2, .len=0);
-        yap_struct_field f1 = {0}; f1.kind = yap_struct_field_valid; f1.name = "type"; f1.type = ctx->ytype_type_id;
-        yap_struct_field f2 = {0}; f2.kind = yap_struct_field_valid; f2.name = "was_emitted"; f2.type = ctx->bool_type_id;
-        darr_push(te_fields, f1);
-        darr_push(te_fields, f2);
-        yap_type te_type = {
-            .kind = yap_type_struct,
-            .structure = { .fields = te_fields, .c_name = "yTypeEmission", .name = "yTypeEmission" },
-        };
-        yap_ctx_push_named_type(ctx, "yTypeEmission", "yTypeEmission", te_type);
-    }
-    yap_type_id yte_id = yap_ctx_get_type_id_by_name(ctx, "yTypeEmission");
+    //Comptime builder templates (yapi.md): opaque handles for the incremental
+    //struct/enum/union/func builders, distinct from the finished yType/yFunc they emit.
+    ctx->ystructt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStructT", "yStructT", "void*");
+    ctx->yenumt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yEnumT",   "yEnumT",   "void*");
+    ctx->yuniont_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yUnionT",  "yUnionT",  "void*");
+    ctx->yfunct_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFuncT",   "yFuncT",   "void*");
 
     //Comptime builder module: yapi
     {
@@ -74,38 +72,47 @@ yap_ctx* yap_ctx_new(){
         yap_type_id yi = ctx->yident_type_id;
         yap_type_id ys = ctx->ystatement_type_id;
         yap_type_id v  = ctx->void_type_id;
-        yap_type_id yel = ctx->yexprlist_type_id;
         yap_type_id ysl = ctx->ystmtlist_type_id;
+        yap_type_id yst = ctx->ystructt_type_id;
+        yap_type_id yen = ctx->yenumt_type_id;
+        yap_type_id yun = ctx->yuniont_type_id;
+        yap_type_id yft = ctx->yfunct_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } builtins[] = {
             { "int",           ye,      {i},          1 },
             { "float",         ye,      {f},          1 },
             { "string",        ye,      {bp},         1 },
             { "bool",          ye,      {b},          1 },
-            { "var",           ye,      {bp},         1 },
-            { "bin",           ye,      {ye, i, ye},  3 },
-            { "call",          ye,      {ye, yel},    2 },
+            { "var_value",     ye,      {bp},         1 },
+            { "new_var",       ye,      {yt, yi},     2 },
+            { "bin_op",        ye,      {ye, i, ye},  3 },
+            { "assign",        ye,      {ye, i, ye},  3 },
+            { "member",        ye,      {ye, bp},     2 },
+            { "index",         ye,      {ye, ye},     2 },
+            { "cast",          ye,      {ye, yt},     2 },
+            { "deref",         ye,      {ye},         1 },
+            { "addr_of",       ye,      {ye},         1 },
+            { "ptr_of",        yt,      {yt},         1 },
+            { "sizeof",        ye,      {yt},         1 },
+            { "call0",         ye,      {ye},             1 },
+            { "call1",         ye,      {ye, ye},         2 },
+            { "call2",         ye,      {ye, ye, ye},     3 },
+            { "call3",         ye,      {ye, ye, ye, ye}, 4 },
             { "kind",          i,       {ye},         1 },
             { "is_comptime",   i,       {ye},         1 },
-            { "var_decl",      ys,      {yi, yt, ye}, 3 },
+            { "var_decl",      ys,      {yt, yi},     2 },
             { "expr_stmt",     ys,      {ye},         1 },
+            { "return_stmt",   ys,      {ye},         1 },
             { "block",         ys,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
             { "uniq_name",     yi,      {ye},         0 },
-            { "list_new",      yel,     {ye},         0 },
-            { "list_push",     yel,     {yel, ye},    2 },
-            { "list_len",      i,       {yel},        1 },
-            { "list_get",      ye,      {yel, i},     2 },
             { "stmt_list_new",  ysl,    {ys},         0 },
             { "stmt_list_push", ysl,    {ysl, ys},    2 },
-            { "struct_new",    ye,      {bp},         1 },
-            { "struct_field",  ye,      {ye, bp, yt}, 3 },
-            { "enum_new",      ye,      {bp},         1 },
-            { "enum_variant",  ye,      {ye, bp, ye}, 3 },
-            { "union_new",     ye,      {bp},         1 },
-            { "union_variant", ye,      {ye, bp, yt}, 3 },
-            { "emit_type",     yte_id,  {ye},         1 },
-            { "type_id",       yt,      {bp},         1 },
+            { "struct_t",      yst,     {i},          0 },
+            { "enum_t",        yen,     {i},          0 },
+            { "union_t",       yun,     {i},          0 },
+            { "func_t",        yft,     {i},          0 },
+            { "type",          yt,      {bp},         1 },
             { "type_exists",   b,       {bp},         1 },
             { "func_exists",   b,       {bp},         1 },
             { "log",           v,       {bp},         1 },
@@ -124,6 +131,65 @@ yap_ctx* yap_ctx_new(){
             };
             yap_type_id ftid = yap_ctx_insert_type_if_not_exists(ctx, ft);
             yap_scope_set_var(yapi->scope, (yap_var){ .name = (char*)builtins[bi].name, .type = ftid });
+        }
+    }
+
+    //Builtin methods on comptime builder templates (yapi.md): registered directly into
+    //global scope (not a module) since method dispatch (yap_build_method_callee) does a
+    //plain recursive scope lookup on "OwnerName_methodname" -- exactly like user-declared
+    //type methods -- rather than a module-prefixed lookup.
+    {
+        yap_type_id ye  = ctx->yexpr_type_id;
+        yap_type_id yt  = ctx->ytype_type_id;
+        yap_type_id ys  = ctx->ystatement_type_id;
+        yap_type_id yfn = ctx->yfunc_type_id;
+        yap_type_id yst = ctx->ystructt_type_id;
+        yap_type_id yen = ctx->yenumt_type_id;
+        yap_type_id yun = ctx->yuniont_type_id;
+        yap_type_id yft = ctx->yfunct_type_id;
+        yap_type_id b   = ctx->bool_type_id;
+        yap_type_id v   = ctx->void_type_id;
+        yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+
+        struct { const char* name; yap_type_id ret; yap_type_id args[3]; int argc; } methods[] = {
+            { "yStructT_add_field", v,   {yst, yt, bp}, 3 },
+            { "yStructT_finish",    yt,  {yst, bp},     2 },
+            { "yStructT_existed",   b,   {yst},         1 },
+            { "yStructT_type",      yt,  {yst},         1 },
+
+            { "yEnumT_add_variant", v,   {yen, bp},     2 },
+            { "yEnumT_finish",      yt,  {yen, bp},     2 },
+            { "yEnumT_existed",     b,   {yen},         1 },
+            { "yEnumT_type",        yt,  {yen},         1 },
+
+            { "yUnionT_add_field",  v,   {yun, yt, bp}, 3 },
+            { "yUnionT_finish",     yt,  {yun, bp},     2 },
+            { "yUnionT_existed",    b,   {yun},         1 },
+            { "yUnionT_type",       yt,  {yun},         1 },
+
+            { "yFuncT_add_param",       ye,  {yft, yt, bp}, 3 },
+            { "yFuncT_set_return_type", v,   {yft, yt},     2 },
+            { "yFuncT_set_body",        v,   {yft, ys},     2 },
+            { "yFuncT_finish",          yfn, {yft, bp},     2 },
+            { "yFuncT_existed",         b,   {yft},         1 },
+            { "yFuncT_func",            yfn, {yft},         1 },
+            { "yFuncT_get_subject",     ye,  {yft},         1 },
+
+            { "yType_new_method",     yft, {yt},          1 },
+            { "yType_new_ref_method", yft, {yt},          1 },
+        };
+        int n = sizeof(methods) / sizeof(methods[0]);
+        for (int mi = 0; mi < n; mi++){
+            darr(yap_type_id) arg_ids = yap_ctx_darr_new(ctx, yap_type_id,
+                .cap = methods[mi].argc, .len = 0);
+            for (int ai = 0; ai < methods[mi].argc; ai++)
+                darr_push(arg_ids, methods[mi].args[ai]);
+            yap_type ft = {
+                .kind = yap_type_func,
+                .func = { .args = arg_ids, .return_type = methods[mi].ret },
+            };
+            yap_type_id ftid = yap_ctx_insert_type_if_not_exists(ctx, ft);
+            yap_scope_set_var(ctx->global_scope, (yap_var){ .name = (char*)methods[mi].name, .type = ftid });
         }
     }
 
@@ -175,12 +241,20 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     return NULL;
   }
 
+  /* Parented to global_scope (not NULL) so that code living inside a module's
+   * own source (e.g. modules/io/sugar.yap, modules/arr/arr.yap) can reach
+   * builtins registered directly into global_scope -- notably the yapi.md
+   * builder methods (yStructT_add_field, yExprList_at, ...), which are
+   * looked up via a plain recursive scope walk from whatever the "current
+   * scope" is at the call site, not a module-prefixed lookup. Purely
+   * additive: only adds a fallback for names that don't already resolve
+   * within the module's own scope. */
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .decls = darr_new(yap_decl_node),
     .module_ctx = NULL,
-    .scope = yap_ctx_new_scope(ctx, NULL),
+    .scope = yap_ctx_new_scope(ctx, ctx->global_scope),
     .lib_paths = darr_new(char*)
   };
   hashmap_set(ctx->modules, &new_module);

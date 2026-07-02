@@ -108,6 +108,11 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id yident_type_id;
   yap_type_id yexprlist_type_id;  //cached type_id for yExprList (growable list of yExpr)
   yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStatement)
+  //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFuncT
+  yap_type_id ystructt_type_id;
+  yap_type_id yenumt_type_id;
+  yap_type_id yuniont_type_id;
+  yap_type_id yfunct_type_id;
   //External
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;
