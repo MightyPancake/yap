@@ -53,6 +53,7 @@ yLval new_var(yType, yIdent) //This creates a new variable that can be fully use
 ## Statements
 yStatement expr_statement(yExpr) //Creates an expression statement
 yStatement var_decl(yType, yIdent) //Generates a variable declaration statement
+yStatement while_stmt(yExpr cond, yStatement body) //while loop; body is typically block(stmt_list)
 ...
 You can build all statements like this
 
@@ -109,6 +110,16 @@ The name is always needed as the type emission takes the type structure, builds 
 
 Returned yType becomes usable! You can also get a type from a passed arg or by using
 yType type(cstring) //for example; yapi->type("i32");
+
+Function types (for function-valued params, e.g. map/filter callbacks) are built with
+yType func_type0(yType ret)
+yType func_type1(yType ret, yType p1)
+yType func_type2(yType ret, yType p1, yType p2)
+yType func_type3(yType ret, yType p1, yType p2, yType p3)
+//Fixed arities mirror call0..call3. The type is deduped via
+//yap_ctx_insert_type_if_not_exists, so declaring a builder-made method param
+//with func_typeN makes the normal call-site argument check reject mismatched
+//function values ("Argument type mismatch") with no extra macro-side code.
 
 ## Functions
 To emit a function, you need to build it like so.

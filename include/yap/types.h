@@ -87,6 +87,11 @@ kenobi_new_struct_free(yap_ctx,
   //Semantic declarations (global, not per-module)
   darr(yap_decl) semantic_decls;
 
+  //Counter for anonymous names (__anon_<tag>_N). Ctx-global, not per-source:
+  //all sources emit into one C translation unit, so per-source counters would
+  //let two files mint the same name.
+  yap_anon_id anon_id;
+
   //Types
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types
