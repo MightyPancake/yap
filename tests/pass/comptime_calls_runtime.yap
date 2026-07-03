@@ -21,6 +21,6 @@ i32 fn main() {
     // add_n#(10) calls get_count() which returns 5,
     // then builds: 10 + 1 + 1 + 1 + 1 + 1 = 15
     _ val = add_n:(#10);
-    if (val == 15) io->puts(c"Comptime-calls-runtime OK");
+    if (val == 15) io->print:(c"Comptime-calls-runtime OK\n");
     ret val - 15;
 }

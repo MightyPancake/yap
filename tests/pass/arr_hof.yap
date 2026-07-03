@@ -15,19 +15,19 @@ i32 fn main() {
 
     // map: [1,2,3,4] -> [2,4,6,8]
     _ doubled = nums:map((i32 fn i32 x) { ret x * 2; });
-    if (doubled:len() == 4) io->puts(c"map len OK");
+    if (doubled:len() == 4) io->print:(c"map len OK\n");
     _ dsum = doubled:at(0) + doubled:at(1) + doubled:at(2) + doubled:at(3); // 20
-    if (dsum == 20) io->puts(c"map values OK");
+    if (dsum == 20) io->print:(c"map values OK\n");
 
     // filter: [1,2,3,4] -> [2,4]
     _ evens = nums:filter((bool fn i32 x) { ret (x % 2) == 0; });
-    if (evens:len() == 2) io->puts(c"filter len OK");
+    if (evens:len() == 2) io->print:(c"filter len OK\n");
     _ esum = evens:at(0) + evens:at(1); // 6
-    if (esum == 6) io->puts(c"filter values OK");
+    if (esum == 6) io->print:(c"filter values OK\n");
 
     // fold: 0+1+2+3+4 = 10
     _ total = nums:fold((i32 fn i32 acc, i32 x) { ret acc + x; }, 0);
-    if (total == 10) io->puts(c"fold OK");
+    if (total == 10) io->print:(c"fold OK\n");
 
     nums:free();
     doubled:free();

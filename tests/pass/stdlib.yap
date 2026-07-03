@@ -21,7 +21,7 @@ i32 fn main() {
     ptr:[0] = '4';
     ptr:[1] = '2';
     ptr:[2] = '\0';
-    io->puts(ptr);
+    io->print:(c"%s\n", [ptr]);
     stdlib->free(ptr.(none@));
 
     io->putchar('\n');

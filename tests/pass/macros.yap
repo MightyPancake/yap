@@ -56,7 +56,7 @@ i32 fn main() {
     pair:(i32, i32) p;
     p.first = 4;
     p.second = 2;
-    if (p.first == 4) io->puts(c"Types OK");
+    if (p.first == 4) io->print:(c"Types OK\n");
 
     // #expr for AST, +ident for hygiene
     _ u = add_via_uniq:(#3, #4);
@@ -72,10 +72,10 @@ i32 fn main() {
     // Comptime log with raw string arg
     yapi->log:(c"direct log from main");
 
-    if (y == 11) io->puts(c"Builder OK");
-    if (z == 10) io->puts(c"Emission OK");
-    if (u == 7) io->puts(c"Uniq OK");
-    if (w == 99) io->puts(c"Ident OK");
-    if (answer == 100) io->puts(c"Statement OK");
+    if (y == 11) io->print:(c"Builder OK\n");
+    if (z == 10) io->print:(c"Emission OK\n");
+    if (u == 7) io->print:(c"Uniq OK\n");
+    if (w == 99) io->print:(c"Ident OK\n");
+    if (answer == 100) io->print:(c"Statement OK\n");
     ret x + y + z + u + w + answer - 269;
 }

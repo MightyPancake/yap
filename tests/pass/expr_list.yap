@@ -39,11 +39,13 @@ yStatement fn emit_chars(yExprList@ vals) {
 i32 fn main() {
     _ a = add_const:(#10, [1, 2, 3]); // 10 + 1 + 2 + 3 = 16
     _ b = add_const:(#100);           // omitted last arg defaults to empty yExprList
+    _ c = add_const:(#100, []);       // explicit empty list must match the omitted form
 
     emit_chars:([72, 105, 10]); // prints "Hi\n"
 
-    if (a == 16) io->puts(c"List sum OK");
-    if (b == 100) io->puts(c"Default empty list OK");
+    if (a == 16) io->print:(c"List sum OK\n");
+    if (b == 100) io->print:(c"Default empty list OK\n");
+    if (c == b)   io->print:(c"Empty list == omitted OK\n");
 
-    ret a + b - 116;
+    ret a + b + c - 216;
 }

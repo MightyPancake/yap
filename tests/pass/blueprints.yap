@@ -37,18 +37,18 @@ i32 fn main() {
     _ eq  = bp_eq:(#7, #7);        // true
     _ ge  = bp_ge:(#9, #9);        // true
 
-    if (b == 11)         { io->puts(c"arith fill/finish OK");  pass = pass + 1; }
-    if (b == m)          { io->puts(c"blueprint == manual OK"); pass = pass + 1; }
-    if (s == 42)         { io->puts(c"stored OK");             pass = pass + 1; }
-    if (sq == 36)        { io->puts(c"hole reuse OK");         pass = pass + 1; }
-    if (tw == 7)         { io->puts(c"chained fill OK");       pass = pass + 1; }
-    if (ng == -5)        { io->puts(c"unary minus OK");        pass = pass + 1; }
-    if (tn == 10)        { io->puts(c"ternary then OK");       pass = pass + 1; }
-    if (tf == 20)        { io->puts(c"ternary else OK");       pass = pass + 1; }
-    if (lt)              { io->puts(c"cmp < true OK");         pass = pass + 1; }
-    if (nlt == false)    { io->puts(c"cmp < false OK");        pass = pass + 1; }
-    if (eq)              { io->puts(c"cmp == OK");             pass = pass + 1; }
-    if (ge)              { io->puts(c"cmp >= OK");             pass = pass + 1; }
+    if (b == 11)         { io->print:(c"arith fill/finish OK\n");  pass = pass + 1; }
+    if (b == m)          { io->print:(c"blueprint == manual OK\n"); pass = pass + 1; }
+    if (s == 42)         { io->print:(c"stored OK\n");             pass = pass + 1; }
+    if (sq == 36)        { io->print:(c"hole reuse OK\n");         pass = pass + 1; }
+    if (tw == 7)         { io->print:(c"chained fill OK\n");       pass = pass + 1; }
+    if (ng == -5)        { io->print:(c"unary minus OK\n");        pass = pass + 1; }
+    if (tn == 10)        { io->print:(c"ternary then OK\n");       pass = pass + 1; }
+    if (tf == 20)        { io->print:(c"ternary else OK\n");       pass = pass + 1; }
+    if (lt)              { io->print:(c"cmp < true OK\n");         pass = pass + 1; }
+    if (nlt == false)    { io->print:(c"cmp < false OK\n");        pass = pass + 1; }
+    if (eq)              { io->print:(c"cmp == OK\n");             pass = pass + 1; }
+    if (ge)              { io->print:(c"cmp >= OK\n");             pass = pass + 1; }
 
     ret pass - 12;
 }

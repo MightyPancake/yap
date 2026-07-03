@@ -46,27 +46,27 @@ i32 fn main() {
     Vec2 b = [1.0, 2.0];
 
     f64 len = a:length();
-    io->puts(c"Vector length:");
+    io->print:(c"Vector length:\n");
     io->putchar(len.(i32) + 48);
     io->putchar(10);
 
     Vec2 scaled = a:scaled(2.0);
-    io->puts(c"Scaled x:");
+    io->print:(c"Scaled x:\n");
     io->putchar(scaled.x.(i32) + 48);
     io->putchar(10);
 
     f64 d = a:dot(b);
-    io->puts(c"Dot product:");
+    io->print:(c"Dot product:\n");
     io->putchar(d.(i32) + 48);
     io->putchar(10);
 
     _ total = sum_range(10);
-    io->puts(c"Sum range mod 10:");
+    io->print:(c"Sum range mod 10:\n");
     io->putchar((total % 10) + 48);
     io->putchar(10);
 
     _ fact = factorial(5);
-    io->puts(c"Factorial mod 10:");
+    io->print:(c"Factorial mod 10:\n");
     io->putchar((fact % 10) + 48);
     io->putchar(10);
 
@@ -82,15 +82,15 @@ i32 fn main() {
     _ evens = nums:filter((bool fn i32 x) { ret (x % 2) == 0; });
     _ total_sum = nums:fold((i32 fn i32 acc, i32 x) { ret acc + x; }, 0);
 
-    io->puts(c"Squared count:");
+    io->print:(c"Squared count:\n");
     io->putchar((squared:len() % 10).(i32) + 48);
     io->putchar(10);
 
-    io->puts(c"Evens count:");
+    io->print:(c"Evens count:\n");
     io->putchar((evens:len() % 10).(i32) + 48);
     io->putchar(10);
 
-    io->puts(c"Fold total mod 10:");
+    io->print:(c"Fold total mod 10:\n");
     io->putchar((total_sum % 10) + 48);
     io->putchar(10);
 

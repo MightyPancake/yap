@@ -9,22 +9,22 @@ i32 fn main() {
     // Assign a function literal to a variable, then call it
     _ inc = (i32 fn i32 x) { ret x + 1; };
     _ five = inc(4);
-    if (five == 5) io->puts(c"Function literal assign+call OK");
+    if (five == 5) io->print:(c"Function literal assign+call OK\n");
 
     // Pass a function literal directly as an argument
     _ sum = apply((i32 fn i32 a, i32 b) { ret a + b; }, 30, 7);
-    if (sum == 37) io->puts(c"Function literal as argument OK");
+    if (sum == 37) io->print:(c"Function literal as argument OK\n");
 
     // No params, explicit return type
     _ answer = (i32 fn) { ret 42; };
 
     // No params, no return type (void)
-    _ shout = (fn) { io->puts(c"Void function literal OK"); };
+    _ shout = (fn) { io->print:(c"Void function literal OK\n"); };
     shout();
 
     // Literal minted in an imported file must not collide with ours
     _ seven = seven_via_literal();
-    if (seven == 7) io->puts(c"Cross-file literal OK");
+    if (seven == 7) io->print:(c"Cross-file literal OK\n");
 
     ret five + sum + answer() + seven - 91; // 5 + 37 + 42 + 7 - 91 = 0
 }

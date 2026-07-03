@@ -36,8 +36,8 @@ i32 fn main() {
     gnums:push(12);
 
     _ gtotal = gnums:at(0) + gnums:at(1) + gnums:at(2);
-    if (gnums:len() == 3) io->puts(c"Generic array len OK");
-    if (gtotal == 42) io->puts(c"Generic array push/at OK");
+    if (gnums:len() == 3) io->print:(c"Generic array len OK\n");
+    if (gtotal == 42) io->print:(c"Generic array push/at OK\n");
     gnums:free();
 
     ret gtotal - 42;
