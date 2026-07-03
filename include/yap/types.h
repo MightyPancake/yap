@@ -111,6 +111,7 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id ystatement_type_id;
   yap_type_id yfunc_type_id;
   yap_type_id yident_type_id;
+  yap_type_id yexprblueprint_type_id; //cached type_id for yExprBlueprint (a yExpr template with named holes)
   yap_type_id yexprlist_type_id;  //cached type_id for yExprList (growable list of yExpr)
   yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStatement)
   //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFuncT

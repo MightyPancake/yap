@@ -7,7 +7,7 @@ i32 fn main() {
 
 	//3. expr_statement
 	a;
-	
+
 	//4. if_statement
 	if (a)
 		a;
@@ -21,27 +21,30 @@ i32 fn main() {
 	//6. empty_statement
 	;
 
-	//7. while_loop
-	while (a)
-		a;
+	//7. while_loop (terminating)
+	i32 w = 3;
+	while (w)
+		w = w - 1;
 
-	//8. for_loop
-	for (_ a = 0; a; a+1)
-		a;
-
-	//9. return_statement
-	ret a;
+	//8. for_loop (terminating)
+	i32 s = 0;
+	for (i32 i = 0; i < 3; i = i + 1)
+		s = s + 1;
 
 	//10. break_statement
 	while (1) {
 		a;
-		break
+		break;
 	}
 
 	//11. continue_statement
-	while (1) {
-		if (a) continue;
-		a+1;
+	i32 c = 0;
+	while (c < 3) {
+		c = c + 1;
+		if (c) continue;
+		a;
 	}
+
+	//9. return_statement (success == 0)
 	ret 0;
 }

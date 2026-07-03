@@ -51,6 +51,8 @@ typedef enum {
     yap_expr_module_access,
     yap_expr_method_access,
     yap_expr_macro,
+    yap_expr_blueprint,       // $( expr ) quasi-quote literal (parse AST only; desugared in build.c)
+    yap_expr_blueprint_hole,  // $name placeholder; also the semtree hole node (reuses var_name)
 } yap_expr_kind;
 
 typedef enum {

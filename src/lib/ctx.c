@@ -42,6 +42,12 @@ yap_ctx* yap_ctx_new(){
     ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
     ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
+    //yExprBlueprint: a yExpr template that may contain named holes ($name). Same
+    //C representation as yExpr (a yap_expr*), but a distinct front-end type so a
+    //stored blueprint must be :fill()'d and :finish()'d before use as a yExpr.
+    //(Named for the expression form specifically; a yStatementBlueprint etc. can
+    //follow when ${}/$[] land.)
+    ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "void*");
     //yExprList is a real slice of yExpr (not an opaque handle) so it gets native
     //'.len' and ':[i]' -- see yap_build_member_access_expr's slice case and
     //yap_exec_macro_call's blob-literal marshalling (both in build.c) for the
@@ -86,6 +92,8 @@ yap_ctx* yap_ctx_new(){
             { "var_value",     ye,      {bp},         1 },
             { "new_var",       ye,      {yt, yi},     2 },
             { "bin_op",        ye,      {ye, i, ye},  3 },
+            { "neg",           ye,      {ye},         1 },
+            { "ternary",       ye,      {ye, ye, ye}, 3 },
             { "assign",        ye,      {ye, i, ye},  3 },
             { "member",        ye,      {ye, bp},     2 },
             { "index",         ye,      {ye, ye},     2 },
@@ -125,6 +133,9 @@ yap_ctx* yap_ctx_new(){
             { "log",           v,       {bp},         1 },
             { "error",         v,       {bp},         1 },
             { "warn",          v,       {bp},         1 },
+            //Blueprint support: build.c desugars a $(...) literal into these hole
+            //placeholders (fill/finish are methods on yExprBlueprint, below).
+            { "hole",          ye,      {bp},         1 },
         };
         int n = sizeof(builtins) / sizeof(builtins[0]);
         for (int bi = 0; bi < n; bi++){
@@ -157,6 +168,7 @@ yap_ctx* yap_ctx_new(){
         yap_type_id b   = ctx->bool_type_id;
         yap_type_id v   = ctx->void_type_id;
         yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+        yap_type_id ybp = ctx->yexprblueprint_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[3]; int argc; } methods[] = {
             { "yStructT_add_field", v,   {yst, yt, bp}, 3 },
@@ -184,6 +196,11 @@ yap_ctx* yap_ctx_new(){
 
             { "yType_new_method",     yft, {yt},          1 },
             { "yType_new_ref_method", yft, {yt},          1 },
+
+            //yExprBlueprint (the $(...) quasi-quote): fill one named hole at a
+            //time (chainable, returns the blueprint), then finish to a yExpr.
+            { "yExprBlueprint_fill",   ybp, {ybp, bp, ye}, 3 },
+            { "yExprBlueprint_finish", ye,  {ybp},         1 },
         };
         int n = sizeof(methods) / sizeof(methods[0]);
         for (int mi = 0; mi < n; mi++){

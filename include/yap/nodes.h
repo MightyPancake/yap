@@ -151,6 +151,19 @@ kenobi_new_struct_free(yap_module_access_node,
     yap_loc loc;
 );
 
+// $( template ) expression blueprint. Parse-AST only: build.c desugars the
+// template into yapi-> builder calls, so this never reaches codegen/semtree.
+kenobi_new_struct_free(yap_blueprint_node,
+    yap_expr_node* template;
+    yap_loc loc;
+);
+
+// $name placeholder inside a blueprint template.
+kenobi_new_struct_free(yap_blueprint_hole_node,
+    yap_identifier_node name;
+    yap_loc loc;
+);
+
 typedef enum {
     yap_macro_param_unnamed,
     yap_macro_param_named,
@@ -202,6 +215,8 @@ kenobi_new_struct_free(yap_expr_node,
         yap_block_node block;
         yap_module_access_node module_access;
         yap_macro_call_node macro_call;
+        yap_blueprint_node blueprint;
+        yap_blueprint_hole_node blueprint_hole;
     };
     yap_loc loc;
 );

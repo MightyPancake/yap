@@ -6,6 +6,7 @@ import "imports/bar.yap"
 
 //import math
 
-fn main(){
+i32 fn main(){
     //foo();
+    ret 0;
 }

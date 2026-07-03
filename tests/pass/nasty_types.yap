@@ -108,7 +108,7 @@ struct ast_node_data {
     }
 }
 
-fn main() {
+i32 fn main() {
     pointer_party pp;
     pp.single_ptr = null;
     pp.const_ptr_to_const = null;
@@ -122,4 +122,6 @@ fn main() {
     ast_node_data node;
     
     _ f = node.kind;
+
+    ret 0;
 }

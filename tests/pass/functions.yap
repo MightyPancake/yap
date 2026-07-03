@@ -5,7 +5,7 @@ i32 fn add(i32 a, i32 b) {
 none fn foo() {}
 none fn bar() {}
 
-fn main(){}
+i32 fn main(){ ret 0; }
 
 i32 fn some_func_using_funcs(
 	(fn) a,
