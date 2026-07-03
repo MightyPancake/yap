@@ -102,7 +102,7 @@ yType fn arr(yType T){
     // map(f): new arr(T) with f (T fn T) applied to every element. The result
     // is exactly-sized (cap = count) and independently owned -- free() both.
     _ map_t = res:new_method();
-    _ map_f = map_t:add_param(yapi->func_type1(T, T), c"f");
+    _ map_f = map_t:add_param(yapi->fn_type1(T, T), c"f");
     yExpr self6 = map_t:get_subject();
     map_t:set_return_type(res);
     _ out6_n = yapi->uniq_name();
@@ -140,7 +140,7 @@ yType fn arr(yType T){
     // filter(keep): new arr(T) with the elements keep (bool fn T) approved.
     // Over-allocates to the source count (cap = source count, count = kept).
     _ filt_t = res:new_method();
-    _ filt_f = filt_t:add_param(yapi->func_type1(yapi->type(c"bool"), T), c"keep");
+    _ filt_f = filt_t:add_param(yapi->fn_type1(yapi->type(c"bool"), T), c"keep");
     yExpr self7 = filt_t:get_subject();
     filt_t:set_return_type(res);
     _ out7_n = yapi->uniq_name();
@@ -184,7 +184,7 @@ yType fn arr(yType T){
 
     // fold(f, acc): reduce with f (T fn T acc, T elem), starting from acc.
     _ fold_t = res:new_method();
-    _ fold_f = fold_t:add_param(yapi->func_type2(T, T, T), c"f");
+    _ fold_f = fold_t:add_param(yapi->fn_type2(T, T, T), c"f");
     _ fold_acc = fold_t:add_param(T, c"acc");
     yExpr self8 = fold_t:get_subject();
     fold_t:set_return_type(T);

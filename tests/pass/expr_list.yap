@@ -24,7 +24,7 @@ yExpr fn add_const(yExpr base, yExprList@ extra) {
 // Statement macro returning a block of calls — exercises yExprList's native
 // .len/:[i] through a deref'd pointer, yapi->call1, yapi->stmt_list_new/push
 // and yapi->block end to end.
-yStatement fn emit_chars(yExprList@ vals) {
+yStmt fn emit_chars(yExprList@ vals) {
     _ stmts = yapi->stmt_list_new();
     _ n = vals..len.(i32);
     i32 i = 0;

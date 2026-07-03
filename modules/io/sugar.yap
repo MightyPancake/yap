@@ -42,7 +42,7 @@ none fn print_i32(i32 v) {
 // yExprList@ (a pointer) rather than a bare value since macro-call blob
 // marshalling only passes one pointer-sized value per slot. `fmt` bytes are
 // already escape-decoded, so this only needs to look for '%' specifiers.
-yStatement fn print(byte@ fmt, yExpr[]@ args) {
+yStmt fn print(byte@ fmt, yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;
     i32 i = 0;

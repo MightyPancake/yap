@@ -36,7 +36,7 @@ yExpr fn with_ident(yIdent name, yExpr val) {
     ret val;
 }
 
-yStatement fn declare_int(yIdent name) {
+yStmt fn declare_int(yIdent name) {
     _ tid = yapi->type(c"i32");
     ret yapi->var_decl(tid, name);
 }

@@ -39,13 +39,13 @@ yap_ctx* yap_ctx_new(){
     //Comptime types (opaque pointer handles for metaprogramming)
     ctx->yexpr_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExpr",      "yExpr",      "void*");
     ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "void*");
-    ctx->ystatement_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStatement", "yStatement", "void*");
-    ctx->yfunc_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFunc",      "yFunc",      "void*");
+    ctx->ystmt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmt", "yStmt", "void*");
+    ctx->yfn_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFn",      "yFn",      "void*");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
     //yExprBlueprint: a yExpr template that may contain named holes ($name). Same
     //C representation as yExpr (a yap_expr*), but a distinct front-end type so a
     //stored blueprint must be :fill()'d and :finish()'d before use as a yExpr.
-    //(Named for the expression form specifically; a yStatementBlueprint etc. can
+    //(Named for the expression form specifically; a yStmtBlueprint etc. can
     //follow when ${}/$[] land.)
     ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "void*");
     //yExprList is a real slice of yExpr (not an opaque handle) so it gets native
@@ -59,11 +59,11 @@ yap_ctx* yap_ctx_new(){
     ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
 
     //Comptime builder templates (yapi.md): opaque handles for the incremental
-    //struct/enum/union/func builders, distinct from the finished yType/yFunc they emit.
+    //struct/enum/union/func builders, distinct from the finished yType/yFn they emit.
     ctx->ystructt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStructT", "yStructT", "void*");
     ctx->yenumt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yEnumT",   "yEnumT",   "void*");
     ctx->yuniont_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yUnionT",  "yUnionT",  "void*");
-    ctx->yfunct_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFuncT",   "yFuncT",   "void*");
+    ctx->yfnt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFnT",   "yFnT",   "void*");
 
     //Comptime builder module: yapi
     {
@@ -76,13 +76,13 @@ yap_ctx* yap_ctx_new(){
         yap_type_id bp = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
         yap_type_id yt = ctx->ytype_type_id;
         yap_type_id yi = ctx->yident_type_id;
-        yap_type_id ys = ctx->ystatement_type_id;
+        yap_type_id ys = ctx->ystmt_type_id;
         yap_type_id v  = ctx->void_type_id;
         yap_type_id ysl = ctx->ystmtlist_type_id;
         yap_type_id yst = ctx->ystructt_type_id;
         yap_type_id yen = ctx->yenumt_type_id;
         yap_type_id yun = ctx->yuniont_type_id;
-        yap_type_id yft = ctx->yfunct_type_id;
+        yap_type_id yft = ctx->yfnt_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } builtins[] = {
             { "int",           ye,      {i},          1 },
@@ -122,12 +122,12 @@ yap_ctx* yap_ctx_new(){
             { "struct_t",      yst,     {i},          0 },
             { "enum_t",        yen,     {i},          0 },
             { "union_t",       yun,     {i},          0 },
-            { "func_t",        yft,     {i},          0 },
+            { "fn_t",        yft,     {i},          0 },
             { "type",          yt,      {bp},         1 },
-            { "func_type0",    yt,      {yt},             1 },
-            { "func_type1",    yt,      {yt, yt},         2 },
-            { "func_type2",    yt,      {yt, yt, yt},     3 },
-            { "func_type3",    yt,      {yt, yt, yt, yt}, 4 },
+            { "fn_type0",    yt,      {yt},             1 },
+            { "fn_type1",    yt,      {yt, yt},         2 },
+            { "fn_type2",    yt,      {yt, yt, yt},     3 },
+            { "fn_type3",    yt,      {yt, yt, yt, yt}, 4 },
             { "type_exists",   b,       {bp},         1 },
             { "func_exists",   b,       {bp},         1 },
             { "log",           v,       {bp},         1 },
@@ -159,47 +159,47 @@ yap_ctx* yap_ctx_new(){
     {
         yap_type_id ye  = ctx->yexpr_type_id;
         yap_type_id yt  = ctx->ytype_type_id;
-        yap_type_id ys  = ctx->ystatement_type_id;
-        yap_type_id yfn = ctx->yfunc_type_id;
+        yap_type_id ys  = ctx->ystmt_type_id;
+        yap_type_id yfn = ctx->yfn_type_id;
         yap_type_id yst = ctx->ystructt_type_id;
         yap_type_id yen = ctx->yenumt_type_id;
         yap_type_id yun = ctx->yuniont_type_id;
-        yap_type_id yft = ctx->yfunct_type_id;
+        yap_type_id yft = ctx->yfnt_type_id;
         yap_type_id b   = ctx->bool_type_id;
         yap_type_id v   = ctx->void_type_id;
         yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
         yap_type_id ybp = ctx->yexprblueprint_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[3]; int argc; } methods[] = {
-            { "yStructT_add_field", v,   {yst, yt, bp}, 3 },
+            { "yStructT_add_field", yst,   {yst, yt, bp}, 3 },
             { "yStructT_finish",    yt,  {yst, bp},     2 },
             { "yStructT_existed",   b,   {yst},         1 },
             { "yStructT_type",      yt,  {yst},         1 },
 
-            { "yEnumT_add_variant", v,   {yen, bp},     2 },
+            { "yEnumT_add_variant", yen,   {yen, bp},     2 },
             { "yEnumT_finish",      yt,  {yen, bp},     2 },
             { "yEnumT_existed",     b,   {yen},         1 },
             { "yEnumT_type",        yt,  {yen},         1 },
 
-            { "yUnionT_add_field",  v,   {yun, yt, bp}, 3 },
+            { "yUnionT_add_field",  yun,   {yun, yt, bp}, 3 },
             { "yUnionT_finish",     yt,  {yun, bp},     2 },
             { "yUnionT_existed",    b,   {yun},         1 },
             { "yUnionT_type",       yt,  {yun},         1 },
 
-            { "yFuncT_add_param",       ye,  {yft, yt, bp}, 3 },
-            { "yFuncT_set_return_type", v,   {yft, yt},     2 },
-            { "yFuncT_set_body",        v,   {yft, ys},     2 },
-            { "yFuncT_finish",          yfn, {yft, bp},     2 },
-            { "yFuncT_existed",         b,   {yft},         1 },
-            { "yFuncT_func",            yfn, {yft},         1 },
-            { "yFuncT_get_subject",     ye,  {yft},         1 },
+            { "yFnT_add_param",       ye,  {yft, yt, bp}, 3 },
+            { "yFnT_set_return_type", v,   {yft, yt},     2 },
+            { "yFnT_set_body",        v,   {yft, ys},     2 },
+            { "yFnT_finish",          yfn, {yft, bp},     2 },
+            { "yFnT_existed",         b,   {yft},         1 },
+            { "yFnT_func",            yfn, {yft},         1 },
+            { "yFnT_get_subject",     ye,  {yft},         1 },
 
             { "yType_new_method",     yft, {yt},          1 },
             { "yType_new_ref_method", yft, {yt},          1 },
 
             //yExprBlueprint (the $(...) quasi-quote): fill one named hole at a
             //time (chainable, returns the blueprint), then finish to a yExpr.
-            { "yExprBlueprint_fill",   ybp, {ybp, bp, ye}, 3 },
+            { "yExprBlueprint_fill_expr",   ybp, {ybp, bp, ye}, 3 },
             { "yExprBlueprint_finish", ye,  {ybp},         1 },
         };
         int n = sizeof(methods) / sizeof(methods[0]);

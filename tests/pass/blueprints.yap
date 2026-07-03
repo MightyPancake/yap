@@ -1,23 +1,23 @@
 import io
 
 // --- arithmetic, fill/finish, stored/reused/chained (first cut) ---
-yExpr fn bp_add1(yExpr a)     { ret $($x + 1):fill(c"x", a):finish(); }
+yExpr fn bp_add1(yExpr a)     { ret expr${ $x + 1 }:fill_expr(c"x", a):finish(); }
 yExpr fn manual_add1(yExpr a) { ret yapi->bin_op(a, 43, yapi->int(1)); } // '+' == 43
-yExpr fn bp_stored(yExpr a)   { yExprBlueprint t = $($x + 1); ret t:fill(c"x", a):finish(); }
-yExpr fn bp_square(yExpr a)   { ret $($x * $x):fill(c"x", a):finish(); }
-yExpr fn bp_add(yExpr a, yExpr b) { ret $($x + $y):fill(c"x", a):fill(c"y", b):finish(); }
+yExpr fn bp_stored(yExpr a)   { yExprBlueprint t = expr${ $x + 1 }; ret t:fill_expr(c"x", a):finish(); }
+yExpr fn bp_square(yExpr a)   { ret expr${ $x * $x }:fill_expr(c"x", a):finish(); }
+yExpr fn bp_add(yExpr a, yExpr b) { ret expr${ $x + $y }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
 
 // --- comparisons (result type is bool) ---
-yExpr fn bp_lt(yExpr a, yExpr b) { ret $($x < $y):fill(c"x", a):fill(c"y", b):finish(); }
-yExpr fn bp_eq(yExpr a, yExpr b) { ret $($x == $y):fill(c"x", a):fill(c"y", b):finish(); }
-yExpr fn bp_ge(yExpr a, yExpr b) { ret $($x >= $y):fill(c"x", a):fill(c"y", b):finish(); }
+yExpr fn bp_lt(yExpr a, yExpr b) { ret expr${ $x < $y }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
+yExpr fn bp_eq(yExpr a, yExpr b) { ret expr${ $x == $y }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
+yExpr fn bp_ge(yExpr a, yExpr b) { ret expr${ $x >= $y }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
 
 // --- unary minus ---
-yExpr fn bp_neg(yExpr a) { ret $(-$x):fill(c"x", a):finish(); }
+yExpr fn bp_neg(yExpr a) { ret expr${ -$x }:fill_expr(c"x", a):finish(); }
 
 // --- ternary ---
 yExpr fn bp_tern(yExpr cnd, yExpr a, yExpr b) {
-    ret $($c ? $a else $b):fill(c"c", cnd):fill(c"a", a):fill(c"b", b):finish();
+    ret expr${ $c ? $a else $b }:fill_expr(c"c", cnd):fill_expr(c"a", a):fill_expr(c"b", b):finish();
 }
 
 i32 fn main() {

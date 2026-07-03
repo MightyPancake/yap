@@ -108,17 +108,17 @@ kenobi_new_struct_free(yap_ctx,
   //Comptime types (opaque handles for metaprogramming)
   yap_type_id yexpr_type_id;
   yap_type_id ytype_type_id;
-  yap_type_id ystatement_type_id;
-  yap_type_id yfunc_type_id;
+  yap_type_id ystmt_type_id;
+  yap_type_id yfn_type_id;
   yap_type_id yident_type_id;
   yap_type_id yexprblueprint_type_id; //cached type_id for yExprBlueprint (a yExpr template with named holes)
   yap_type_id yexprlist_type_id;  //cached type_id for yExprList (growable list of yExpr)
-  yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStatement)
-  //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFuncT
+  yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStmt)
+  //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFnT
   yap_type_id ystructt_type_id;
   yap_type_id yenumt_type_id;
   yap_type_id yuniont_type_id;
-  yap_type_id yfunct_type_id;
+  yap_type_id yfnt_type_id;
   //External
   yap_print_error_fn print_error;
   yap_gen_decl_fn gen_decl;

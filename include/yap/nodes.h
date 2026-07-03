@@ -164,6 +164,15 @@ kenobi_new_struct_free(yap_blueprint_hole_node,
     yap_loc loc;
 );
 
+// type${ struct{...} } eager type blueprint. Parse-AST only: build.c desugars
+// `body` (an anon struct/enum/union type node) into a chained
+// yapi->struct_t()/enum_t()/union_t() + add_field/add_variant call, yielding a
+// yStructT/yEnumT/yUnionT template. $T in a field/variant type is an eager splice.
+kenobi_new_struct_free(yap_type_blueprint_node,
+    yap_type_node* body;
+    yap_loc loc;
+);
+
 typedef enum {
     yap_macro_param_unnamed,
     yap_macro_param_named,
@@ -217,6 +226,7 @@ kenobi_new_struct_free(yap_expr_node,
         yap_macro_call_node macro_call;
         yap_blueprint_node blueprint;
         yap_blueprint_hole_node blueprint_hole;
+        yap_type_blueprint_node type_blueprint;
     };
     yap_loc loc;
 );
@@ -384,6 +394,7 @@ typedef enum {
     yap_type_node_array,
     yap_type_node_slice,
     yap_type_node_macro,
+    yap_type_node_blueprint_hole,  // $name in type position (eager splice / type-hole); reuses .identifier for the name
 } yap_type_node_kind;
 
 kenobi_new_struct_free(yap_type_node,
