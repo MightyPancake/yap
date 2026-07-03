@@ -172,8 +172,7 @@ test: build
 			cat "$$vg_log"; \
 		fi; \
 		rm -f "$$vg_log" "$$cmd_log"; \
-		if [ "$$test_failed" -eq 1 ]; then failed=1; fi; \
-		if [ "$$expect" = "pass" ] && [ "$$leak_found" -eq 1 ]; then failed=1; fi; \
+		if [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; then failed=1; fi; \
 	}; \
 	for test_file in tests/pass/*.yap; do \
 		[ -e "$$test_file" ] || { echo "No pass test files found in ./tests/pass"; exit 1; }; \
