@@ -34,6 +34,8 @@
               # libclang for C binding generation
               clang
               libclang
+              # gum: renders the live test-status table in tests/run_tests.sh
+              gum
             ];
 
             shellHook = ''

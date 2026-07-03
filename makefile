@@ -117,73 +117,7 @@ build: lib compiler
 
 test: build
 	@echo $(CYAN)Running tests$(RESET)
-	@set -e; \
-	failed=0; \
-	run_one() { \
-		test_file="$$1"; expect="$$2"; err_file="$$3"; \
-		vg_log=$$(mktemp); \
-		cmd_log=$$(mktemp); \
-		test_failed=0; \
-		leak_found=0; \
-		if valgrind \
-			--track-origins=yes \
-			--leak-check=full \
-			--error-exitcode=99 \
-			--suppressions=valgrind_suppressions.supp \
-			--log-file="$$vg_log" \
-			./yap "$$test_file" >"$$cmd_log" 2>&1; then \
-			run_exit=0; \
-		else \
-			run_exit=1; \
-		fi; \
-		if [ "$$expect" = "pass" ]; then \
-			if [ "$$run_exit" -eq 0 ]; then \
-				status="$(GREEN)passed$(RESET)"; \
-			else \
-				status="$(RED)failed$(RESET)"; \
-				test_failed=1; \
-			fi; \
-		else \
-			if [ "$$run_exit" -ne 0 ] && grep -qF -- "$$(cat "$$err_file")" "$$cmd_log"; then \
-				status="$(GREEN)passed$(RESET)"; \
-			else \
-				status="$(RED)failed$(RESET)"; \
-				test_failed=1; \
-			fi; \
-		fi; \
-		leaks=""; \
-		if grep -Eq 'definitely lost:[[:space:]]*[1-9][0-9]* bytes|indirectly lost:[[:space:]]*[1-9][0-9]* bytes|possibly lost:[[:space:]]*[1-9][0-9]* bytes' "$$vg_log"; then \
-			leak_found=1; \
-			leaks="$(RED)LEAKING!$(RESET)"; \
-		fi; \
-		printf '%s: %s %s\n' "$$test_file" "$$status" "$$leaks"; \
-		if [ "$(show_test_output)" = "true" ]; then \
-			cat "$$cmd_log"; \
-		fi; \
-		if { [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; }; then \
-			echo $(CYAN)Output for $$test_file$(RESET); \
-			cat "$$cmd_log"; \
-			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
-			cat "$$vg_log"; \
-		elif [ "$(detailed)" = "true" ]; then \
-			echo $(CYAN)Output for $$test_file$(RESET); \
-			cat "$$cmd_log"; \
-			echo $(CYAN)Valgrind output for $$test_file$(RESET); \
-			cat "$$vg_log"; \
-		fi; \
-		rm -f "$$vg_log" "$$cmd_log"; \
-		if [ "$$test_failed" -eq 1 ] || [ "$$leak_found" -eq 1 ]; then failed=1; fi; \
-	}; \
-	for test_file in tests/pass/*.yap; do \
-		[ -e "$$test_file" ] || { echo "No pass test files found in ./tests/pass"; exit 1; }; \
-		run_one "$$test_file" pass; \
-	done; \
-	for fail_dir in tests/fail/*/; do \
-		[ -d "$$fail_dir" ] || continue; \
-		run_one "$${fail_dir}test.yap" fail "$${fail_dir}err.txt"; \
-	done; \
-	test $$failed -eq 0
-	@echo $(GREEN)Tests passed!$(RESET)
+	@SHOW_TEST_OUTPUT=$(show_test_output) DETAILED=$(detailed) bash tests/run_tests.sh
 
 rerun: build
 	@make run test=$(test)
