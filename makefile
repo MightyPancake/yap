@@ -9,6 +9,8 @@ RESET := [0m
 debug ?= true
 ifeq ($(debug),true)
     CFLAGS += -g -O1 -fno-omit-frame-pointer -DYAP_DEBUG
+else
+    CFLAGS += -O2
 endif
 
 show_test_output ?= false
@@ -50,7 +52,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib build test test_file path workflow bindings hello
+.PHONY: default compiler lib build release test test_file path workflow bindings hello
 
 default: all
 
@@ -114,6 +116,14 @@ build: lib compiler
 	@make yap_semantic debug=$(debug)
 	@yap -c
 	@yap -C
+
+# Optimized build (-O2, no -g/-DYAP_DEBUG/-DYAP_LOG). Cleans yap-ts's
+# libtree-sitter.a first since it's only rebuilt when missing.
+release:
+	@echo $(PURPLE)Building optimized release \(debug=false\)$(RESET)
+	@cd components/yap-ts && $(MAKE) clean
+	@make build debug=false
+	@echo $(GREEN)Release build done!$(RESET)
 
 test: build
 	@echo $(CYAN)Running tests$(RESET)

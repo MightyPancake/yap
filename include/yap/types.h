@@ -82,12 +82,7 @@ kenobi_new_struct_free(yap_ctx,
 
   //Modules
   map modules; //map of named modules
-  // Name of the active module, not a cached yap_module* -- 'modules' stores
-  // yap_module by value and can relocate every entry on resize, so a
-  // pointer taken at switch-time would go stale as soon as another module
-  // gets registered. Resolve via yap_ctx_current_module(ctx) instead of
-  // reading this field directly.
-  char* current_module_name;
+  char* current_module_name; //resolve via yap_ctx_current_module(ctx), don't read directly
 
   //Semantic declarations (global, not per-module)
   darr(yap_decl) semantic_decls;

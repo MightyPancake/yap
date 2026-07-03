@@ -37,22 +37,11 @@ none fn print_i32(i32 v) {
     }
 }
 
-// printf-style macro: compile-time walks `fmt`, dispatching one runtime
-// call per %-specifier (or literal character) and chaining them into a
-// single returned block. `args` may be omitted entirely at the call site
-// (defaults to an empty yExprList) when the format string has no
-// specifiers, e.g. io->print:(c"hello\n");
-// 'args' is yExprList@ (pointer to a real slice of yExpr), not a bare
-// yExprList value — see project memory on why: the macro-call blob-literal
-// marshalling that populates it can only pass one pointer-sized value per
-// argument slot, and a genuine by-value slice is two words. 'args.:[ai]'
-// dereferences the pointer (a plain 'ptr.'), then indexes the resulting
-// slice ('expr:[idx]') — both native slice operations, no yapi->list_* or
-// yExprList methods needed anymore.
-// `fmt` bytes are already escape-decoded (the frontend resolves '\n' etc.
-// once, when the string literal is parsed), so this walk only has to look
-// for '%' specifiers -- every other byte, including a decoded '\n', is
-// printed as-is.
+// printf-style macro: compile-time walks `fmt`, dispatching one runtime call
+// per %-specifier and chaining them into a single block. `args` is
+// yExprList@ (a pointer) rather than a bare value since macro-call blob
+// marshalling only passes one pointer-sized value per slot. `fmt` bytes are
+// already escape-decoded, so this only needs to look for '%' specifiers.
 yStatement fn print(byte@ fmt, yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;

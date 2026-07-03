@@ -1,14 +1,10 @@
 // Generic growable array, implemented entirely in yap via the yapi builder
 // API -- no C backend. Callers must `import stdlib` themselves before
-// `import arr` (arr's own mod.yap can't import stdlib on arr's behalf --
-// nested module-to-module imports mis-prefix the inner module's
-// declarations with the outer module's prefix; see the CI gotcha note in
-// this project's arr-module memory).
+// `import arr` (nested module-to-module imports mis-prefix declarations).
 //
-// Each arr:(T) instantiation embeds T's real size
-// (yapi->sizeof(T)) directly into its own push() body, so unlike the earlier
-// C-backend version there's no type-erased elem_size field: every field is
-// genuinely T-typed / u32-typed, known at comptime per instantiation.
+// Each arr:(T) instantiation embeds T's real size (yapi->sizeof(T)) directly
+// into its own push() body, so every field is genuinely T-typed, known at
+// comptime per instantiation -- no type-erased elem_size field.
 //
 // yBinOp/yAssignOp codes (no char-literal syntax in yap; passed as raw
 // ASCII/enum ints, same convention as tests/macros.yap):

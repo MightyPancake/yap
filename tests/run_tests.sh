@@ -100,18 +100,13 @@ render() {
         [ -e "$work_dir/leak.$i" ] && label="${label} ${RED}LEAK!${RESET}"
         rows+="${names[i]},${label}"$'\n'
     done
-    # Render the whole frame (incl. spawning gum) before touching the
-    # screen, so cursor-home + erase + draw happen as one atomic write
-    # instead of leaving a visible blank gap while gum starts up.
+    # Render the full frame before touching the screen, to avoid a blank flash
     local frame
     frame=$(printf '%s' "$rows" | gum table -s',' -c 'Test,Status' -p)
     printf '\033[H\033[J%s\n' "$frame"
 }
 
-# Non-interactive (CI logs, redirected output): no gum, no cursor tricks --
-# just print one plain line per test as it finishes, same as the old
-# sequential runner. Avoids requiring gum in CI and avoids flooding the
-# log with dozens of full-screen redraws that a log viewer can't overwrite.
+# Non-interactive (CI): plain line per finished test, no gum/cursor tricks
 declare -A reported
 report_progress() {
     local i st label

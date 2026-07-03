@@ -1,6 +1,4 @@
-// A "normal-sized" example program used to profile where the yap
-// compiler spends its time: struct methods, generic arrays, higher-order
-// functions, loops, and a couple of libc-bound module calls.
+// Profiling example: struct methods, generic arrays, HOFs, loops, C modules.
 import io
 import math
 import arr
