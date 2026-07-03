@@ -21,6 +21,11 @@ yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
 yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name);
 yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix);
 yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name);
+// Re-resolves the current module by name on every call. ctx->modules stores
+// yap_module by value in a hashmap that can resize (and relocate every
+// entry) on later inserts, so a yap_module* cached across module
+// registrations would go stale -- always look it up fresh instead.
+yap_module* yap_ctx_current_module(yap_ctx* ctx);
 void yap_ctx_push_decl_node(yap_ctx* ctx, yap_decl_node decl);
 
 //Source manipulation

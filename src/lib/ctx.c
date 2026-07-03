@@ -13,7 +13,7 @@ yap_ctx* yap_ctx_new(){
       .current_scopes=darr_new(yap_scope*),
       .errors=darr_new(yap_error),
       .modules=new_module_map(),
-      .current_module=NULL,
+      .current_module_name=NULL,
       .module_lookup_paths=darr_new(char*),
       .semantic_decls=darr_new(yap_decl),
       .types=darr_new(yap_type), //yap_type_id points to types in this array
@@ -279,13 +279,19 @@ yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
     });
     return NULL;
   }
-  ctx->current_module = module;
+  ctx->current_module_name = module->name;
   return module;
 }
 
+yap_module* yap_ctx_current_module(yap_ctx* ctx){
+  if (!ctx || !ctx->current_module_name) return NULL;
+  return yap_ctx_get_module(ctx, ctx->current_module_name);
+}
+
 void yap_ctx_push_decl_node(yap_ctx* ctx, yap_decl_node decl){
-  if (!ctx || !ctx->current_module) return;
-  darr_push(ctx->current_module->decls, decl);
+  yap_module* module = yap_ctx_current_module(ctx);
+  if (!module) return;
+  darr_push(module->decls, decl);
 }
 
 void* yap_ctx_malloc(yap_ctx* ctx, size_t bytes){
