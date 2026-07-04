@@ -81,6 +81,7 @@ kenobi_new_struct_free(yap_type,
     yap_blob blob;
     yap_array_type array;
     yap_slice_type slice;
+    char* hole_name; //yap_type_hole: name of the unfilled $name blueprint type-hole
     yap_error err;
   };
   bool is_const;

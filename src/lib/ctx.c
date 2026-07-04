@@ -141,6 +141,7 @@ yap_ctx* yap_ctx_new(){
             //placeholders (fill/finish are methods on yExprBlueprint/yStmtBlueprint, below).
             { "hole",          ye,      {bp},         1 },
             { "hole_stmt",     ys,      {bp},         1 },
+            { "type_hole",     yt,      {bp},         1 },
         };
         int n = sizeof(builtins) / sizeof(builtins[0]);
         for (int bi = 0; bi < n; bi++){
@@ -744,6 +745,10 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
       return left.blob.field_count == right.blob.field_count;
     case yap_type_untyped:
       return yap_ctx_type_ids_eq(ctx, left.untyped_default, right.untyped_default);
+    case yap_type_hole:
+      // Two holes are the same type iff same hole_name, so repeated $T in one
+      // template dedupes to a single type_id (one :fill_type() closes all of them).
+      return strus_eq(left.hole_name, right.hole_name);
     default:
       return false;
   }
@@ -844,6 +849,11 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
     }
     case yap_type_blob:
       return strus_newf("%sB%u", const_str, typ.blob.field_count);
+    case yap_type_hole:
+      // Not real codegen-able C -- only used as a yap_ctx_insert_type_if_not_exists
+      // interning key, so repeated $T in one template naturally dedupes to the
+      // same type_id (name lookup hits before a second type gets pushed).
+      return strus_newf("%sH%s", const_str, typ.hole_name);
     default:
       return NULL;
   }

@@ -90,6 +90,7 @@ typedef enum {
   yap_type_blob,
   yap_type_array,
   yap_type_slice,
+  yap_type_hole, //Unresolved $T blueprint placeholder; interned/deduped by hole_name, must be substituted away before codegen
   yap_type_error,
 }yap_type_kind;
 
