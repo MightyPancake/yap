@@ -14,6 +14,7 @@ typedef struct yap_func_arg_node yap_func_arg_node;
 //Misc
 kenobi_new_struct_free(yap_identifier_node,
     char* value;
+    bool is_hole; // true if this came from a $name blueprint_hole token (name in .value, stripped of '$')
     yap_loc loc;
 );
 
