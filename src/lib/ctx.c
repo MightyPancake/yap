@@ -48,6 +48,9 @@ yap_ctx* yap_ctx_new(){
     //(Named for the expression form specifically; a yStmtBlueprint etc. can
     //follow when ${}/$[] land.)
     ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "void*");
+    //yStmtBlueprint: the stmt${ } analogue -- a yStmt template with named holes,
+    //filled via :fill_expr(...)/:finish() (same C repr as yStmt, a yap_statement*).
+    ctx->ystmtblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtBlueprint", "yStmtBlueprint", "void*");
     //yExprList is a real slice of yExpr (not an opaque handle) so it gets native
     //'.len' and ':[i]' -- see yap_build_member_access_expr's slice case and
     //yap_exec_macro_call's blob-literal marshalling (both in build.c) for the
@@ -133,9 +136,10 @@ yap_ctx* yap_ctx_new(){
             { "log",           v,       {bp},         1 },
             { "error",         v,       {bp},         1 },
             { "warn",          v,       {bp},         1 },
-            //Blueprint support: build.c desugars a $(...) literal into these hole
-            //placeholders (fill/finish are methods on yExprBlueprint, below).
+            //Blueprint support: build.c desugars a blueprint literal into these hole
+            //placeholders (fill/finish are methods on yExprBlueprint/yStmtBlueprint, below).
             { "hole",          ye,      {bp},         1 },
+            { "hole_stmt",     ys,      {bp},         1 },
         };
         int n = sizeof(builtins) / sizeof(builtins[0]);
         for (int bi = 0; bi < n; bi++){
@@ -169,6 +173,7 @@ yap_ctx* yap_ctx_new(){
         yap_type_id v   = ctx->void_type_id;
         yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
         yap_type_id ybp = ctx->yexprblueprint_type_id;
+        yap_type_id ysbp = ctx->ystmtblueprint_type_id;
 
         struct { const char* name; yap_type_id ret; yap_type_id args[3]; int argc; } methods[] = {
             { "yStructT_add_field", yst,   {yst, yt, bp}, 3 },
@@ -201,6 +206,12 @@ yap_ctx* yap_ctx_new(){
             //time (chainable, returns the blueprint), then finish to a yExpr.
             { "yExprBlueprint_fill_expr",   ybp, {ybp, bp, ye}, 3 },
             { "yExprBlueprint_finish", ye,  {ybp},         1 },
+
+            //yStmtBlueprint (the stmt${ } quasi-quote): fill_expr for expr holes,
+            //fill_stmt for statement holes ($body in statement position).
+            { "yStmtBlueprint_fill_expr", ysbp, {ysbp, bp, ye}, 3 },
+            { "yStmtBlueprint_fill_stmt", ysbp, {ysbp, bp, ys}, 3 },
+            { "yStmtBlueprint_finish",    ys,   {ysbp},         1 },
         };
         int n = sizeof(methods) / sizeof(methods[0]);
         for (int mi = 0; mi < n; mi++){

@@ -183,3 +183,38 @@ yType fn arr(yType T){
     ret res;
 
 }
+
+## Blueprints (quasi-quote sugar over the builders)
+
+Blueprints let you write concrete syntax with `$` marks instead of building AST by
+hand. `$` always means "reach into the comptime world"; the timing differs by form.
+There are four keyword-tagged forms (the old `$(…)`/`${…}`/`$[…]`/`$<…>` brackets are
+gone):
+
+- `expr${ <expr with $holes> }` -> **yExprBlueprint** (lazy). `$name` is a named hole.
+  Fill and close with methods: `expr${ $x + 1 }:fill_expr(c"x", a):finish()` -> yExpr.
+  Supports literals, vars, holes, arithmetic/comparisons, ternary, assignment,
+  member/index, deref, address-of, cast, and calls (<=3 args).
+
+- `stmt${ <statements with $holes> }` -> **yStmtBlueprint** (lazy). Same
+  fill_expr/finish protocol; `:finish()` yields a yStmt (a block if >1 statement).
+  e.g. `stmt${ $l = $r; }:fill_expr(c"l", lhs):fill_expr(c"r", rhs):finish()`.
+
+- `type${ struct/enum/union { … } }` -> a **yStructT / yEnumT / yUnionT** template
+  (eager, Model A). `$T` in a field/variant type splices the in-scope comptime yType
+  now; a named type -> `yapi->type(c"…")`. You `:finish("name")` it yourself, so
+  naming/hash/dedup/`existed()`/methods all stay on the existing template API:
+  `_ st = type${ struct { $T first, $T second } }; ret st:finish(c"pair");`
+
+- `(RET fn$ params){ body }` -> a **yFnT** template (eager, Model A) — the anonymous
+  func literal tagged `fn` -> `fn$`. `$T` in a param/return type splices eagerly; the
+  body refs the fn's own params. You `:finish("name")` it:
+  `_ ft = ($T fn$ $T a, $T b){ ret a + b; }; ret ft:finish(c"add");`
+
+The two *lazy* forms (expr/stmt) produce hole-carrying blueprints you fill; the two
+*eager* forms (type/fn) produce ready templates (no fill phase). `stmt${ }` also
+supports **statement holes** — a bare `$body;` in statement position, filled with
+`:fill_stmt(c"body", someStmt)` — so you can build control-flow templates:
+`stmt${ if ($c) { $b; } }:fill_expr(c"c", cond):fill_stmt(c"b", body):finish()`.
+(`fill_type` / `fill_ident` for holes in type/name positions are not yet supported —
+those positions are builder arguments, not deferrable AST nodes.)

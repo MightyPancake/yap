@@ -26,7 +26,8 @@ typedef enum {
     yap_statement_break,
     yap_statement_continue,
     yap_statement_block,
-    yap_statement_macro
+    yap_statement_macro,
+    yap_statement_hole   // stmt${ } statement hole ($body in stmt position); comptime-only (yapi->hole_stmt), reuses .expr.var_name for the name
 } yap_statement_kind;
 
 typedef enum {
@@ -54,6 +55,8 @@ typedef enum {
     yap_expr_blueprint,       // expr${ expr } quasi-quote literal (parse AST only; desugared in build.c)
     yap_expr_blueprint_hole,  // $name placeholder; also the semtree hole node (reuses var_name)
     yap_expr_type_blueprint,  // type${ struct{...} } eager type blueprint (parse AST only; desugared in build.c -> yStructT/yEnumT/yUnionT)
+    yap_expr_stmt_blueprint,  // stmt${ ...statements... } lazy stmt blueprint (parse AST only; desugared in build.c -> yStmtBlueprint)
+    yap_expr_fn_blueprint,    // (RET fn$ params){body} eager fn blueprint (parse AST only; desugared in build.c -> yFnT)
 } yap_expr_kind;
 
 typedef enum {

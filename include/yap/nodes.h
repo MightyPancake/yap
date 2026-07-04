@@ -173,6 +173,14 @@ kenobi_new_struct_free(yap_type_blueprint_node,
     yap_loc loc;
 );
 
+// stmt${ ...statements... } lazy statement blueprint. Parse-AST only: build.c
+// desugars the statement sequence into yapi->expr_stmt/return_stmt/... + block
+// builder calls (holes -> yapi->hole), yielding a yStmtBlueprint.
+kenobi_new_struct_free(yap_stmt_blueprint_node,
+    darr(yap_statement_node) body;
+    yap_loc loc;
+);
+
 typedef enum {
     yap_macro_param_unnamed,
     yap_macro_param_named,
@@ -227,6 +235,8 @@ kenobi_new_struct_free(yap_expr_node,
         yap_blueprint_node blueprint;
         yap_blueprint_hole_node blueprint_hole;
         yap_type_blueprint_node type_blueprint;
+        yap_stmt_blueprint_node stmt_blueprint;
+        yap_func_literal_node fn_blueprint; // (RET fn$ params){body}: reuses the func-literal shape
     };
     yap_loc loc;
 );
