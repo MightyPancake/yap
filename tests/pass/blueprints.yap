@@ -20,6 +20,11 @@ yExpr fn bp_tern(yExpr cnd, yExpr a, yExpr b) {
     ret expr${ $c ? $a else $b }:fill_expr(c"c", cnd):fill_expr(c"a", a):fill_expr(c"b", b):finish();
 }
 
+// --- holes inside call args (regression: ct_clone_expr must deep-clone func_call args, not shallow-share them) ---
+i32 fn bp_helper_add(i32 a, i32 b) { ret a + b; }
+yExpr fn bp_call1(yExpr a) { ret expr${ bp_helper_add($x, 1) }:fill_expr(c"x", a):finish(); }
+yExpr fn bp_call2(yExpr a, yExpr b) { ret expr${ bp_helper_add($x, $y) }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
+
 i32 fn main() {
     i32 pass = 0;
 
@@ -37,6 +42,9 @@ i32 fn main() {
     _ eq  = bp_eq:(#7, #7);        // true
     _ ge  = bp_ge:(#9, #9);        // true
 
+    _ c1 = bp_call1:(#10);         // bp_helper_add(10, 1) = 11
+    _ c2 = bp_call2:(#3, #4);      // bp_helper_add(3, 4) = 7
+
     if (b == 11)         { io->print:(c"arith fill/finish OK\n");  pass = pass + 1; }
     if (b == m)          { io->print:(c"blueprint == manual OK\n"); pass = pass + 1; }
     if (s == 42)         { io->print:(c"stored OK\n");             pass = pass + 1; }
@@ -50,5 +58,8 @@ i32 fn main() {
     if (eq)              { io->print:(c"cmp == OK\n");             pass = pass + 1; }
     if (ge)              { io->print:(c"cmp >= OK\n");             pass = pass + 1; }
 
-    ret pass - 12;
+    if (c1 == 11)        { io->print:(c"call-arg hole fill OK\n"); pass = pass + 1; }
+    if (c2 == 7)         { io->print:(c"call-arg multi-hole fill OK\n"); pass = pass + 1; }
+
+    ret pass - 14;
 }

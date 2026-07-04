@@ -54,6 +54,7 @@ char* yap_ctx_type_to_mangle_string(yap_ctx* ctx, yap_type typ); //Auto qualifie
 char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings qs); //Custom qualifier strings
 yap_type_id yap_ctx_insert_type_if_not_exists(yap_ctx* ctx, yap_type typ);
 yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id);
+yap_type_id yap_ctx_get_slice_of_type_id(yap_ctx* ctx, yap_type_id id);
 yap_type_id yap_ctx_find_common_type(yap_ctx* ctx, yap_type_id id1, yap_type_id id2);
 yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, const char* member_name);
 yap_type_id yap_push_blob_type(yap_ctx* ctx, size_t field_count);

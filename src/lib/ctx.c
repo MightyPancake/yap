@@ -104,6 +104,7 @@ yap_ctx* yap_ctx_new(){
             { "deref",         ye,      {ye},         1 },
             { "addr_of",       ye,      {ye},         1 },
             { "ptr_of",        yt,      {yt},         1 },
+            { "slice_of",      yt,      {yt},         1 },
             { "sizeof",        ye,      {yt},         1 },
             { "call0",         ye,      {ye},             1 },
             { "call1",         ye,      {ye, ye},         2 },
@@ -198,6 +199,12 @@ yap_ctx* yap_ctx_new(){
             { "yFnT_existed",         b,   {yft},         1 },
             { "yFnT_func",            yfn, {yft},         1 },
             { "yFnT_get_subject",     ye,  {yft},         1 },
+
+            // yFn:ref() -> a callable yExpr referencing the finished function by
+            // its real (possibly hashed/mangled) emitted name, so target code can
+            // actually call a fn$/fn_t()-built function instead of only verifying
+            // it was emitted.
+            { "yFn_ref",              ye,  {yfn},         1 },
 
             { "yType_new_method",     yft, {yt},          1 },
             { "yType_new_ref_method", yft, {yt},          1 },
@@ -882,6 +889,14 @@ yap_type_id yap_ctx_get_pointer_of_type_id(yap_ctx* ctx, yap_type_id id){
     .pointer_type=id
   };
   return yap_ctx_insert_type_if_not_exists(ctx, ptr_type);
+}
+
+yap_type_id yap_ctx_get_slice_of_type_id(yap_ctx* ctx, yap_type_id id){
+  yap_type slice_type = (yap_type){
+    .kind=yap_type_slice,
+    .slice={.element_type=id}
+  };
+  return yap_ctx_insert_type_if_not_exists(ctx, slice_type);
 }
 
 yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, const char* member_name){

@@ -14,9 +14,26 @@ yType fn boxed(yType T) {
     ret st:finish(c"boxed");
 }
 
+// --- $x in a fn$ body is an EAGER splice (fn$ has no fill methods, so a lazy
+// hole here could never be closed), and yFn:ref() gives a callable yExpr for
+// an already-finished function -- composed together: build+emit a function
+// whose body eagerly splices an outer comptime yExpr ($bonus, this function's
+// own param), then build+return an actual call to it.
+yExpr fn make_and_call_adder(yExpr bonus, yExpr arg) {
+    _ ft = (i32 fn$ i32 a) {
+        ret a + $bonus;
+    };
+    _ f = ft:finish(c"adder_with_bonus");
+    ret yapi->call1(f:ref(), arg);
+}
+
 i32 fn main() {
     boxed:(i32) b;
     b.val = 42;
     if (b.val == 42) { io->print:(c"fn blueprint built+emitted OK\n"); }
-    ret 0;
+
+    _ result = make_and_call_adder:(#10, #5); // adder_with_bonus(5) = 5 + 10 = 15
+    if (result == 15) { io->print:(c"fn$ eager splice + callable ref OK\n"); }
+
+    ret result - 15;
 }
