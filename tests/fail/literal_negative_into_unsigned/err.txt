@@ -1,0 +1,1 @@
+Cannot assign negative literal '-1' to unsigned type 'u32'

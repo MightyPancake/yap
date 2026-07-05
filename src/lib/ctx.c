@@ -637,13 +637,22 @@ bool yap_ctx_type_compatible(yap_ctx* ctx, yap_type type1, yap_type type2){
 
 //Check if a value of type 'rhs_id' can be assigned to a location of type 'lhs_id'.
 //Untyped types are coerced to their defaults before comparison.
-//This is stricter than type_compatible: untyped_int is NOT assignable to f32.
 bool yap_ctx_type_id_assignable(yap_ctx* ctx, yap_type_id lhs_id, yap_type_id rhs_id){
   if (!ctx) return false;
   // null (void) is assignable to any pointer type
   if (rhs_id == ctx->void_type_id) {
     yap_type* lhs_typ = yap_ctx_get_type(ctx, lhs_id);
     if (lhs_typ && lhs_typ->kind == yap_type_ptr) return true;
+  }
+  // An untyped numeric literal adapts to any numeric target, not just its own
+  // default (i32 for ints, f32 for floats): 'u64 x = 42;' or 'f64 y = 1;' are
+  // both fine. bool is excluded since it isn't meant to accept bare numbers.
+  // Whether the literal's actual value/shape (fractional, out of range,
+  // negative into unsigned, ...) fits the target is yap_check_literal_range's job.
+  if (rhs_id == ctx->untyped_int_type_id || rhs_id == ctx->untyped_float_type_id) {
+    yap_type* lhs_typ = yap_ctx_get_type(ctx, lhs_id);
+    if (lhs_typ && lhs_typ->kind == yap_type_primitive && lhs_id != ctx->bool_type_id)
+      return true;
   }
   // Coerce both sides (untyped types become their defaults)
   lhs_id = yap_ctx_coerce_type_id_to_id(ctx, lhs_id);
@@ -661,6 +670,15 @@ char* yap_ctx_type_id_to_string(yap_ctx* ctx, yap_type_id id){
 char* yap_ctx_type_to_string(yap_ctx* ctx, yap_type typ){
   char* res = NULL;
   switch (typ.kind){
+    case yap_type_untyped: {
+      yap_type* def = yap_ctx_get_type(ctx, typ.untyped_default);
+      if (!def) return strus_copy("(error getting type)");
+      char* def_str = yap_ctx_type_to_string(ctx, *def);
+      if (!def_str) return strus_copy("(error getting type)");
+      res = strus_newf("untyped %s", def_str);
+      free(def_str);
+      break;
+    }
     case yap_type_primitive:
       return strus_copy(typ.primitive.name);
     case yap_type_ptr:

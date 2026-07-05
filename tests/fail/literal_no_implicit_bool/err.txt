@@ -1,0 +1,1 @@
+Cannot initialize variable of type 'bool' with value of type 'untyped i32'
