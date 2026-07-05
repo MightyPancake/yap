@@ -220,6 +220,7 @@ kenobi_new_struct_free(yap_expr,
   yap_type_id type;
   bool is_lvalue;
   bool is_comptime;
+  bool prefix; // increment/decrement only: true for '++expr'/'--expr', false for 'expr++'/'expr--'
   yap_loc loc;
   yap_code_range range;
 );

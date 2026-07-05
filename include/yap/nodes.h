@@ -117,11 +117,13 @@ kenobi_new_struct_free(yap_unary_op_node,
 
 kenobi_new_struct_free(yap_increment_node,
     yap_expr_node* expr;
+    bool prefix; // true for '++expr' (prefix_incr_expr), false for 'expr++' (incr_expr)
     yap_loc loc;
 );
 
 kenobi_new_struct_free(yap_decrement_node,
     yap_expr_node* expr;
+    bool prefix; // true for '--expr' (prefix_incr_expr), false for 'expr--' (incr_expr)
     yap_loc loc;
 );
 
