@@ -119,6 +119,7 @@ yap_ctx* yap_ctx_new(){
             { "if_else_stmt",  ys,      {ye, ys, ys}, 3 },
             { "while_stmt",    ys,      {ye, ys},     2 },
             { "block",         ys,      {ysl},        1 },
+            { "block_expr",    ye,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
             { "uniq_name",     yi,      {ye},         0 },
             { "stmt_list_new",  ysl,    {ys},         0 },

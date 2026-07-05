@@ -29,6 +29,11 @@ i32 fn main() {
     _ total = nums:fold((i32 fn i32 acc, i32 x) { ret acc + x; }, 0);
     if (total == 10) io->print:(c"fold OK\n");
 
+    // for: side-effecting iteration with index+value, in order -- doesn't
+    // build a new arr(T), so just confirm nums itself is unaffected after.
+    nums:for((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });
+    if (nums:len() == 4) io->print:(c"for len OK\n");
+
     nums:free();
     doubled:free();
     evens:free();

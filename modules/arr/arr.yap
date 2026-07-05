@@ -190,5 +190,55 @@ yType fn arr(yType T){
         :fill_expr(c"f", fold_f):finish());
     fold_t:finish(c"fold");
 
+    // for(cb): calls cb(index, element) once per element, in order -- pure
+    // iteration side effect (unlike map/filter/fold, doesn't build a new
+    // arr(T)), e.g. `nums:for((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });`.
+    _ for_t = res:new_method();
+    _ for_cb = for_t:add_param(yapi->fn_type2(yapi->type(c"none"), u32_t, T), c"cb");
+    yExpr self9 = for_t:get_subject();
+    for_t:set_body(
+        stmt${
+            u32 $i;
+            $i = 0;
+            while ($i < $self.count) {
+                $cb($i, $self.data:[$i]);
+                $i = $i + 1;
+            }
+        }
+        :fill_var(c"i", u32_t, yapi->uniq_name())
+        :fill_expr(c"self", self9)
+        :fill_expr(c"cb", for_cb):finish());
+    for_t:finish(c"for");
+
     ret res;
+}
+
+// new(T): value-yielding convenience constructor. Builds a zero-initialized
+// arr(T) (the same fields init() sets) and yields it as a single expression
+// via yapi->block_expr's GNU statement-expression, so callers can write
+// `_ a = arr->new:(i32);` -- type inferred from the initializer -- instead of
+// a separate var decl followed by an init() call. arr(T) is fetched via a
+// plain (non-splicing) call through the module, `arr->arr(T)`, same as any
+// yapi-> builder call -- a *bare* `arr(T)` call resolves at the source level
+// but the comptime C translation unit only ever defines/links the type's
+// methods (and itself) under the module-prefixed name ("arr_arr"), so a bare
+// reference emits an unresolvable symbol; going through the module gives the
+// correctly-prefixed name, same as every other cross-function reference here.
+yExpr fn new(yType T) {
+    _ arr_t = arr->arr(T);
+    _ ptr_t = yapi->ptr_of(T);
+    _ name = yapi->uniq_name();
+    _ out = yapi->new_var(arr_t, name);
+
+    _ stmts = yapi->stmt_list_new();
+    stmts = yapi->stmt_list_push(stmts, yapi->var_decl(arr_t, name));
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
+        yapi->assign(yapi->member(out, c"data"), 61, yapi->cast(yapi->int(0), ptr_t))));
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
+        yapi->assign(yapi->member(out, c"count"), 61, yapi->int(0))));
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
+        yapi->assign(yapi->member(out, c"cap"), 61, yapi->int(0))));
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(out));
+
+    ret yapi->block_expr(stmts);
 }
