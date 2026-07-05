@@ -126,12 +126,22 @@ kenobi_new_struct_free(yap_bin_expr,
     yap_bin_expr_mul = '*',
     yap_bin_expr_div = '/',
     yap_bin_expr_mod = '%',
+    yap_bin_expr_band = '&', // bitwise AND
+    yap_bin_expr_bor = '|',  // bitwise OR
+    yap_bin_expr_bxor = '^', // bitwise XOR
     yap_bin_expr_eq = 128,
     yap_bin_expr_neq,
     yap_bin_expr_lt,
     yap_bin_expr_gt,
     yap_bin_expr_le,
-    yap_bin_expr_ge
+    yap_bin_expr_ge,
+    // Sentinel codes for multi-char operators, matching parse.c's remapping
+    // (their ASCII code doubles as the parse-AST's single-char yap_bin_op_node.op,
+    // same trick as the arithmetic ops above).
+    yap_bin_expr_and = 'a',  // &&
+    yap_bin_expr_or = 'o',   // ||
+    yap_bin_expr_shl = 'L',  // <<
+    yap_bin_expr_shr = 'R'   // >>
   } op;
   union {
     struct {
