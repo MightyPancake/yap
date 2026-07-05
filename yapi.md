@@ -5,7 +5,7 @@ All functions described below are to be part of the yapi module, meaning to call
 
 ## Calling macro (comptime-typed) functions
 This applies to user-authored functions whose return type is a comptime type
-(yExpr, yStatement, yType, yFunc, ...) -- e.g. `yType fn pair(yType t1, yType t2) {...}`,
+(yExpr, yStmt, yType, yFn, ...) -- e.g. `yType fn pair(yType t1, yType t2) {...}`,
 `yType fn arr(yType T) {...}`. Not the yapi-> builtins themselves, which are
 always plain calls.
 
@@ -20,7 +20,7 @@ return garbage). There are two ways to call one:
 - `func(args)` -- executes at compile time, but binds the result as an
   ordinary value at that call site instead of splicing it. Used for
   composing macros: one macro-typed function calling another as a helper,
-  keeping the returned yExpr/yType/yStatement to keep building with.
+  keeping the returned yExpr/yType/yStmt to keep building with.
 
 Both forms are valid anywhere a call is valid -- not just inside other
 macro-typed function bodies -- and both accept the same argument syntax:
@@ -42,6 +42,12 @@ yExpr assign(yLval, yAssignOp, yExpr) //yAssignOp is enum of '=', '+=', '-=' etc
 //yLval-returning variant is needed. assign() does not itself validate that its
 //first arg is lvalue-tagged -- it's always safe / unchecked, on the caller.
 yExpr member(yExpr, cstring) //c string is field name
+yExpr opt_member(yExpr, cstring) //optional chaining ('obj?.field'); requires a pointer-to-struct/union operand, never an lvalue -- falls back to the zero value at runtime when the pointer is null
+yExpr neg(yExpr) //prefix unary minus ('-expr')
+yExpr not(yExpr) //prefix logical not ('!expr'); truthy-checks any scalar (primitive or pointer), always yields bool
+yExpr bnot(yExpr) //prefix bitwise not ('~expr'); numeric operand, keeps the operand's own type
+yExpr increment(yExpr, bool prefix) //'++expr' (prefix=true) / 'expr++' (prefix=false); operand must be an lvalue (unchecked, like assign())
+yExpr decrement(yExpr, bool prefix) //'--expr' / 'expr--'; same rules as increment
 ...
 You can build all expressions like this
 
@@ -51,9 +57,12 @@ yLval new_var(yType, yIdent) //This creates a new variable that can be fully use
 //Passing `lval=` makes an expression you can assign to, unlike passing normal `yExpr` which makes it readonly.
 
 ## Statements
-yStatement expr_statement(yExpr) //Creates an expression statement
-yStatement var_decl(yType, yIdent) //Generates a variable declaration statement
-yStatement while_stmt(yExpr cond, yStatement body) //while loop; body is typically block(stmt_list)
+yStmt expr_stmt(yExpr) //Creates an expression statement
+yStmt var_decl(yType, yIdent) //Generates a variable declaration statement (declare only -- no inline initializer; follow with an assign()-wrapped expr_stmt to initialize)
+yStmt while_stmt(yExpr cond, yStmt body) //while loop; body is typically block(stmt_list)
+yStmt for_stmt(yStmt init, yExpr cond, yExpr update, yStmt body) //'for (init; cond; update) body'
+yStmt break_stmt() //'break;' -- no payload; unchecked whether the splice site is actually inside a loop (same trust-the-caller stance as assign())
+yStmt continue_stmt() //'continue;' -- same caveat as break_stmt
 ...
 You can build all statements like this
 
@@ -76,6 +85,12 @@ yStructT st = yapi->struct_t();
 st:add_field(yType, "my_field_name");
 ...
 etc.
+
+//yEnumT has its own variant builders (name-only, auto-incrementing value, or
+//an explicit value):
+yEnumT et = yapi->enum_t();
+et:add_variant("first");                    //implicit value
+et:add_variant_value("ten", yapi->int(10));  //explicit value ('ten = 10' in the emitted C enum)
 
 To use the type, you *have* to call
 yType st:finish("my_struct");
@@ -112,21 +127,28 @@ Returned yType becomes usable! You can also get a type from a passed arg or by u
 yType type(cstring) //for example; yapi->type("i32");
 
 Function types (for function-valued params, e.g. map/filter callbacks) are built with
-yType func_type0(yType ret)
-yType func_type1(yType ret, yType p1)
-yType func_type2(yType ret, yType p1, yType p2)
-yType func_type3(yType ret, yType p1, yType p2, yType p3)
-//Fixed arities mirror call0..call3. The type is deduped via
-//yap_ctx_insert_type_if_not_exists, so declaring a builder-made method param
-//with func_typeN makes the normal call-site argument check reject mismatched
-//function values ("Argument type mismatch") with no extra macro-side code.
+yType fn_type0(yType ret)
+yType fn_type1(yType ret, yType p1)
+yType fn_type2(yType ret, yType p1, yType p2)
+yType fn_type3(yType ret, yType p1, yType p2, yType p3)
+//Fixed arities mirror call0..call3 -- both capped at 3 args by deliberate
+//design (a general variable-arity call builder backed by a growable list was
+//tried and removed; every real call site only ever needed a small fixed
+//number of args). The type is deduped via yap_ctx_insert_type_if_not_exists,
+//so declaring a builder-made method param with fn_typeN makes the normal
+//call-site argument check reject mismatched function values ("Argument type
+//mismatch") with no extra macro-side code.
+
+Fixed-size array types ('Type[N]' in surface syntax) are built with
+yType array_of(yType elem, int size)
+//Mirrors ptr_of/slice_of; deduped the same way.
 
 ## Functions
 To emit a function, you need to build it like so.
-yFuncT func_t()
+yFnT fn_t()
 
 Assuming:
-_ ft = yapi->func_t();
+_ ft = yapi->fn_t();
 
 You can then do:
 
@@ -134,7 +156,7 @@ ft:add_param(yType, cstring); //This can added multiple times ofc
 //and...
 ft:set_return_type(yType);
 //then finally...
-ft:set_body(yStatement);
+ft:set_body(yStmt);
 
 Where statement has to be a block.
 Finally, you can do. Finish, which works similarly to how it worked with out st.
@@ -142,24 +164,28 @@ _ f = ft:finish("my_cool_fn");
 
 //This also exists, same behavior as with type
 bool ft:existed()
-yFunc ft:func();
+yFn ft:func();
 
 This hashes the func code and appends it to the name.
 
+To get a callable yExpr referencing an already-finished yFn by its real
+(possibly hashed/mangled) emitted name -- e.g. to pass it as a value, or
+splice a call to it -- use:
+yExpr f:ref()
+
 ## Methods
 Methods follow a similar pattern to funcs:
-yFuncT yType:new_method()
-`yFuncT` contains a n `is_method` flag. Returned `yFuncT` already has first param set to given  `yType`.
+yFnT yType:new_method()
+yFnT yType:new_ref_method() //pointer-receiver variant: the subject param is a pointer to yType instead of yType itself, auto-address-of'd at the call site
+`yFnT` contains an `is_method` flag. Returned `yFnT` already has first param set to given `yType` (or a pointer to it, for `new_ref_method`).
 
 The rest is the same, so you set return type, add body, and emit.
 
 Running `finish("hello")` on a method results in a mangled name <mangled_subject_type> + "_" + "hello".
 
-//OPEN QUESTION: new_method() auto-injects the subject as the first param, but
-//it's not yet specified how the method body gets a yExpr referencing it while
-//being built (e.g. to call member(subject_expr, c"data")). Does the injected
-//param have a fixed name (so yapi->var_value(c"self") already works), or does
-//new_method()/the returned yFuncT need its own accessor, e.g. get_t:subject()?
+To reference the injected subject param while building the method's body
+(e.g. to call member(subject_expr, c"data")), call:
+yExpr ft:get_subject() //returns a yExpr referencing the method's own first (subject) param
 
 
 ### Example: Creating an array type!
@@ -177,7 +203,7 @@ yType fn arr(yType T){
     yExpr self = get_t:get_subject();
     yExpr p1 = get_t:add_param(yapi->type("u32"), "index");
     ... build body to `body`
-    get_t:setBody(body);
+    get_t:set_body(body);
     get_t:finish("at");
 
     ret res;
@@ -193,8 +219,9 @@ gone):
 
 - `expr${ <expr with $holes> }` -> **yExprBlueprint** (lazy). `$name` is a named hole.
   Fill and close with methods: `expr${ $x + 1 }:fill_expr(c"x", a):finish()` -> yExpr.
-  Supports literals, vars, holes, arithmetic/comparisons, ternary, assignment,
-  member/index, deref, address-of, cast, and calls (<=3 args).
+  Supports literals, vars, holes, arithmetic/comparisons, unary (`-`/`!`/`~`),
+  ternary, assignment, member/index, deref, address-of, cast, and calls (<=3 args).
+  A cast's type (`$x.($T)`) is a lazy hole too, closed with `:fill_type(c"T", ty)`.
 
 - `stmt${ <statements with $holes> }` -> **yStmtBlueprint** (lazy). Same
   fill_expr/finish protocol; `:finish()` yields a yStmt (a block if >1 statement).
@@ -216,5 +243,13 @@ The two *lazy* forms (expr/stmt) produce hole-carrying blueprints you fill; the 
 supports **statement holes** ; a bare `$body;` in statement position, filled with
 `:fill_stmt(c"body", someStmt)` ; so you can build control-flow templates:
 `stmt${ if ($c) { $b; } }:fill_expr(c"c", cond):fill_stmt(c"b", body):finish()`.
-(`fill_type` / `fill_ident` for holes in type/name positions are not yet supported ;
-those positions are builder arguments, not deferrable AST nodes.)
+`stmt${ }` also has real lazy type-holes and ident-holes (closed via `:fill_type`/
+`:fill_ident`), which is what makes a `var_decl` with a `$`-named type and a
+`$`-named var possible: `stmt${ $T $name = $init; }:fill_type(c"T", ty)
+:fill_ident(c"name", +n):fill_expr(c"init", seed):finish()`. `fill_ident` only
+closes the *declaration's* name; if the template also references that same
+name again later (e.g. a loop counter used in its own condition/body), use
+`fill_var(name, type, ident)` instead -- it closes the declaration's
+ident-hole AND every later plain `$name` expr-hole reference in one call.
+(`type${ }`/`fn$` stay eager and unchanged -- no fill phase, `$T` splices
+immediately -- so `fill_type`/`fill_ident` are only meaningful for `stmt${ }`.)

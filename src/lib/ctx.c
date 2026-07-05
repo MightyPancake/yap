@@ -97,15 +97,21 @@ yap_ctx* yap_ctx_new(){
             { "new_var",       ye,      {yt, yi},     2 },
             { "bin_op",        ye,      {ye, i, ye},  3 },
             { "neg",           ye,      {ye},         1 },
+            { "not",           ye,      {ye},         1 },
+            { "bnot",          ye,      {ye},         1 },
+            { "increment",     ye,      {ye, b},      2 },
+            { "decrement",     ye,      {ye, b},      2 },
             { "ternary",       ye,      {ye, ye, ye}, 3 },
             { "assign",        ye,      {ye, i, ye},  3 },
             { "member",        ye,      {ye, bp},     2 },
+            { "opt_member",    ye,      {ye, bp},     2 },
             { "index",         ye,      {ye, ye},     2 },
             { "cast",          ye,      {ye, yt},     2 },
             { "deref",         ye,      {ye},         1 },
             { "addr_of",       ye,      {ye},         1 },
             { "ptr_of",        yt,      {yt},         1 },
             { "slice_of",      yt,      {yt},         1 },
+            { "array_of",      yt,      {yt, i},      2 },
             { "type_of",       yt,      {ye},         1 },
             { "pointee_type",  yt,      {yt},         1 },
             { "field_type",    yt,      {yt, bp},     2 },
@@ -122,6 +128,9 @@ yap_ctx* yap_ctx_new(){
             { "if_stmt",       ys,      {ye, ys},     2 },
             { "if_else_stmt",  ys,      {ye, ys, ys}, 3 },
             { "while_stmt",    ys,      {ye, ys},     2 },
+            { "for_stmt",      ys,      {ys, ye, ye, ys}, 4 },
+            { "break_stmt",    ys,      {ys},         0 },
+            { "continue_stmt", ys,      {ys},         0 },
             { "block",         ys,      {ysl},        1 },
             { "block_expr",    ye,      {ysl},        1 },
             { "uniq",          ye,      {ye},         0 },
@@ -192,6 +201,7 @@ yap_ctx* yap_ctx_new(){
             { "yStructT_type",      yt,  {yst},         1 },
 
             { "yEnumT_add_variant", yen,   {yen, bp},     2 },
+            { "yEnumT_add_variant_value", yen, {yen, bp, ye}, 3 },
             { "yEnumT_finish",      yt,  {yen, bp},     2 },
             { "yEnumT_existed",     b,   {yen},         1 },
             { "yEnumT_type",        yt,  {yen},         1 },
@@ -925,6 +935,14 @@ yap_type_id yap_ctx_get_slice_of_type_id(yap_ctx* ctx, yap_type_id id){
     .slice={.element_type=id}
   };
   return yap_ctx_insert_type_if_not_exists(ctx, slice_type);
+}
+
+yap_type_id yap_ctx_get_array_of_type_id(yap_ctx* ctx, yap_type_id id, size_t size){
+  yap_type array_type = (yap_type){
+    .kind=yap_type_array,
+    .array={.element_type=id, .size=size}
+  };
+  return yap_ctx_insert_type_if_not_exists(ctx, array_type);
 }
 
 yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, const char* member_name){

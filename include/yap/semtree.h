@@ -221,6 +221,7 @@ kenobi_new_struct_free(yap_expr,
   bool is_lvalue;
   bool is_comptime;
   bool prefix; // increment/decrement only: true for '++expr'/'--expr', false for 'expr++'/'expr--'
+  char unary_op; // yap_expr_unary only: '-' (negation), '!' (logical not), '~' (bitwise not)
   yap_loc loc;
   yap_code_range range;
 );

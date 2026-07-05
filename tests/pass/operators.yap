@@ -40,6 +40,21 @@ i32 fn main() {
     // shift binds looser than addition: (1 + 2) << 1 == 6, not 1 + (2 << 1) == 5
     fail = fail + assert_eq(1 + 2 << 1, 6, 6);
 
+    // --- Unary (!, ~) ---
+    // '!' shares the same grammar slot (PREC.UNARY) as '-'/'~', already
+    // proven tighter-than-'+' by increment.yap's "(++c) + 10" case; '!'
+    // itself can't be composed with arithmetic the same way since its
+    // result is bool, which doesn't mix with i32 in this language.
+    if (!true == false) fail = fail + 0; else fail = fail + 1;
+    if (!false == true) fail = fail + 0; else fail = fail + 1;
+    // '!' truthy-checks any scalar, not just bool
+    if (!0 == true) fail = fail + 0; else fail = fail + 1;
+    if (!5 == false) fail = fail + 0; else fail = fail + 1;
+    fail = fail + assert_eq(~0, -1, 12);
+    fail = fail + assert_eq(~5, -6, 13);
+    // unary binds tighter than '+': (~a) + 1 == -6, not ~(a + 1) == -8
+    fail = fail + assert_eq(~a + 1, -6, 14);
+
     // --- Coalesce (??, ?=) ---
     // a ?? b -> (a ? a : b): yields a when truthy/non-zero, else b
     fail = fail + assert_eq(0 ?? 5, 5, 7);

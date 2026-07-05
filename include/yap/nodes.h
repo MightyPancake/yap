@@ -107,11 +107,11 @@ kenobi_new_struct_free(yap_paren_node,
     yap_loc loc;
 );
 
-// Prefix unary minus ('-expr'). Only operator supported today; same shape
-// would carry '!'/'~' too if those get added later, but nothing builds that
-// path yet.
+// Prefix unary op: '-expr' (negation), '!expr' (logical not), '~expr'
+// (bitwise not). op holds the literal operator char.
 kenobi_new_struct_free(yap_unary_op_node,
     yap_expr_node* expr;
+    char op;
     yap_loc loc;
 );
 
