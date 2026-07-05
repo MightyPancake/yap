@@ -36,6 +36,15 @@ kenobi_new_struct_free(yap_blob_element_node,
     yap_loc loc;
 );
 
+// One argument at a call site: 'expr' (positional) or '.name = expr' (named,
+// matched against the callee's declared parameter names in build.c).
+kenobi_new_struct_free(yap_call_arg_node,
+    bool is_named;
+    yap_identifier_node name;
+    yap_expr_node* value;
+    yap_loc loc;
+);
+
 /* Anonymous function literal: (<optional return_type> fn(<params>) { <body> }).
  * Same shape as yap_func_decl_node minus name/subject; params reuse
  * yap_func_arg_node (has_default is always false ; literal params are just
@@ -77,7 +86,7 @@ kenobi_new_struct_free(yap_assignment_node,
 
 kenobi_new_struct_free(yap_func_call_node,
     yap_expr_node* func;
-    darr(yap_expr_node) args;
+    darr(yap_call_arg_node) args;
     yap_loc loc;
 );
 
