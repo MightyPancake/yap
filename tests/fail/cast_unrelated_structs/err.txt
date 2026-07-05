@@ -1,0 +1,1 @@
+Cannot cast 'struct Point' to 'struct Line': casts only work between scalar types (numbers, pointers, enums)
