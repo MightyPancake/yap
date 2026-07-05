@@ -1,3 +1,5 @@
+module hello {}
+
 i32 fn main() {
 	//1. incremental_statement
 	//TODO
@@ -45,6 +47,12 @@ i32 fn main() {
 		a;
 	}
 
+	//12. block_expr
+	i32 blk = ({
+		i32 res = 1;
+		res;
+	});
+
 	//9. return_statement (success == 0)
-	ret 0;
+	ret blk - 1;
 }

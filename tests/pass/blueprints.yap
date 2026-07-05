@@ -31,6 +31,63 @@ yExpr fn bp_call2(yExpr a, yExpr b) { ret expr${ bp_helper_add($x, $y) }:fill_ex
 // :fill_type (yapi->type_hole under the hood, same as stmt${ }'s var_decl). ---
 yExpr fn bp_cast(yType t, yExpr a) { ret expr${ $x.($T) }:fill_expr(c"x", a):fill_type(c"T", t):finish(); }
 
+// stmt${ } lazy blueprint -> yStmtBlueprint; fill_expr(...) + finish() -> yStmt.
+// A statement macro's yStmt result is spliced at the call site.
+yStmt fn assign_it(yExpr lhs, yExpr rhs) {
+    ret stmt${ $l = $r; }:fill_expr(c"l", lhs):fill_expr(c"r", rhs):finish();
+}
+
+yStmt fn add_into(yExpr dst, yExpr a, yExpr b) {
+    ret stmt${ $d = $a + $b; }:fill_expr(c"d", dst):fill_expr(c"a", a):fill_expr(c"b", b):finish();
+}
+
+// multi-statement blueprint -> block
+yStmt fn bump_twice(yExpr v) {
+    ret stmt${
+        $x = $x + 1;
+        $x = $x + 1;
+    }:fill_expr(c"x", v):finish();
+}
+
+// stmt${ } with a *statement* hole ($b), filled via fill_stmt.
+// Builds a body statement, then splices it into a control-flow template.
+yStmt fn guard_inc(yExpr flag, yExpr counter) {
+    _ body = stmt${ $x = $x + 1; }:fill_expr(c"x", counter):finish();
+    ret stmt${ if ($c) { $b; } }:fill_expr(c"c", flag):fill_stmt(c"b", body):finish();
+}
+
+// stmt${ }'s var_decl support: `$T $name = $init;` -- a genuine lazy type-hole
+// (:fill_type, closed via yapi->type_hole) and ident-hole (:fill_ident, closed
+// via yapi->ident_hole), composing with the pre-existing :fill_expr for the
+// initializer. This is the canonical example from the original design doc.
+yStmt fn declare_var(yType t, yIdent name, yExpr init_val) {
+    ret stmt${ $T $name = $init; }
+        :fill_type(c"T", t)
+        :fill_ident(c"name", name)
+        :fill_expr(c"init", init_val)
+        :finish();
+}
+
+// :fill_var(name, type, ident) combinator: declares $out once, then
+// references it as a plain value TWICE more ($out = $init; $out = $out +
+// $out;). A declaration's name-hole and a later plain reference to the same
+// name are two different hole kinds (ident-hole vs expr-hole) that happen to
+// share a spelling -- fill_var closes both with a single call instead of
+// requiring a second hole name and a manually-built yapi->new_var reference.
+yStmt fn build_double(yType t, yExpr init_val, yExpr result_slot) {
+    ret stmt${
+        $T $out;
+        $out = $init;
+        $out = $out + $out;
+        $result = $out;
+    }
+        :fill_type(c"T", t)
+        :fill_var(c"out", t, yapi->uniq_name())
+        :fill_expr(c"init", init_val)
+        :fill_expr(c"result", result_slot)
+        :finish();
+}
+
 i32 fn main() {
     i32 pass = 0;
 
@@ -71,5 +128,36 @@ i32 fn main() {
 
     if (ct == 7)         { io->print:(c"lazy cast type-hole fill OK\n"); pass = pass + 1; }
 
-    ret pass - 15;
+    // --- stmt${ } basics: assignment, arithmetic, multi-statement block ---
+    i32 x = 0;
+    i32 y = 0;
+    i32 z = 10;
+
+    assign_it:(#x, #5);        // x = 5;
+    add_into:(#y, #x, #3);     // y = x + 3;
+    bump_twice:(#z);           // { z = z + 1; z = z + 1; }
+
+    if (x == 5)  { io->print:(c"stmt bp assign OK\n");      pass = pass + 1; }
+    if (y == 8)  { io->print:(c"stmt bp add OK\n");         pass = pass + 1; }
+    if (z == 12) { io->print:(c"stmt bp multi/block OK\n"); pass = pass + 1; }
+
+    // --- stmt${ } with a statement hole (:fill_stmt) ---
+    i32 c = 0;
+    guard_inc:(#true, #c);    // if (true) { c = c + 1; }
+    i32 d = 0;
+    guard_inc:(#false, #d);   // if (false) { d = d + 1; }
+
+    if (c == 1) { io->print:(c"fill_stmt then-taken OK\n");    pass = pass + 1; }
+    if (d == 0) { io->print:(c"fill_stmt then-skipped OK\n");  pass = pass + 1; }
+
+    // --- stmt${ }'s var_decl support (:fill_type + :fill_ident + :fill_var) ---
+    declare_var:(i32, +vx, #42);
+    vx = vx + 1;
+    if (vx == 43) { io->print:(c"canonical var_decl blueprint fill OK\n"); pass = pass + 1; }
+
+    i32 r = 0;
+    build_double:(i32, #5, #r);
+    if (r == 10) { io->print:(c"fill_var declare+reference OK\n"); pass = pass + 1; }
+
+    ret pass - 22;
 }
