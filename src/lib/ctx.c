@@ -142,6 +142,7 @@ yap_ctx* yap_ctx_new(){
             { "hole",          ye,      {bp},         1 },
             { "hole_stmt",     ys,      {bp},         1 },
             { "type_hole",     yt,      {bp},         1 },
+            { "ident_hole",    yi,      {bp},         1 },
         };
         int n = sizeof(builtins) / sizeof(builtins[0]);
         for (int bi = 0; bi < n; bi++){
@@ -174,10 +175,11 @@ yap_ctx* yap_ctx_new(){
         yap_type_id b   = ctx->bool_type_id;
         yap_type_id v   = ctx->void_type_id;
         yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+        yap_type_id yi  = ctx->yident_type_id;
         yap_type_id ybp = ctx->yexprblueprint_type_id;
         yap_type_id ysbp = ctx->ystmtblueprint_type_id;
 
-        struct { const char* name; yap_type_id ret; yap_type_id args[3]; int argc; } methods[] = {
+        struct { const char* name; yap_type_id ret; yap_type_id args[4]; int argc; } methods[] = {
             { "yStructT_add_field", yst,   {yst, yt, bp}, 3 },
             { "yStructT_finish",    yt,  {yst, bp},     2 },
             { "yStructT_existed",   b,   {yst},         1 },
@@ -212,14 +214,24 @@ yap_ctx* yap_ctx_new(){
 
             //yExprBlueprint (the $(...) quasi-quote): fill one named hole at a
             //time (chainable, returns the blueprint), then finish to a yExpr.
+            //fill_type closes a cast's lazy $T type-hole nested inside the expr.
             { "yExprBlueprint_fill_expr",   ybp, {ybp, bp, ye}, 3 },
+            { "yExprBlueprint_fill_type",   ybp, {ybp, bp, yt}, 3 },
             { "yExprBlueprint_finish", ye,  {ybp},         1 },
 
             //yStmtBlueprint (the stmt${ } quasi-quote): fill_expr for expr holes,
-            //fill_stmt for statement holes ($body in statement position).
-            { "yStmtBlueprint_fill_expr", ysbp, {ysbp, bp, ye}, 3 },
-            { "yStmtBlueprint_fill_stmt", ysbp, {ysbp, bp, ys}, 3 },
-            { "yStmtBlueprint_finish",    ys,   {ysbp},         1 },
+            //fill_stmt for statement holes ($body in statement position),
+            //fill_type/fill_ident for a var_decl's type/name holes. fill_var is
+            //a combinator: closes BOTH a var_decl's name-hole (the declaration)
+            //AND any later plain reference to that same name (a separate
+            //expr-hole) in one call, so a template can write $out once for a
+            //declared variable and use it again later without a second hole name.
+            { "yStmtBlueprint_fill_expr",  ysbp, {ysbp, bp, ye},     3 },
+            { "yStmtBlueprint_fill_stmt",  ysbp, {ysbp, bp, ys},     3 },
+            { "yStmtBlueprint_fill_type",  ysbp, {ysbp, bp, yt},     3 },
+            { "yStmtBlueprint_fill_ident", ysbp, {ysbp, bp, yi},     3 },
+            { "yStmtBlueprint_fill_var",   ysbp, {ysbp, bp, yt, yi}, 4 },
+            { "yStmtBlueprint_finish",     ys,   {ysbp},             1 },
         };
         int n = sizeof(methods) / sizeof(methods[0]);
         for (int mi = 0; mi < n; mi++){

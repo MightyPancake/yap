@@ -25,6 +25,12 @@ i32 fn bp_helper_add(i32 a, i32 b) { ret a + b; }
 yExpr fn bp_call1(yExpr a) { ret expr${ bp_helper_add($x, 1) }:fill_expr(c"x", a):finish(); }
 yExpr fn bp_call2(yExpr a, yExpr b) { ret expr${ bp_helper_add($x, $y) }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
 
+// --- lazy $T inside a cast: a cast's type used to always eagerly splice
+// regardless of the enclosing template's own laziness (a shortcut from before
+// type holes existed); now $T is a genuine lazy hole here too, closed via
+// :fill_type (yapi->type_hole under the hood, same as stmt${ }'s var_decl). ---
+yExpr fn bp_cast(yType t, yExpr a) { ret expr${ $x.($T) }:fill_expr(c"x", a):fill_type(c"T", t):finish(); }
+
 i32 fn main() {
     i32 pass = 0;
 
@@ -45,6 +51,8 @@ i32 fn main() {
     _ c1 = bp_call1:(#10);         // bp_helper_add(10, 1) = 11
     _ c2 = bp_call2:(#3, #4);      // bp_helper_add(3, 4) = 7
 
+    _ ct = bp_cast:(i64, #7);      // (i64)7
+
     if (b == 11)         { io->print:(c"arith fill/finish OK\n");  pass = pass + 1; }
     if (b == m)          { io->print:(c"blueprint == manual OK\n"); pass = pass + 1; }
     if (s == 42)         { io->print:(c"stored OK\n");             pass = pass + 1; }
@@ -61,5 +69,7 @@ i32 fn main() {
     if (c1 == 11)        { io->print:(c"call-arg hole fill OK\n"); pass = pass + 1; }
     if (c2 == 7)         { io->print:(c"call-arg multi-hole fill OK\n"); pass = pass + 1; }
 
-    ret pass - 14;
+    if (ct == 7)         { io->print:(c"lazy cast type-hole fill OK\n"); pass = pass + 1; }
+
+    ret pass - 15;
 }
