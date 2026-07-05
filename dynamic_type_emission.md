@@ -21,7 +21,7 @@ A single mechanism handles both problems. After the metaprogram produces its C s
    - Record hash in `emitted_hashes`.
    - Return the new `yap_type_id`.
 
-The metaprogram runs on every call. This is correct because metaprograms can depend on mutable state (globals, I/O, random seeds) not captured in their argument list. Generating a C typedef string is cheap enough that caching the metaprogram body is unnecessary — the output hash alone prevents the expensive operation (duplicate TCC compilation).
+The metaprogram runs on every call. This is correct because metaprograms can depend on mutable state (globals, I/O, random seeds) not captured in their argument list. Generating a C typedef string is cheap enough that caching the metaprogram body is unnecessary ; the output hash alone prevents the expensive operation (duplicate TCC compilation).
 
 ### Why hash the output, not the inputs?
 
@@ -45,7 +45,7 @@ The C-level name must be unique per distinct struct body. Since `vec2(i32)` and 
 ```
 Source:  darr(i32) a = new_darr(i32);
 
-// First darr(i32) — type annotation
+// First darr(i32) ; type annotation
 run darr(i32) → "typedef struct darr_i32 { i32* data; i32 len; } darr_i32;"
 hash("typedef struct darr_i32 ...") → 0xABC123
 emitted_hashes.lookup(0xABC123) → miss
@@ -55,7 +55,7 @@ emitted_hashes.lookup(0xABC123) → miss
   emitted_hashes.insert(0xABC123)
 return type_id=42
 
-// Second darr(i32) — constructor call
+// Second darr(i32) ; constructor call
 run darr(i32) → "typedef struct darr_i32 { i32* data; i32 len; } darr_i32;"
 hash("typedef struct darr_i32 ...") → 0xABC123
 emitted_hashes.lookup(0xABC123) → found!
@@ -81,4 +81,4 @@ map emitted_hashes;  // uint64_t → dummy (just a set)
 
 - All named types must be emitted with `typedef` so the C name (with hash suffix) is bound to both the struct tag and the typedef alias. This matches existing codegen behavior.
 - Module prefixes add another layer of namespace isolation at the C level.
-- The hash suffix only needs to be a few hex digits (e.g., 8) — collisions are astronomically unlikely with MurmurHash3 over structured C code.
+- The hash suffix only needs to be a few hex digits (e.g., 8) ; collisions are astronomically unlikely with MurmurHash3 over structured C code.

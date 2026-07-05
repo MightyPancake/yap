@@ -38,7 +38,7 @@ kenobi_new_struct_free(yap_blob_element_node,
 
 /* Anonymous function literal: (<optional return_type> fn(<params>) { <body> }).
  * Same shape as yap_func_decl_node minus name/subject; params reuse
- * yap_func_arg_node (has_default is always false — literal params are just
+ * yap_func_arg_node (has_default is always false ; literal params are just
  * type+name). */
 kenobi_new_struct_free(yap_func_literal_node,
     darr(yap_func_arg_node) args;

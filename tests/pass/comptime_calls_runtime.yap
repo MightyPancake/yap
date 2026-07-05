@@ -1,6 +1,6 @@
 import io
 
-// Regular runtime function — defined before the comptime function
+// Regular runtime function ; defined before the comptime function
 i32 fn get_count() {
     ret 5;
 }

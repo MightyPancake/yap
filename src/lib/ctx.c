@@ -933,7 +933,7 @@ yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, c
   switch(object_type->kind){
     case yap_type_struct:
       for_darr(i, field, object_type->structure.fields){
-        // Anonymous embedded struct/union — flatten fields recursively
+        // Anonymous embedded struct/union ; flatten fields recursively
         if (!field.name || field.name[0] == '\0'){
           yap_type_id nested = yap_ctx_find_member_type(ctx, field.type, member_name);
           if (nested != ctx->internal_error_type_id) return nested;
@@ -947,7 +947,7 @@ yap_type_id yap_ctx_find_member_type(yap_ctx* ctx, yap_type_id object_type_id, c
       break;
     case yap_type_union:
       for_darr(i, variant, object_type->uni.variants){
-        // Anonymous embedded — flatten
+        // Anonymous embedded ; flatten
         if (!variant.name || variant.name[0] == '\0'){
           yap_type_id nested = yap_ctx_find_member_type(ctx, variant.type, member_name);
           if (nested != ctx->internal_error_type_id) return nested;

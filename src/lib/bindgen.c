@@ -411,7 +411,7 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
         hashmap_set(ctx->named_types, &anon_named);
       }
 
-      // Now walk fields — self-references will find the registered name
+      // Now walk fields ; self-references will find the registered name
       if (clang_isCursorDefinition(decl)) {
         if (is_union) {
           yap_union_type *ut = &ctx->types[opaque_id].uni;

@@ -74,7 +74,7 @@ each parameter type
 
 While worklist not empty:
 
-Step A — normalize
+Step A ; normalize
 
 get type from libclang
 
@@ -82,7 +82,7 @@ compute canonical type:
 
 clang_getCanonicalType
 
-Step B — deduplicate
+Step B ; deduplicate
 
 If canonical type already in seen_types → skip
 
@@ -214,7 +214,7 @@ If you want next step, I can .
 
 ---
 
-13. The "int problem" — preserving original C spelling
+13. The "int problem" ; preserving original C spelling
 
 Your language uses fixed-width names like i32, f64, bool.
 Their C emission names live in yap_prim_type.c_name:
@@ -231,11 +231,11 @@ But imported C headers use native C names:
   char* (not byte@)
 
 Emitting int32_t for an imported function like printf would produce
-broken code — stdio.h did not declare printf with int32_t.
+broken code ; stdio.h did not declare printf with int32_t.
 
 Two approaches exist.  We choose approach A (minimal, non-invasive).
 
-A — extern function keep their original C spelling
+A ; extern function keep their original C spelling
 
 Add a new decl kind that wraps a normal yap function signature
 plus the original C-name strings for return and parameter types:
@@ -250,11 +250,11 @@ Codegen rule: when kind == yap_decl_extern_func, emit
 c_return_spelling and c_param_spellings verbatim instead of
 looking up yap_prim_type.c_name.
 
-The yap type system itself remains unchanged — i32 still means int32_t
+The yap type system itself remains unchanged ; i32 still means int32_t
 internally and when emitting yap-native code.  Only the extern
 declaration carries the original C spelling for ABI-correct output.
 
-B — (future) named types get an extern_c_name field
+B ; (future) named types get an extern_c_name field
 
 If we later need to import structs, enums, and typedefs with their
 original C spelling (e.g. size_t, FILE, struct timeval), add:

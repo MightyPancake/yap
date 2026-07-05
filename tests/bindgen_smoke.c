@@ -1,4 +1,4 @@
-/** Simple libclang smoke test — parse stdio.h and print exported functions. */
+/** Simple libclang smoke test ; parse stdio.h and print exported functions. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,6 +111,6 @@ int main(int argc, char **argv) {
 
   clang_disposeTranslationUnit(tu);
   clang_disposeIndex(idx);
-  printf("OK — libclang smoke test passed.\n");
+  printf("OK ; libclang smoke test passed.\n");
   return 0;
 }

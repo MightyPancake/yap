@@ -39,4 +39,4 @@
 }
 
 # Only suppress glibc-internal dlopen bookkeeping.
-# Do NOT use blanket "..." wildcards — they hide real yap leaks.
+# Do NOT use blanket "..." wildcards ; they hide real yap leaks.

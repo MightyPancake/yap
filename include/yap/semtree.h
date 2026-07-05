@@ -281,7 +281,7 @@ kenobi_new_struct_free(yap_statement,
   yap_code_range range;
 );
 
-/* Growable comptime handle lists — backing storage for yExprList/yStmtList,
+/* Growable comptime handle lists ; backing storage for yExprList/yStmtList,
  * the macro-side vehicle for passing/building a variable number of yExpr or
  * yStmt values through a single fixed-arity comptime call argument. */
 typedef struct {

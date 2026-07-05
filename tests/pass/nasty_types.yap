@@ -1,4 +1,4 @@
-// Pointer madness — chains of pointers and const qualifiers
+// Pointer madness ; chains of pointers and const qualifiers
 struct pointer_party {
     i32@ single_ptr,
     i32@@ double_ptr,
@@ -13,7 +13,7 @@ struct pointer_party {
     u64 const @ const @ const @ const u64_triple_const_ptr
 }
 
-// Deeply nested anonymous embedded types — Inception style
+// Deeply nested anonymous embedded types ; Inception style
 struct deep_nesting {
     // Level 1: anonymous struct
     struct {

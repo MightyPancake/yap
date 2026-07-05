@@ -6,10 +6,10 @@ none fn emit_char(i32 c) {
 
 // Variable number of values through one fixed-arity macro argument, via a
 // blob literal that gets unpacked into a yExprList (a real slice of yExpr).
-// 'extra' is yExprList@ (pointer), not a bare yExprList value — see project
+// 'extra' is yExprList@ (pointer), not a bare yExprList value ; see project
 // memory for why. Reading it is 'extra..len' (deref via a plain 'ptr.', then
 // the slice's native '.len' field) and 'extra.:[i]' (deref, then native
-// ':[idx]' index access) — no yapi->list_* or yExprList methods needed.
+// ':[idx]' index access) ; no yapi->list_* or yExprList methods needed.
 yExpr fn add_const(yExpr base, yExprList@ extra) {
     _ n = extra..len.(i32);
     _ acc = base;
@@ -21,7 +21,7 @@ yExpr fn add_const(yExpr base, yExprList@ extra) {
     ret acc;
 }
 
-// Statement macro returning a block of calls — exercises yExprList's native
+// Statement macro returning a block of calls ; exercises yExprList's native
 // .len/:[i] through a deref'd pointer, yapi->call1, yapi->stmt_list_new/push
 // and yapi->block end to end.
 yStmt fn emit_chars(yExprList@ vals) {

@@ -206,15 +206,15 @@ gone):
   naming/hash/dedup/`existed()`/methods all stay on the existing template API:
   `_ st = type${ struct { $T first, $T second } }; ret st:finish(c"pair");`
 
-- `(RET fn$ params){ body }` -> a **yFnT** template (eager, Model A) — the anonymous
+- `(RET fn$ params){ body }` -> a **yFnT** template (eager, Model A) ; the anonymous
   func literal tagged `fn` -> `fn$`. `$T` in a param/return type splices eagerly; the
   body refs the fn's own params. You `:finish("name")` it:
   `_ ft = ($T fn$ $T a, $T b){ ret a + b; }; ret ft:finish(c"add");`
 
 The two *lazy* forms (expr/stmt) produce hole-carrying blueprints you fill; the two
 *eager* forms (type/fn) produce ready templates (no fill phase). `stmt${ }` also
-supports **statement holes** — a bare `$body;` in statement position, filled with
-`:fill_stmt(c"body", someStmt)` — so you can build control-flow templates:
+supports **statement holes** ; a bare `$body;` in statement position, filled with
+`:fill_stmt(c"body", someStmt)` ; so you can build control-flow templates:
 `stmt${ if ($c) { $b; } }:fill_expr(c"c", cond):fill_stmt(c"b", body):finish()`.
-(`fill_type` / `fill_ident` for holes in type/name positions are not yet supported —
+(`fill_type` / `fill_ident` for holes in type/name positions are not yet supported ;
 those positions are builder arguments, not deferrable AST nodes.)

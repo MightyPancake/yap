@@ -57,13 +57,13 @@ run_one() {
             # Runtime gate: the compiled program must exit 0. Convention is
             # "success = main returns 0", so tests fold their assertions into the
             # exit code (e.g. `ret computed - expected;`). Not run under valgrind
-            # — we only leak-check the compiler, not the user program.
+            # ; we only leak-check the compiler, not the user program.
             local prog_exit=0
             timeout 10 "$out_bin" >"$work_dir/run.$i.log" 2>&1 || prog_exit=$?
             if [ "$prog_exit" -ne 0 ]; then
                 test_failed=1
                 if [ "$prog_exit" -eq 124 ]; then
-                    echo "runtime TIMEOUT (>10s) — program did not terminate" >> "$cmd_log"
+                    echo "runtime TIMEOUT (>10s) ; program did not terminate" >> "$cmd_log"
                 else
                     echo "runtime exit $prog_exit (expected 0)" >> "$cmd_log"
                 fi

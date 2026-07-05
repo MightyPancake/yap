@@ -1,8 +1,8 @@
-# YAP Compiler — Next Steps
+# YAP Compiler ; Next Steps
 
 ## 1. Variable declaration inference (`_ name = expr`)
 
-`_ f = node.kind;` — the `_` means "infer the type." Build the RHS expression, grab its type, and declare `f` with that type. Small, self-contained, immediately testable.
+`_ f = node.kind;` ; the `_` means "infer the type." Build the RHS expression, grab its type, and declare `f` with that type. Small, self-contained, immediately testable.
 
 ## 2. Type coercion for literals
 
@@ -14,7 +14,7 @@
 
 ## 4. `(fn ...)` function types as field/param types
 
-`callback_hell` declares function-pointer fields like `(fn i32, i32) simple_cb` — grammar parses them, but the build phase can't resolve anonymous function types yet.
+`callback_hell` declares function-pointer fields like `(fn i32, i32) simple_cb` ; grammar parses them, but the build phase can't resolve anonymous function types yet.
 
 ## 5. Block expressions `({ ... })`
 
