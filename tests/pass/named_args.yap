@@ -56,6 +56,10 @@ i32 fn main() {
     // Module function with a named argument
     fail = fail + assert_eq(foo_test_module->add_default(.a=5, .b=3), 8, 8);
 
+    // Module function calling a sibling in the same module by bare name with
+    // a named argument (exercises module-local identifier name mangling)
+    fail = fail + assert_eq(foo_test_module->add_default_via_sibling(5), 7, 9);
+
     if (fail == 0) io->print:(c"OK\n");
 
     ret fail;
