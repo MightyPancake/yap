@@ -27,7 +27,8 @@ typedef enum {
     yap_statement_continue,
     yap_statement_block,
     yap_statement_macro,
-    yap_statement_hole   // stmt${ } statement hole ($body in stmt position); comptime-only (yapi->hole_stmt), reuses .expr.var_name for the name
+    yap_statement_hole,  // stmt${ } statement hole ($body in stmt position); comptime-only (yapi->hole_stmt), reuses .expr.var_name for the name
+    yap_statement_deferred // raw, unbuilt macro-arg fragment (yap_macro_param_statement); resolved in place by yap_resolve_deferred_fragments once the macro that received it has run -- see .deferred_raw
 } yap_statement_kind;
 
 typedef enum {

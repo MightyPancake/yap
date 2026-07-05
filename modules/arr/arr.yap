@@ -190,13 +190,17 @@ yType fn arr(yType T){
         :fill_expr(c"f", fold_f):finish());
     fold_t:finish(c"fold");
 
-    // for(cb): calls cb(index, element) once per element, in order -- pure
-    // iteration side effect (unlike map/filter/fold, doesn't build a new
-    // arr(T)), e.g. `nums:for((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });`.
-    _ for_t = res:new_method();
-    _ for_cb = for_t:add_param(yapi->fn_type2(yapi->type(c"none"), u32_t, T), c"cb");
-    yExpr self9 = for_t:get_subject();
-    for_t:set_body(
+    // foreach(cb): calls cb(index, element) once per element, in order --
+    // pure iteration side effect (unlike map/filter/fold, doesn't build a
+    // new arr(T)), e.g. `nums:foreach((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });`.
+    // Named distinctly from the receiver-dispatched macro `for` below (not
+    // "for" itself) -- same word for two different mechanisms reads as one
+    // ambiguous API, even with them living in genuinely separate tables
+    // (see the register_macro_method call at the end of this function).
+    _ foreach_t = res:new_method();
+    _ foreach_cb = foreach_t:add_param(yapi->fn_type2(yapi->type(c"none"), u32_t, T), c"cb");
+    yExpr self9 = foreach_t:get_subject();
+    foreach_t:set_body(
         stmt${
             u32 $i;
             $i = 0;
@@ -207,8 +211,16 @@ yType fn arr(yType T){
         }
         :fill_var(c"i", u32_t, yapi->uniq_name())
         :fill_expr(c"self", self9)
-        :fill_expr(c"cb", for_cb):finish());
-    for_t:finish(c"for");
+        :fill_expr(c"cb", foreach_cb):finish());
+    foreach_t:finish(c"foreach");
+
+    // Claim "for" (defined below, an ordinary ungeneric top-level macro) as
+    // THIS concrete instantiation's macro method, dynamically, right where
+    // res is known -- see yapi->register_macro_method's own comment for why
+    // this makes a macro method and a same-named real method structurally
+    // incapable of colliding (separate table entirely), not just
+    // disambiguated by a shape check.
+    yapi->register_macro_method(res, c"for", c"for");
 
     ret res;
 }
@@ -241,4 +253,44 @@ yExpr fn new(yType T) {
     stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(out));
 
     ret yapi->block_expr(stmts);
+}
+
+// for(self, i, v, body): receiver-dispatched macro-method form of iteration,
+// e.g. `gnums:for:(+i, +v, { io->print:(c"%u: %d\n", [i, v]); });` -- +i/+v
+// are hygienic idents the macro itself declares (u32 index, T-typed element)
+// and the block body can reference them directly, unlike the typed-callback
+// method `foreach(cb)` above. This is an ordinary, ungeneric top-level
+// macro -- it's arr(T) (above) that dynamically claims it as each concrete
+// instantiation's own "for" via yapi->register_macro_method, so 'gnums:for:(...)'
+// dispatch is a direct (receiver's exact type, "for") lookup, not a guess
+// by name or shape. The hygiene itself works because 'body' arrives as an
+// unbuilt fragment (yap_macro_param_statement in yap_exec_macro_call) that
+// gets built later, once $i/$v actually exist in scope, by
+// yap_resolve_deferred_fragments (yap-semantic/build.c) walking the spliced
+// tree with a real, nested scope. Element type isn't an explicit argument
+// here (dispatched by receiver, not `arr->for:(T, ...)`), so it's derived
+// structurally from self's own 'data' field -- via yapi->field_type
+// directly on self's type, not yapi->member(self,...) + type_of, since a
+// yapi->member(...)-built expr's .type is only resolved once the *spliced*
+// result later undergoes real semantic building, not during this macro's
+// own comptime execution.
+yStmt fn for(yExpr self, yIdent i, yIdent v, yStmt body) {
+    _ ptr_t = yapi->field_type(yapi->type_of(self), c"data");
+    _ elem_t = yapi->pointee_type(ptr_t);
+    _ u32_t = yapi->type(c"u32");
+    ret stmt${
+        u32 $i;
+        $i = 0;
+        while ($i < $self.count) {
+            $ElemT $v;
+            $v = $self.data:[$i];
+            $body;
+            $i = $i + 1;
+        }
+    }
+    :fill_var(c"i", u32_t, i)
+    :fill_type(c"ElemT", elem_t)
+    :fill_var(c"v", elem_t, v)
+    :fill_expr(c"self", self)
+    :fill_stmt(c"body", body):finish();
 }

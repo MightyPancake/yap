@@ -29,10 +29,22 @@ i32 fn main() {
     _ total = nums:fold((i32 fn i32 acc, i32 x) { ret acc + x; }, 0);
     if (total == 10) io->print:(c"fold OK\n");
 
-    // for: side-effecting iteration with index+value, in order -- doesn't
+    // foreach: side-effecting iteration with index+value, in order -- doesn't
     // build a new arr(T), so just confirm nums itself is unaffected after.
-    nums:for((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });
-    if (nums:len() == 4) io->print:(c"for len OK\n");
+    nums:foreach((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });
+    if (nums:len() == 4) io->print:(c"foreach len OK\n");
+
+    // for (macro): 'nums:for:(+i, +v, { ... })' -- +i/+v are hygienic idents
+    // the macro itself introduces (dispatched via receiver-style macro call,
+    // a completely different mechanism from the foreach method above), and
+    // unlike a func_literal callback (deliberately capture-free) the body
+    // block is built inline in the caller's own scope chain, so it can close
+    // over an outer local -- verified here by accumulating into macro_total.
+    i32 macro_total = 0;
+    nums:for:(+mi, +mv, {
+        macro_total = macro_total + mv;
+    });
+    if (macro_total == 10) io->print:(c"for macro OK\n");
 
     nums:free();
     doubled:free();

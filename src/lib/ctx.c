@@ -14,6 +14,7 @@ yap_ctx* yap_ctx_new(){
       .errors=darr_new(yap_error),
       .modules=new_module_map(),
       .current_module_name=NULL,
+      .macro_methods=darr_new(yap_macro_method_entry),
       .module_lookup_paths=darr_new(char*),
       .semantic_decls=darr_new(yap_decl),
       .types=darr_new(yap_type), //yap_type_id points to types in this array
@@ -105,6 +106,9 @@ yap_ctx* yap_ctx_new(){
             { "addr_of",       ye,      {ye},         1 },
             { "ptr_of",        yt,      {yt},         1 },
             { "slice_of",      yt,      {yt},         1 },
+            { "type_of",       yt,      {ye},         1 },
+            { "pointee_type",  yt,      {yt},         1 },
+            { "field_type",    yt,      {yt, bp},     2 },
             { "sizeof",        ye,      {yt},         1 },
             { "call0",         ye,      {ye},             1 },
             { "call1",         ye,      {ye, ye},         2 },
@@ -138,6 +142,7 @@ yap_ctx* yap_ctx_new(){
             { "log",           v,       {bp},         1 },
             { "error",         v,       {bp},         1 },
             { "warn",          v,       {bp},         1 },
+            { "register_macro_method", v, {yt, bp, bp}, 3 },
             //Blueprint support: build.c desugars a blueprint literal into these hole
             //placeholders (fill/finish are methods on yExprBlueprint/yStmtBlueprint, below).
             { "hole",          ye,      {bp},         1 },

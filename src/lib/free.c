@@ -70,6 +70,11 @@ void yap_ctx_free(yap_ctx ctx){
   // Free semantic declarations
   darr_free(ctx.semantic_decls);
 
+  // Free macro-method registry (yapi->register_macro_method entries -- the
+  // name/emit_name strings are arena-allocated via ct_strdup, freed with the
+  // arena itself, so just the darr's own backing array needs releasing here)
+  darr_free(ctx.macro_methods);
+
   // Free module lookup paths
   for_darr(i, p, ctx.module_lookup_paths){
     free(p);

@@ -275,6 +275,7 @@ kenobi_new_struct_free(yap_statement,
     yap_while while_stmt;
     yap_for for_stmt;
     yap_block block;
+    yap_statement_node* deferred_raw; // yap_statement_deferred: raw, unbuilt macro-arg fragment (yap_macro_param_statement), resolved in place post-macro-exec by yap_resolve_deferred_fragments (build.c)
   };
   yap_loc loc;
   yap_code_range range;
