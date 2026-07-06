@@ -8,6 +8,9 @@ modules/*/binds.yap
 modules/*/*.a
 modules/*/*.so
 modules/*/*.c
+# hkeep hashmap wrapper/binds
+!modules/hashmap/binds.yap
+!modules/hashmap/wrapper.c
 thesis
 foo
 foo/*
