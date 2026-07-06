@@ -1,6 +1,6 @@
 module io {
     version: "0.0.1",
-    prefix: "yap_io_"
+    prefix: "io_"
 }
 
 import "binds.yap"
