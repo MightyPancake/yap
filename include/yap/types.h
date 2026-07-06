@@ -137,8 +137,9 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id yident_type_id;
   yap_type_id yexprblueprint_type_id; //cached type_id for yExprBlueprint (a yExpr template with named holes)
   yap_type_id ystmtblueprint_type_id; //cached type_id for yStmtBlueprint (a yStmt template with named holes)
-  yap_type_id yexprlist_type_id;  //cached type_id for yExprList (growable list of yExpr)
+  yap_type_id yexprlist_type_id;  //cached type_id for yExprList (fixed real slice of yExpr, a macro's own variadic parameter type)
   yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStmt)
+  yap_type_id ycallargs_type_id;  //cached type_id for yCallArgs (growable list of yExpr, for building an arbitrary-arity yapi->call(func, args) argument list)
   //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFnT
   yap_type_id ystructt_type_id;
   yap_type_id yenumt_type_id;

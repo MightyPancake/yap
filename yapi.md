@@ -48,6 +48,15 @@ yExpr not(yExpr) //prefix logical not ('!expr'); truthy-checks any scalar (primi
 yExpr bnot(yExpr) //prefix bitwise not ('~expr'); numeric operand, keeps the operand's own type
 yExpr increment(yExpr, bool prefix) //'++expr' (prefix=true) / 'expr++' (prefix=false); operand must be an lvalue (unchecked, like assign())
 yExpr decrement(yExpr, bool prefix) //'--expr' / 'expr--'; same rules as increment
+yExpr call0(yExpr func)
+yExpr call1(yExpr func, yExpr a)
+yExpr call2(yExpr func, yExpr a, yExpr b)
+yExpr call3(yExpr func, yExpr a, yExpr b, yExpr c)
+//call0..call3 cover the common small-arity case directly (no list needed).
+//For an arbitrary number of arguments, build a yCallArgs list first, then call():
+yCallArgs call_args_new()                    //new, empty growable arg list
+yCallArgs call_args_push(yCallArgs, yExpr)   //returns the same list, grown by one
+yExpr call(yExpr func, yCallArgs args)       //calls func with however many args the list holds
 ...
 You can build all expressions like this
 
@@ -131,13 +140,13 @@ yType fn_type0(yType ret)
 yType fn_type1(yType ret, yType p1)
 yType fn_type2(yType ret, yType p1, yType p2)
 yType fn_type3(yType ret, yType p1, yType p2, yType p3)
-//Fixed arities mirror call0..call3 -- both capped at 3 args by deliberate
-//design (a general variable-arity call builder backed by a growable list was
-//tried and removed; every real call site only ever needed a small fixed
-//number of args). The type is deduped via yap_ctx_insert_type_if_not_exists,
-//so declaring a builder-made method param with fn_typeN makes the normal
-//call-site argument check reject mismatched function values ("Argument type
-//mismatch") with no extra macro-side code.
+//Fixed arities only, by deliberate design -- unlike call0..call3 below, there
+//is no general variable-arity fn_type builder (no real call site has ever
+//needed a function-valued param with more than 3 args). The type is deduped
+//via yap_ctx_insert_type_if_not_exists, so declaring a builder-made method
+//param with fn_typeN makes the normal call-site argument check reject
+//mismatched function values ("Argument type mismatch") with no extra
+//macro-side code.
 
 Fixed-size array types ('Type[N]' in surface syntax) are built with
 yType array_of(yType elem, int size)
@@ -220,7 +229,9 @@ gone):
 - `expr${ <expr with $holes> }` -> **yExprBlueprint** (lazy). `$name` is a named hole.
   Fill and close with methods: `expr${ $x + 1 }:fill_expr(c"x", a):finish()` -> yExpr.
   Supports literals, vars, holes, arithmetic/comparisons, unary (`-`/`!`/`~`),
-  ternary, assignment, member/index, deref, address-of, cast, and calls (<=3 args).
+  ternary, assignment, member/index, deref, address-of, cast, and calls (any
+  number of args -- desugars to call0..call3 for <=3 args, or a folded
+  call_args_new/call_args_push chain into `call()` beyond that).
   A cast's type (`$x.($T)`) is a lazy hole too, closed with `:fill_type(c"T", ty)`.
 
 - `stmt${ <statements with $holes> }` -> **yStmtBlueprint** (lazy). Same

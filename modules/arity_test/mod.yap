@@ -1,0 +1,6 @@
+module arity_test {
+    version: "0.0.1",
+    prefix: "arity_test_"
+}
+
+import "binds.yap"

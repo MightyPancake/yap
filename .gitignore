@@ -11,6 +11,9 @@ modules/*/*.c
 # hkeep hashmap wrapper/binds
 !modules/hashmap/binds.yap
 !modules/hashmap/wrapper.c
+# keep arity_test wrapper/binds (tests/pass/call_arity.yap's fixture module)
+!modules/arity_test/binds.yap
+!modules/arity_test/wrapper.c
 thesis
 foo
 foo/*

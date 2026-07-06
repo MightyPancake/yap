@@ -25,6 +25,18 @@ i32 fn bp_helper_add(i32 a, i32 b) { ret a + b; }
 yExpr fn bp_call1(yExpr a) { ret expr${ bp_helper_add($x, 1) }:fill_expr(c"x", a):finish(); }
 yExpr fn bp_call2(yExpr a, yExpr b) { ret expr${ bp_helper_add($x, $y) }:fill_expr(c"x", a):fill_expr(c"y", b):finish(); }
 
+// --- >3-arg call inside a blueprint: past the call0..call3 fixed-arity cap,
+// so bp_desugar_template's yap_expr_func_call case must fold this into a
+// call_args_new/call_args_push chain + yapi->call instead of erroring out.
+// (Only 4 holes, not 5: macro EXECUTION dispatch -- a separate, unrelated
+// mechanism -- caps at 4 args, so the 5th call arg is a plain literal.) ---
+i32 fn bp_helper_add5(i32 a, i32 b, i32 c, i32 d, i32 e) { ret a + b + c + d + e; }
+yExpr fn bp_call5(yExpr a, yExpr b, yExpr c, yExpr d) {
+    ret expr${ bp_helper_add5($v, $w, $x, $y, 100) }
+        :fill_expr(c"v", a):fill_expr(c"w", b):fill_expr(c"x", c):fill_expr(c"y", d)
+        :finish();
+}
+
 // --- lazy $T inside a cast: a cast's type used to always eagerly splice
 // regardless of the enclosing template's own laziness (a shortcut from before
 // type holes existed); now $T is a genuine lazy hole here too, closed via
@@ -107,6 +119,7 @@ i32 fn main() {
 
     _ c1 = bp_call1:(#10);         // bp_helper_add(10, 1) = 11
     _ c2 = bp_call2:(#3, #4);      // bp_helper_add(3, 4) = 7
+    _ c5 = bp_call5:(#1, #2, #3, #4); // bp_helper_add5(1,2,3,4,100) = 110
 
     _ ct = bp_cast:(i64, #7);      // (i64)7
 
@@ -125,6 +138,7 @@ i32 fn main() {
 
     if (c1 == 11)        { io->print:(c"call-arg hole fill OK\n"); pass = pass + 1; }
     if (c2 == 7)         { io->print:(c"call-arg multi-hole fill OK\n"); pass = pass + 1; }
+    if (c5 == 110)       { io->print:(c"call-arg >3 arity (call_args builder) OK\n"); pass = pass + 1; }
 
     if (ct == 7)         { io->print:(c"lazy cast type-hole fill OK\n"); pass = pass + 1; }
 
@@ -159,5 +173,5 @@ i32 fn main() {
     build_double:(i32, #5, #r);
     if (r == 10) { io->print:(c"fill_var declare+reference OK\n"); pass = pass + 1; }
 
-    ret pass - 22;
+    ret pass - 23;
 }

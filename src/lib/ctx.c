@@ -61,6 +61,10 @@ yap_ctx* yap_ctx_new(){
         ctx->yexprlist_type_id = yap_ctx_push_named_type(ctx, "yExprList", NULL, yexprlist_slice);
     }
     ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
+    //yCallArgs: an opaque, growable handle for building a yapi->call(func, args)
+    //argument list of arbitrary length (distinct from yExprList above, which is
+    //a fixed real slice, not growable). Mirrors yStmtList's shape exactly.
+    ctx->ycallargs_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yCallArgs",  "yCallArgs",  "void*");
 
     //Comptime builder templates (yapi.md): opaque handles for the incremental
     //struct/enum/union/func builders, distinct from the finished yType/yFn they emit.
@@ -83,6 +87,7 @@ yap_ctx* yap_ctx_new(){
         yap_type_id ys = ctx->ystmt_type_id;
         yap_type_id v  = ctx->void_type_id;
         yap_type_id ysl = ctx->ystmtlist_type_id;
+        yap_type_id yca = ctx->ycallargs_type_id;
         yap_type_id yst = ctx->ystructt_type_id;
         yap_type_id yen = ctx->yenumt_type_id;
         yap_type_id yun = ctx->yuniont_type_id;
@@ -120,6 +125,9 @@ yap_ctx* yap_ctx_new(){
             { "call1",         ye,      {ye, ye},         2 },
             { "call2",         ye,      {ye, ye, ye},     3 },
             { "call3",         ye,      {ye, ye, ye, ye}, 4 },
+            { "call_args_new",  yca,    {},           0 },
+            { "call_args_push", yca,    {yca, ye},    2 },
+            { "call",          ye,      {ye, yca},    2 },
             { "kind",          i,       {ye},         1 },
             { "is_comptime",   i,       {ye},         1 },
             { "var_decl",      ys,      {yt, yi},     2 },
