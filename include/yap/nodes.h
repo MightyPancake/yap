@@ -200,6 +200,7 @@ typedef enum {
     yap_macro_param_ident_add,
     yap_macro_param_mut,
     yap_macro_param_ast,
+    yap_macro_param_type, // a compound type spelling (array_type/slice_type/function_type) with no _expr equivalent
 } yap_macro_param_kind;
 
 typedef struct yap_macro_param_node yap_macro_param_node;
@@ -211,6 +212,7 @@ kenobi_new_struct_free(yap_macro_param_node,
         yap_statement_node* statement;
         yap_identifier_node ident_add;
         yap_expr_node* mut_expr;
+        yap_type_node* type_node;
     };
     yap_loc loc;
 );
