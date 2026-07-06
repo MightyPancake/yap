@@ -1,0 +1,1 @@
+'main' argument must have type 'byte@[]'

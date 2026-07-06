@@ -1,0 +1,3 @@
+i32 fn main(i32 x) {
+    ret 0;
+}
