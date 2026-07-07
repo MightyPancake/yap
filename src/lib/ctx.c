@@ -797,6 +797,11 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
       return true;
     case yap_type_blob:
       return left.blob.field_count == right.blob.field_count;
+    case yap_type_array:
+      return left.array.size == right.array.size &&
+             yap_ctx_type_ids_eq(ctx, left.array.element_type, right.array.element_type);
+    case yap_type_slice:
+      return yap_ctx_type_ids_eq(ctx, left.slice.element_type, right.slice.element_type);
     case yap_type_untyped:
       return yap_ctx_type_ids_eq(ctx, left.untyped_default, right.untyped_default);
     case yap_type_hole:

@@ -36,6 +36,8 @@
               libclang
               # gum: renders the live test-status table in tests/run_tests.sh
               gum
+              # python with matplotlib for benchmark plots
+              (python3.withPackages (ps: [ ps.matplotlib ]))
             ];
 
             shellHook = ''
