@@ -8,6 +8,13 @@ i32 fn main() {
     i32 back = f.(i32);
     u64 widened = a.(u64);
 
+    // byte is declared unsigned but backed by C 'char' (implementation-defined
+    // signedness); widening a byte >=128 back to i32 must zero-extend to the
+    // original 0..255 value, not sign-extend into a negative number.
+    i32 two_hundred = 200;
+    byte hi = two_hundred.(byte);
+    i32 widened_byte = hi.(i32);
+
     // Numeric <-> pointer, pointer <-> pointer (including unrelated pointee types)
     i32@ p = a@;
     i64 addr = p.(i64);
@@ -25,6 +32,7 @@ i32 fn main() {
     if (widened == 300) { io->print:(c"widen through cast OK\n"); ok = ok + 1; }
     if (addr != 0) { io->print:(c"pointer-to-int OK\n"); ok = ok + 1; }
     if (back_p. == 300) { io->print:(c"pointer round-trip through none@ OK\n"); ok = ok + 1; }
+    if (widened_byte == 200) { io->print:(c"byte>=128 widens unsigned (no sign-extension) OK\n"); ok = ok + 1; }
 
-    ret ok - 5;
+    ret ok - 6;
 }

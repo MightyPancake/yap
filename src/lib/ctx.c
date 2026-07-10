@@ -618,6 +618,24 @@ yap_type_id yap_ctx_find_common_type(yap_ctx* ctx, yap_type_id id1, yap_type_id 
   yap_type* type1 = yap_ctx_get_type(ctx, id1);
   yap_type* type2 = yap_ctx_get_type(ctx, id2);
   if (!type1 || !type2) return 0;
+
+  // An untyped numeric literal paired with a concrete (non-bool) primitive
+  // adapts to that primitive's own type, not the literal's default -- same
+  // rule yap_ctx_type_id_assignable already applies for var-decl/assignment
+  // ('f64 y = 1;' picks f64, not i32). Without this, 'typed op literal' and
+  // 'literal op typed' resolved to different common types depending on
+  // which operand happened to be written first, since the fallback below
+  // always favors id1 whenever *either* order reports "compatible" (which,
+  // per its own TODO, it does for any untyped+primitive pairing).
+  bool untyped1 = type1->kind == yap_type_untyped;
+  bool untyped2 = type2->kind == yap_type_untyped;
+  if (untyped1 != untyped2){
+    yap_type*   conc_t  = untyped1 ? type2 : type1;
+    yap_type_id conc_id = untyped1 ? id2   : id1;
+    if (conc_t->kind == yap_type_primitive && conc_id != ctx->bool_type_id)
+      return conc_id;
+  }
+
   if (yap_ctx_type_compatible(ctx, *type1, *type2)) return yap_ctx_coerce_type_id_to_id(ctx, id1);
   if (yap_ctx_type_compatible(ctx, *type2, *type1)) return yap_ctx_coerce_type_id_to_id(ctx, id2);
   return ctx->internal_error_type_id;

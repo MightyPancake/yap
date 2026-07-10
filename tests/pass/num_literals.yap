@@ -23,6 +23,12 @@ i32 fn main() {
     u64 max_u64 = 18446744073709551615;
     i64 min_i64 = -9223372036854775808;
 
+    // An untyped literal adapts to a typed operand's width in binary ops and
+    // comparisons too, not just var-decl/assignment -- and regardless of
+    // which side (literal or typed variable) it appears on.
+    f64 wide_f64_lhs = wide_f64 + 66.6;
+    f64 wide_f64_rhs = 66.6 + wide_f64;
+
     if (hex == 26) io->print:(c"hex OK\n");
     if (oct == 15) io->print:(c"oct OK\n");
     if (bin == 10) io->print:(c"bin OK\n");
@@ -40,6 +46,8 @@ i32 fn main() {
     if (wide_i64 == -100) io->print:(c"wide_i64 OK\n");
     if (wide_u32 == 300000) io->print:(c"wide_u32 OK\n");
     if (wide_f64 == 1.0) io->print:(c"wide_f64 OK\n");
+    if (wide_f64_lhs == 67.6) io->print:(c"wide_f64_lhs OK\n");
+    if (wide_f64_rhs == 67.6) io->print:(c"wide_f64_rhs OK\n");
     if (int_into_f32 == 7.0) io->print:(c"int_into_f32 OK\n");
     if (small_byte == 65) io->print:(c"small_byte OK\n");
     if (max_u64 == 18446744073709551615) io->print:(c"max_u64 OK\n");
