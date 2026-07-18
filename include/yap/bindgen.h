@@ -17,7 +17,7 @@ void yap_bindgen_import(yap_ctx *ctx,
                         int clang_argc,
                         const char **clang_argv);
 
-// --gen-c-bind CLI command: parse header, write binds.yap to outdir.
+// --gen-c-bind CLI command: parse header, write binds.yp to outdir.
 int yap_gen_c_bind(yap_args args);
 
 #endif // YAP_BINDGEN_H

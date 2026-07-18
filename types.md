@@ -6,7 +6,7 @@
 - Comp func (BE)
 
 ## Input
-Files/strings passed to the compiler as input, ie. main.yap
+Files/strings passed to the compiler as input, ie. main.yp
 
 ## Source
 Information about source (either file or string) that were passed to the compiler.

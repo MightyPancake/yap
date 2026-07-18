@@ -59,15 +59,8 @@ kenobi_new_struct_free(yap_module,
   darr(char*) lib_paths; //Paths to static/shared libraries for this module
 );
 
-// One dynamic association made by yapi->register_macro_method(owner, name,
-// backing_fn_name): "receiver type `owner_type` has a macro method called
-// `name`, backed by the ordinary top-level macro function already emitted
-// under `emit_name`". Registered at comptime (e.g. by arr(T) once it knows
-// its own concrete instantiation), looked up by (owner_type, name) in
-// yap_exec_macro_call's method_access handling -- a completely separate
-// table from yap_scope (where real, per-instantiation methods and ordinary
-// bare-name macros live), so a real method and a macro method can never
-// collide even in principle, not just by a shape-based guard.
+// One dynamic association made by yapi->register_macro_method(owner, name, backing_fn_name).
+// Kept in its own table (separate from yap_scope), so a macro method can never collide with a real method of the same name.
 kenobi_new_struct_free(yap_macro_method_entry,
   yap_type_id owner_type;
   char* name;
@@ -100,20 +93,13 @@ kenobi_new_struct_free(yap_ctx,
   map modules; //map of named modules
   char* current_module_name; //resolve via yap_ctx_current_module(ctx), don't read directly
 
-  //Dynamic macro-method associations (yapi->register_macro_method), see
-  //yap_macro_method_entry. Plain malloc-backed darr (NOT yap_ctx_darr_new /
-  //arena-backed) -- this grows via repeated darr_push over the whole
-  //compilation (once per registered macro method), and an arena-backed darr
-  //silently corrupts memory once pushes exceed its initial cap (see
-  //project_arena_darr_no_growth memory).
+  //Dynamic macro-method associations. Plain malloc-backed darr, NOT arena-backed: it grows via repeated darr_push, which corrupts an arena-backed darr past its initial cap.
   darr(yap_macro_method_entry) macro_methods;
 
   //Semantic declarations (global, not per-module)
   darr(yap_decl) semantic_decls;
 
-  //Counter for anonymous names (__anon_<tag>_N). Ctx-global, not per-source:
-  //all sources emit into one C translation unit, so per-source counters would
-  //let two files mint the same name.
+  //Counter for anonymous names (__anon_<tag>_N). Ctx-global, not per-source, so two files can't mint the same name.
   yap_anon_id anon_id;
 
   //Types

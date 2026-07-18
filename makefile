@@ -91,15 +91,15 @@ lib:
 # On Ubuntu: clang package puts headers/libs in system paths.
 bindings: lib compiler
 	@echo $(PURPLE)Generating C bindings$(RESET)
-	./yap --gen-c-bind '<stdio.h>' --prefix io_ -o modules/io/binds.yap
-	./yap --gen-c-bind '<stdlib.h>' --prefix stdlib_ -o modules/stdlib/binds.yap
-	./yap --gen-c-bind '<math.h>' --prefix math_ -o modules/math/binds.yap
-	./yap --gen-c-bind '<time.h>' --prefix time_ -o modules/time/binds.yap
+	./yap --gen-c-bind '<stdio.h>' --prefix io_ -o modules/io/binds.yp
+	./yap --gen-c-bind '<stdlib.h>' --prefix stdlib_ -o modules/stdlib/binds.yp
+	./yap --gen-c-bind '<math.h>' --prefix math_ -o modules/math/binds.yp
+	./yap --gen-c-bind '<time.h>' --prefix time_ -o modules/time/binds.yp
 	@echo $(GREEN)Done!$(RESET)
 
 hello: bindings
 	@echo $(PURPLE)Building and running hello world$(RESET)
-	./yap -o hello examples/hello.yap
+	./yap -o hello examples/hello.yp
 	./hello
 	@echo $(GREEN)Done!$(RESET)
 
@@ -154,7 +154,7 @@ run:
 		--leak-check=full \
 		--error-exitcode=99 \
 		--suppressions=valgrind_suppressions.supp \
-		./yap tests/$(test).yap
+		./yap tests/$(test).yp
 
 submodules:
 	git submodule update --init --recursive

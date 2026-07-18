@@ -135,9 +135,7 @@ kenobi_new_struct_free(yap_bin_expr,
     yap_bin_expr_gt,
     yap_bin_expr_le,
     yap_bin_expr_ge,
-    // Sentinel codes for multi-char operators, matching parse.c's remapping
-    // (their ASCII code doubles as the parse-AST's single-char yap_bin_op_node.op,
-    // same trick as the arithmetic ops above).
+    // Sentinel codes for multi-char operators, matching parse.c's remapping.
     yap_bin_expr_and = 'a',  // &&
     yap_bin_expr_or = 'o',   // ||
     yap_bin_expr_shl = 'L',  // <<
@@ -293,9 +291,7 @@ kenobi_new_struct_free(yap_statement,
   yap_code_range range;
 );
 
-/* Growable comptime handle lists ; backing storage for yExprList/yStmtList,
- * the macro-side vehicle for passing/building a variable number of yExpr or
- * yStmt values through a single fixed-arity comptime call argument. */
+/* Growable comptime handle lists ; backing storage for yExprList/yStmtList. */
 typedef struct {
   yap_expr* items;
   unsigned int count;

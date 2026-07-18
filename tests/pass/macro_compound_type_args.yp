@@ -1,6 +1,6 @@
 import io
 
-// Extends macros.yap's pair(T1, T2) macro to cover compound type spellings
+// Extends macros.yp's pair(T1, T2) macro to cover compound type spellings
 // as macro-call type arguments -- previously only bare identifiers and
 // pointer types (e.g. i32@) could be passed here. array_type/slice_type/
 // function_type/const_type failed with a syntax error (no _expr equivalent

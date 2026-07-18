@@ -10,7 +10,7 @@
 
 ## 3. Cross-module function resolution
 
-`import.yap` calls `foo()` from an imported file. The build phase needs to look up symbols across source boundaries.
+`import.yp` calls `foo()` from an imported file. The build phase needs to look up symbols across source boundaries.
 
 ## 4. `(fn ...)` function types as field/param types
 

@@ -9,7 +9,7 @@ import arity_test
 // needs more args than call0..call3 can build).
 //
 // `vals` is passed as ONE yExprList@ macro argument (same pattern as
-// expr_list.yap's add_const/emit_chars) rather than 5 separate ones: macro
+// expr_list.yp's add_const/emit_chars) rather than 5 separate ones: macro
 // EXECUTION dispatch (yap_exec_macro_call) has its own, unrelated 4-arg cap,
 // not touched by this change -- only call-expression BUILDING (yapi->call0..
 // call3) was capped at 3 and is what's being fixed here.
@@ -17,7 +17,7 @@ import arity_test
 // cast() pins the result to i32: yapi->var_value(c"arity_test_sum5")'s scope
 // lookup only ever resolves names registered in ctx->global_scope itself, so
 // it can't see a name registered inside another module's own scope (same
-// reason modules/hashmap/hashmap.yap never relies on the un-cast type of its
+// reason modules/hashmap/hashmap.yp never relies on the un-cast type of its
 // own yapi->var_value(c"yhm_make") call -- it only ever appears in assign()/
 // expr_stmt position there). This is a pre-existing, unrelated limitation;
 // cast() is the same explicit-pin escape hatch used throughout this codebase.

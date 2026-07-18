@@ -58,21 +58,12 @@ void yap_ctx_free(yap_ctx ctx){
   }
   darr_free(ctx.types);
   //Named types
-  // void* item;
-  // size_t iter = 0;
-  // while (hashmap_iter(ctx.named_types, &iter, &item)) {
-  //   yap_named_type* named = item;
-  //   free(named->name);
-  //   free(named->c_name);
-  // }
   hashmap_free(ctx.named_types);
 
   // Free semantic declarations
   darr_free(ctx.semantic_decls);
 
-  // Free macro-method registry (yapi->register_macro_method entries -- the
-  // name/emit_name strings are arena-allocated via ct_strdup, freed with the
-  // arena itself, so just the darr's own backing array needs releasing here)
+  // Free macro-method registry (entries' strings are arena-allocated, only the darr's own array needs releasing)
   darr_free(ctx.macro_methods);
 
   // Free module lookup paths
@@ -95,15 +86,9 @@ void yap_ctx_free(yap_ctx ctx){
 
 void yap_module_free(yap_module module){
   yap_log("Freeing module '%s'", module.name);
-  // for_darr(i, decl, module.decls){
-  //   yap_decl_node_free(decl);
-  // }
   darr_free(module.decls);
   for_darr(i, lp, module.lib_paths) free(lp);
   darr_free(module.lib_paths);
-  // darr_free(module.imports);
-  // free(module.name);
-  // free(module.prefix);
 }
 
 void yap_type_free(yap_type typ){

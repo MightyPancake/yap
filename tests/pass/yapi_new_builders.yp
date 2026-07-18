@@ -53,11 +53,11 @@ yStmt fn build_counting_loop(yIdent i_name, yIdent sum_name, yExpr skip_at, yExp
 yExpr fn build_preinc(yExpr lval)  { ret yapi->increment(lval, 1); } // ++lval
 yExpr fn build_postdec(yExpr lval) { ret yapi->decrement(lval, 0); } // lval--
 
-// --- not/bnot builders: mirror '!expr'/'~expr' surface syntax (see operators.yap) ---
+// --- not/bnot builders: mirror '!expr'/'~expr' surface syntax (see operators.yp) ---
 yExpr fn build_not(yExpr a)  { ret yapi->not(a); }
 yExpr fn build_bnot(yExpr a) { ret yapi->bnot(a); }
 
-// --- opt_member: mirrors 'obj?.field' surface syntax (see optional_chaining.yap) ---
+// --- opt_member: mirrors 'obj?.field' surface syntax (see optional_chaining.yp) ---
 struct Box { i32 val, }
 
 yExpr fn read_opt(yExpr ptr_expr) {
@@ -73,7 +73,7 @@ yStmt fn declare_i32_array(yIdent name) {
 
 // --- enum variant with an explicit value ---
 // Variant *names* aren't resolvable as values at the yap level yet (a
-// pre-existing gap unrelated to this builder -- see type_blueprints.yap's
+// pre-existing gap unrelated to this builder -- see type_blueprints.yp's
 // signal() comment), so this is a build/round-trip smoke test, same shape as
 // that existing enum test: declare, poke a value in via a pointer cast, read
 // it back through the emitted type.

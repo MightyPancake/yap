@@ -43,27 +43,18 @@ yap_ctx* yap_ctx_new(){
     ctx->ystmt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmt", "yStmt", "void*");
     ctx->yfn_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFn",      "yFn",      "void*");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
-    //yExprBlueprint: a yExpr template that may contain named holes ($name). Same
-    //C representation as yExpr (a yap_expr*), but a distinct front-end type so a
-    //stored blueprint must be :fill()'d and :finish()'d before use as a yExpr.
-    //(Named for the expression form specifically; a yStmtBlueprint etc. can
-    //follow when ${}/$[] land.)
+    //yExprBlueprint: yExpr template with named holes ($name); must be :fill()'d and :finish()'d before use as a yExpr.
     ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "void*");
     //yStmtBlueprint: the stmt${ } analogue -- a yStmt template with named holes,
     //filled via :fill_expr(...)/:finish() (same C repr as yStmt, a yap_statement*).
     ctx->ystmtblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtBlueprint", "yStmtBlueprint", "void*");
-    //yExprList is a real slice of yExpr (not an opaque handle) so it gets native
-    //'.len' and ':[i]' -- see yap_build_member_access_expr's slice case and
-    //yap_exec_macro_call's blob-literal marshalling (both in build.c) for the
-    //two places that had to learn about slices specifically because of this.
+    //yExprList is a real slice of yExpr (not an opaque handle), so it gets native '.len' and ':[i]'.
     {
         yap_type yexprlist_slice = { .kind = yap_type_slice, .slice = { .element_type = ctx->yexpr_type_id }, .is_const = false };
         ctx->yexprlist_type_id = yap_ctx_push_named_type(ctx, "yExprList", NULL, yexprlist_slice);
     }
     ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
-    //yCallArgs: an opaque, growable handle for building a yapi->call(func, args)
-    //argument list of arbitrary length (distinct from yExprList above, which is
-    //a fixed real slice, not growable). Mirrors yStmtList's shape exactly.
+    //yCallArgs: opaque growable handle for a yapi->call(func, args) argument list, unlike the fixed-size yExprList above.
     ctx->ycallargs_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yCallArgs",  "yCallArgs",  "void*");
 
     //Comptime builder templates (yapi.md): opaque handles for the incremental
@@ -182,10 +173,7 @@ yap_ctx* yap_ctx_new(){
         }
     }
 
-    //Builtin methods on comptime builder templates (yapi.md): registered directly into
-    //global scope (not a module) since method dispatch (yap_build_method_callee) does a
-    //plain recursive scope lookup on "OwnerName_methodname" -- exactly like user-declared
-    //type methods -- rather than a module-prefixed lookup.
+    //Registered directly into global scope (not a module): method dispatch does a plain "OwnerName_methodname" lookup, same as user-declared type methods.
     {
         yap_type_id ye  = ctx->yexpr_type_id;
         yap_type_id yt  = ctx->ytype_type_id;
@@ -227,29 +215,19 @@ yap_ctx* yap_ctx_new(){
             { "yFnT_func",            yfn, {yft},         1 },
             { "yFnT_get_subject",     ye,  {yft},         1 },
 
-            // yFn:ref() -> a callable yExpr referencing the finished function by
-            // its real (possibly hashed/mangled) emitted name, so target code can
-            // actually call a fn$/fn_t()-built function instead of only verifying
-            // it was emitted.
+            // yFn:ref() -> callable yExpr referencing the finished function's real emitted name.
             { "yFn_ref",              ye,  {yfn},         1 },
 
             { "yType_new_method",     yft, {yt},          1 },
             { "yType_new_ref_method", yft, {yt},          1 },
 
-            //yExprBlueprint (the $(...) quasi-quote): fill one named hole at a
-            //time (chainable, returns the blueprint), then finish to a yExpr.
-            //fill_type closes a cast's lazy $T type-hole nested inside the expr.
+            //yExprBlueprint ($(...) quasi-quote): fill named holes one at a time (chainable), then finish to a yExpr.
             { "yExprBlueprint_fill_expr",   ybp, {ybp, bp, ye}, 3 },
             { "yExprBlueprint_fill_type",   ybp, {ybp, bp, yt}, 3 },
             { "yExprBlueprint_finish", ye,  {ybp},         1 },
 
-            //yStmtBlueprint (the stmt${ } quasi-quote): fill_expr for expr holes,
-            //fill_stmt for statement holes ($body in statement position),
-            //fill_type/fill_ident for a var_decl's type/name holes. fill_var is
-            //a combinator: closes BOTH a var_decl's name-hole (the declaration)
-            //AND any later plain reference to that same name (a separate
-            //expr-hole) in one call, so a template can write $out once for a
-            //declared variable and use it again later without a second hole name.
+            //yStmtBlueprint (stmt${ } quasi-quote): fill_expr/fill_stmt/fill_type/fill_ident fill each hole kind;
+            //fill_var closes both a var_decl's name-hole and any later reference to it in one call.
             { "yStmtBlueprint_fill_expr",  ysbp, {ysbp, bp, ye},     3 },
             { "yStmtBlueprint_fill_stmt",  ysbp, {ysbp, bp, ys},     3 },
             { "yStmtBlueprint_fill_type",  ysbp, {ysbp, bp, yt},     3 },
@@ -319,14 +297,7 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     return NULL;
   }
 
-  /* Parented to global_scope (not NULL) so that code living inside a module's
-   * own source (e.g. modules/io/sugar.yap, modules/arr/arr.yap) can reach
-   * builtins registered directly into global_scope -- notably the yapi.md
-   * builder methods (yStructT_add_field, yExprList_at, ...), which are
-   * looked up via a plain recursive scope walk from whatever the "current
-   * scope" is at the call site, not a module-prefixed lookup. Purely
-   * additive: only adds a fallback for names that don't already resolve
-   * within the module's own scope. */
+  /* Parented to global_scope (not NULL) so a module's own source can still reach builtins registered there (e.g. yapi.md builder methods). */
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
@@ -619,14 +590,7 @@ yap_type_id yap_ctx_find_common_type(yap_ctx* ctx, yap_type_id id1, yap_type_id 
   yap_type* type2 = yap_ctx_get_type(ctx, id2);
   if (!type1 || !type2) return 0;
 
-  // An untyped numeric literal paired with a concrete (non-bool) primitive
-  // adapts to that primitive's own type, not the literal's default -- same
-  // rule yap_ctx_type_id_assignable already applies for var-decl/assignment
-  // ('f64 y = 1;' picks f64, not i32). Without this, 'typed op literal' and
-  // 'literal op typed' resolved to different common types depending on
-  // which operand happened to be written first, since the fallback below
-  // always favors id1 whenever *either* order reports "compatible" (which,
-  // per its own TODO, it does for any untyped+primitive pairing).
+  // An untyped numeric literal paired with a concrete (non-bool) primitive adapts to that primitive's type, not the literal's default (so operand order doesn't change the result).
   bool untyped1 = type1->kind == yap_type_untyped;
   bool untyped2 = type2->kind == yap_type_untyped;
   if (untyped1 != untyped2){
@@ -670,11 +634,7 @@ bool yap_ctx_type_id_assignable(yap_ctx* ctx, yap_type_id lhs_id, yap_type_id rh
     yap_type* lhs_typ = yap_ctx_get_type(ctx, lhs_id);
     if (lhs_typ && lhs_typ->kind == yap_type_ptr) return true;
   }
-  // An untyped numeric literal adapts to any numeric target, not just its own
-  // default (i32 for ints, f32 for floats): 'u64 x = 42;' or 'f64 y = 1;' are
-  // both fine. bool is excluded since it isn't meant to accept bare numbers.
-  // Whether the literal's actual value/shape (fractional, out of range,
-  // negative into unsigned, ...) fits the target is yap_check_literal_range's job.
+  // An untyped numeric literal adapts to any numeric target, not just its own default (i32/f32); bool is excluded since it isn't meant to accept bare numbers.
   if (rhs_id == ctx->untyped_int_type_id || rhs_id == ctx->untyped_float_type_id) {
     yap_type* lhs_typ = yap_ctx_get_type(ctx, lhs_id);
     if (lhs_typ && lhs_typ->kind == yap_type_primitive && lhs_id != ctx->bool_type_id)
@@ -785,11 +745,7 @@ bool yap_ctx_types_eq(yap_ctx* ctx, yap_type left, yap_type right){
       }
       return yap_ctx_type_ids_eq(ctx, left.func.return_type, right.func.return_type);
     case yap_type_struct:
-      /* Named structs are nominally typed: a forward-declaration placeholder
-       * (fields not yet built) and the fully-built struct of the same name
-       * both get registered as separate type ids, so structural comparison
-       * would either dereference a NULL fields array or wrongly call them
-       * distinct types. Compare by name when both are named. */
+      /* Named structs are nominally typed: compare by name, since a forward-declaration placeholder has no fields yet. */
       if (left.structure.name && right.structure.name)
         return strus_eq(left.structure.name, right.structure.name);
       if (darr_len(left.structure.fields) != darr_len(right.structure.fields)) return false;
@@ -927,9 +883,7 @@ char* yap_ctx_mangle_type(yap_ctx* ctx, yap_type typ, yap_type_qualifier_strings
     case yap_type_blob:
       return strus_newf("%sB%u", const_str, typ.blob.field_count);
     case yap_type_hole:
-      // Not real codegen-able C -- only used as a yap_ctx_insert_type_if_not_exists
-      // interning key, so repeated $T in one template naturally dedupes to the
-      // same type_id (name lookup hits before a second type gets pushed).
+      // Not real codegen-able C -- just an interning key so repeated $T in one template dedupes to the same type_id.
       return strus_newf("%sH%s", const_str, typ.hole_name);
     default:
       return NULL;

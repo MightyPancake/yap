@@ -4,5 +4,5 @@ module hashmap {
 }
 
 import stdlib
-import "binds.yap"
-import "hashmap.yap"
+import "binds.yp"
+import "hashmap.yp"

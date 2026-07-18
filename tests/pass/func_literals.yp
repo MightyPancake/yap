@@ -1,5 +1,5 @@
 import io
-import "imports/func_literal_helper.yap"
+import "imports/func_literal_helper.yp"
 
 i32 fn apply((i32 fn i32, i32) op, i32 a, i32 b) {
     ret op(a, b);

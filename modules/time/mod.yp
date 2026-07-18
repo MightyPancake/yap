@@ -3,4 +3,4 @@ module time {
     prefix: "time_"
 }
 
-import "binds.yap"
+import "binds.yp"

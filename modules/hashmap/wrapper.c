@@ -1,9 +1,5 @@
-// Vendored from src/lib/hashmap.c (tidwall/hashmap.c), which the yap
-// compiler itself already uses internally (scope/ctx/bindgen symbol
-// tables) but never exposed to *compiled* yap programs. This copy is
-// built into libhashmap.a/.so instead, so `import hashmap` can link
-// against it from ordinary yap code, same as math/stdlib/io/time wrap
-// their own C libraries.
+// Vendored from src/lib/hashmap.c (tidwall/hashmap.c), also used internally by the yap compiler itself.
+// This copy is built into libhashmap.a/.so so `import hashmap` can link against it from ordinary yap code.
 //
 // Copyright 2020 Joshua J Baker. All rights reserved.
 // Use of this source code is governed by an MIT-style
@@ -785,26 +781,12 @@ static uint64_t hashmap_xxhash3(const void *data, size_t len, uint64_t seed0,
 }
 
 //-----------------------------------------------------------------------------
-// yap-facing surface, all under a yhm_ prefix rather than the original
-// hashmap_ names above: the yap compiler's own binary already links a
-// separate copy of this exact file in (for its own scope/ctx/bindgen
-// symbol tables -- see include/yap/hashmap.h), so re-exporting the
-// original names here collides at link time when a compiled yap program
-// pulls in both. Marking every original tidwall function `static` (done
-// above throughout the file) hides them from that collision entirely;
-// these thin yhm_-prefixed forwarders are the only symbols this module
-// actually exports, bound in binds.yap under bare names ("make", "free",
-// ...) via mod.yap's own "yhm_" module prefix.
+// yap-facing surface, under a yhm_ prefix rather than the original hashmap_ names: the compiler's own binary already
+// links a separate copy of this file, so re-exporting the original names would collide at link time.
 //
-// yhm_make also collapses hashmap_new()'s 8 args (including two raw C
-// function pointers) down to 3 plain scalars: yap's comptime call/blueprint
-// builders cap out at 3 args per built call and have no way to pass a
-// function pointer *value* across the yap/C boundary, so hash_id/cmp_id
-// instead select between three fixed hash/compare pairs -- 0 for a 4-byte
-// scalar key (i32/u32/f32), 1 for an 8-byte one (i64/u64/f64), 2 for a
-// null-terminated C string key (byte@, hashed/compared by *contents*, not
-// by the raw 8-byte pointer value) -- all hashmap.yap's generic
-// hashmap(K, V) wrapper currently supports as a key type.
+// yhm_make also collapses hashmap_new()'s 8 args (including two raw C function pointers) down to 3 plain scalars:
+// yap's comptime call builders cap out at 3 args and can't pass a function pointer value, so hash_id/cmp_id instead
+// select between three fixed hash/compare pairs (4-byte scalar, 8-byte scalar, or null-terminated C string key).
 //-----------------------------------------------------------------------------
 static uint64_t hm_hash_4(const void *item, uint64_t seed0, uint64_t seed1) {
     return hashmap_xxhash3(item, 4, seed0, seed1);
@@ -820,12 +802,7 @@ static int hm_compare_8(const void *a, const void *b, void *udata) {
     (void)udata;
     return memcmp(a, b, 8);
 }
-// The entry's key field (a byte@/`const char*`) sits at the start of the
-// entry struct, same as any other key -- these just follow the pointer
-// they find there and hash/compare the string it points to, instead of the
-// 8 raw pointer bytes themselves (which would compare pointer identity,
-// not string equality -- two distinct buffers holding "same text" would
-// wrongly count as different keys).
+// Hash/compare the string a byte@ key points to, not its raw pointer bytes (which would compare identity, not equality).
 static uint64_t hm_hash_cstr(const void *item, uint64_t seed0, uint64_t seed1) {
     const char *s = *(const char *const *)item;
     return hashmap_xxhash3(s, strlen(s), seed0, seed1);
@@ -845,10 +822,7 @@ struct hashmap *yhm_make(uint64_t elsize, int32_t hash_id, int32_t cmp_id) {
     return hashmap_new(elsize, 0, 0, 0, hash_fn, cmp_fn, NULL, NULL);
 }
 
-// Zero-fills n bytes at ptr. Used to build a "zero value of V" that works
-// uniformly whether V is a scalar or a struct (an int-literal cast to V
-// only works for scalars -- casting 0 to a struct type isn't valid, same
-// as in C) -- see hashmap.yap's get().
+// Zero-fills n bytes at ptr. Used to build a "zero value of V" that works whether V is a scalar or a struct.
 void yhm_zero(void *ptr, uint64_t n) {
     memset(ptr, 0, n);
 }

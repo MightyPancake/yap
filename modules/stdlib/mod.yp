@@ -3,4 +3,4 @@ module stdlib {
     prefix: "stdlib_"
 }
 
-import "binds.yap"
+import "binds.yp"

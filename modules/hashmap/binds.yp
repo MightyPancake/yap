@@ -1,0 +1,30 @@
+// Raw C bindings for the vendored Robin Hood hashmap in wrapper.c. Hand-written rather than run through
+// `--gen-c-bind`: bindgen silently skips wrapper generation for any function with a function-pointer parameter.
+//
+// Bare names below ("make", "free", ...) resolve via mod.yp's "yhm_" module prefix to wrapper.c's yhm_make/yhm_free/...,
+// not hashmap_make/hashmap_free/etc: the compiler's own binary already links a separate copy of this vendored file,
+// so a literal hashmap_* name here would collide at link time.
+//
+// `struct hashmap` stays fully opaque here; the generic, type-safe wrapper lives in hashmap.yp.
+type hashmap
+
+// hash_id/cmp_id select between three hash/compare pairs baked into wrapper.c's yhm_make: 0 for a 4-byte scalar key,
+// 1 for an 8-byte one, 2 for a null-terminated C string key.
+hashmap@ fn make(i64 elsize, i32 hash_id, i32 cmp_id);
+none fn free(hashmap@ map);
+none fn clear(hashmap@ map, bool update_cap);
+i64 fn count(hashmap@ map);
+bool fn oom(hashmap@ map);
+
+// get/set/delete take/return a pointer to a full { key, value } entry; set/delete return the replaced/removed entry.
+none@ fn get(hashmap@ map, none@ item);
+none@ fn set(hashmap@ map, none@ item);
+none@ fn delete(hashmap@ map, none@ item);
+
+// Cursor-based iteration: seed `i` at 0, call repeatedly; returns false once
+// exhausted. `item` is written with a pointer to the current entry.
+bool fn iter(hashmap@ map, i64@ i, none@@ item);
+
+// Zero-fills n bytes at ptr -- used by hashmap.yp's get() to build a zero
+// value of V that works whether V is a scalar or a struct.
+none fn zero(none@ ptr, i64 n);

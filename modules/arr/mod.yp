@@ -4,4 +4,4 @@ module arr {
 }
 
 import stdlib
-import "arr.yap"
+import "arr.yp"

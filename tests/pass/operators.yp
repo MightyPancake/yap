@@ -42,7 +42,7 @@ i32 fn main() {
 
     // --- Unary (!, ~) ---
     // '!' shares the same grammar slot (PREC.UNARY) as '-'/'~', already
-    // proven tighter-than-'+' by increment.yap's "(++c) + 10" case; '!'
+    // proven tighter-than-'+' by increment.yp's "(++c) + 10" case; '!'
     // itself can't be composed with arithmetic the same way since its
     // result is bool, which doesn't mix with i32 in this language.
     if (!true == false) fail = fail + 0; else fail = fail + 1;

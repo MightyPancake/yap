@@ -3,4 +3,4 @@ module arity_test {
     prefix: "arity_test_"
 }
 
-import "binds.yap"
+import "binds.yp"

@@ -1,4 +1,4 @@
-// Helper for func_literals.yap: this file mints its own function literal, so
+// Helper for func_literals.yp: this file mints its own function literal, so
 // together with the importer it proves anon names are unique across source
 // files (ctx-global counter ; per-source counters made both files emit
 // __anon_func_0 into the same translation unit).

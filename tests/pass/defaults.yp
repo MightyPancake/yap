@@ -1,6 +1,6 @@
 import io
 import foo_test_module
-import "imports/defaults_helper.yap"
+import "imports/defaults_helper.yp"
 
 struct Point {
     i32 x = 0,

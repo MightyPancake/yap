@@ -45,10 +45,7 @@ kenobi_new_struct_free(yap_call_arg_node,
     yap_loc loc;
 );
 
-/* Anonymous function literal: (<optional return_type> fn(<params>) { <body> }).
- * Same shape as yap_func_decl_node minus name/subject; params reuse
- * yap_func_arg_node (has_default is always false ; literal params are just
- * type+name). */
+/* Anonymous function literal: (<optional return_type> fn(<params>) { <body> }). */
 kenobi_new_struct_free(yap_func_literal_node,
     darr(yap_func_arg_node) args;
     bool has_return_type;
@@ -176,18 +173,13 @@ kenobi_new_struct_free(yap_blueprint_hole_node,
     yap_loc loc;
 );
 
-// type${ struct{...} } eager type blueprint. Parse-AST only: build.c desugars
-// `body` (an anon struct/enum/union type node) into a chained
-// yapi->struct_t()/enum_t()/union_t() + add_field/add_variant call, yielding a
-// yStructT/yEnumT/yUnionT template. $T in a field/variant type is an eager splice.
+// type${ struct{...} } eager type blueprint. Parse-AST only: build.c desugars it into a yStructT/yEnumT/yUnionT template.
 kenobi_new_struct_free(yap_type_blueprint_node,
     yap_type_node* body;
     yap_loc loc;
 );
 
-// stmt${ ...statements... } lazy statement blueprint. Parse-AST only: build.c
-// desugars the statement sequence into yapi->expr_stmt/return_stmt/... + block
-// builder calls (holes -> yapi->hole), yielding a yStmtBlueprint.
+// stmt${ ...statements... } lazy statement blueprint. Parse-AST only: build.c desugars it into a yStmtBlueprint.
 kenobi_new_struct_free(yap_stmt_blueprint_node,
     darr(yap_statement_node) body;
     yap_loc loc;

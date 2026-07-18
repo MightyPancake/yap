@@ -1,6 +1,4 @@
-// Hand-written sugar on top of the auto-generated stdio bindings in
-// binds.yap. NOT touched by `make bindings` (that target only regenerates
-// binds.yap/wrapper.c/libio.*), so it's safe to extend here directly.
+// Hand-written sugar on top of the auto-generated bindings; `make bindings` never touches this file.
 
 none fn print_char(i32 c) {
     io->putchar(c);
@@ -37,11 +35,7 @@ none fn print_i32(i32 v) {
     }
 }
 
-// printf-style macro: compile-time walks `fmt`, dispatching one runtime call
-// per %-specifier and chaining them into a single block. `args` is
-// yExprList@ (a pointer) rather than a bare value since macro-call blob
-// marshalling only passes one pointer-sized value per slot. `fmt` bytes are
-// already escape-decoded, so this only needs to look for '%' specifiers.
+// printf-style macro: compile-time walks `fmt`, dispatching one runtime call per %-specifier, chained into a single block.
 yStmt fn print(byte@ fmt, yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;

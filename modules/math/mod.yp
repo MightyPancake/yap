@@ -3,4 +3,4 @@ module math {
     prefix: "math_"
 }
 
-import "binds.yap"
+import "binds.yp"

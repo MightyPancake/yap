@@ -28,7 +28,7 @@ i32 fn main() {
     io->putchar(10);
 
     // Generic growable array (modules/arr), built entirely in yap via the
-    // yapi.md builder API -- no C backend; see modules/arr/arr.yap.
+    // yapi.md builder API -- no C backend; see modules/arr/arr.yp.
     _ gnums = arr->new:(i32);
     gnums:push(10);
     gnums:push(20);

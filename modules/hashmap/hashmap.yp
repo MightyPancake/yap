@@ -1,18 +1,9 @@
-// Generic, type-safe wrapper around the raw hashmap module (binds.yap),
-// mirroring modules/arr's approach: hashmap(K, V) builds one concrete
-// struct type per (K, V) instantiation (hash-deduplicated by yapi's
-// struct_t:finish, same as arr(T)), with real K/V-typed methods layered
-// over the raw none@ item-pointer surface underneath.
+// Generic, type-safe wrapper around the raw hashmap module (binds.yp): hashmap(K, V) builds one concrete struct type
+// per (K, V) instantiation, with real K/V-typed methods layered over the raw none@ item-pointer surface underneath.
 //
-// Key support is intentionally narrow: K must be a 4-byte or 8-byte scalar
-// (i32/u32/f32/i64/u64/f64), or byte@ treated as a null-terminated C string
-// (hashed/compared by contents, not pointer identity -- see wrapper.c's
-// hm_hash_cstr/hm_compare_cstr). No arbitrary struct keys.
+// Key support is intentionally narrow: K must be a 4-byte or 8-byte scalar, or byte@ treated as a C string. No struct keys.
 
-// Picks wrapper.c's hash_id/cmp_id (0 = 4-byte key, 1 = 8-byte key, 2 =
-// byte@ C-string key) for a given key type. Early-returns per branch rather
-// than declaring then reassigning a local (yap requires initialization at
-// declaration). -1 means "unsupported"; callers check for that.
+// Picks wrapper.c's hash_id/cmp_id for a given key type; -1 means "unsupported", callers check for that.
 i32 fn key_size_id(yType K) {
     if (K == yapi->type(c"i32") || K == yapi->type(c"u32") || K == yapi->type(c"f32")) {
         ret 0;
@@ -42,10 +33,7 @@ yType fn hashmap(yType K, yType V) {
         ret K;
     }
 
-    // entry_t = { K key, V value }: gives hashmap_make's elsize via
-    // yapi->sizeof, and (being K/V-shaped itself) is what forces the outer
-    // wrapper struct below to hash differently per (K, V) instantiation --
-    // same trick arr(T) gets for free from its own T-typed 'data' field.
+    // entry_t = { K key, V value }: gives hashmap_make's elsize via yapi->sizeof, and forces the outer wrapper struct to hash differently per (K, V) instantiation.
     _ entry_st = yapi->struct_t();
     entry_st:add_field(K, c"key");
     entry_st:add_field(V, c"value");
@@ -61,9 +49,7 @@ yType fn hashmap(yType K, yType V) {
     _ res = st:finish(c"hashmap");
     if (st:existed()) ret res;
 
-    // init(): allocates the real underlying map via hashmap_make. Pointer
-    // receiver since it assigns self's own fields (same reasoning as
-    // arr(T)'s init()).
+    // init(): allocates the real underlying map via hashmap_make.
     _ init_t = res:new_ref_method();
     yExpr self1 = yapi->deref(init_t:get_subject());
     init_t:set_body(
@@ -81,11 +67,8 @@ yType fn hashmap(yType K, yType V) {
     );
     init_t:finish(c"init");
 
-    // put(key, value): builds a { key, value } entry on the stack and hands
-    // its address to hashmap_set, which copies it in (replacing any
-    // existing entry for the same key). For a byte@ key this only copies
-    // the *pointer*, not the string contents (the map borrows it) -- the
-    // caller must keep the buffer alive for as long as it's used as a key.
+    // put(key, value): builds a { key, value } entry on the stack and hands its address to hashmap_set, which copies it in.
+    // For a byte@ key this only copies the pointer, not the string contents -- the caller must keep the buffer alive.
     _ put_t = res:new_method();
     _ pkey_p = put_t:add_param(K, c"key");
     _ pval_p = put_t:add_param(V, c"value");
@@ -129,14 +112,8 @@ yType fn hashmap(yType K, yType V) {
     );
     has_t:finish(c"has");
 
-    // get(key): returns the stored value, or V's zero value on a miss (a
-    // deliberate default -- simpler than threading a found/not-found out
-    // param through every call site; use has(key) first if that
-    // distinction matters, or try_get(key, out) below to do both in one
-    // lookup). The zero value is built via yhm_zero (memset) rather than
-    // casting 0 to V, since that cast only works for scalar V -- casting an
-    // int to a struct type isn't valid, same as in C, and V may now be a
-    // struct (e.g. hashmap(byte@, test_struct)).
+    // get(key): returns the stored value, or V's zero value on a miss; use has(key) or try_get(key, out) if that distinction matters.
+    // Zero value is built via yhm_zero (memset) rather than casting 0 to V, since that only works for scalar V, not struct V.
     _ get_t = res:new_method();
     _ gkey_p = get_t:add_param(K, c"key");
     yExpr self4 = get_t:get_subject();
@@ -175,10 +152,7 @@ yType fn hashmap(yType K, yType V) {
     }
     get_t:finish(c"get");
 
-    // try_get(key, out): single-lookup found/not-found check that also
-    // writes the value through `out` on a hit -- unlike has(key) followed
-    // by get(key), which would probe the map twice. Leaves *out untouched
-    // on a miss.
+    // try_get(key, out): single-lookup found/not-found check that also writes the value through `out` on a hit -- unlike has(key)+get(key), which probes twice.
     _ tryget_t = res:new_method();
     _ tgkey_p = tryget_t:add_param(K, c"key");
     _ tgout_p = tryget_t:add_param(yapi->ptr_of(V), c"out");
@@ -261,8 +235,7 @@ yType fn hashmap(yType K, yType V) {
     );
     free_t:finish(c"free");
 
-    // foreach(cb): calls cb(key, value) once per entry, in map order (no
-    // particular guarantee beyond "every live entry exactly once").
+    // foreach(cb): calls cb(key, value) once per entry (no ordering guarantee beyond "every live entry exactly once").
     _ foreach_t = res:new_method();
     _ cb_p = foreach_t:add_param(yapi->fn_type2(none_t, K, V), c"cb");
     yExpr self8 = foreach_t:get_subject();
@@ -288,9 +261,7 @@ yType fn hashmap(yType K, yType V) {
     );
     foreach_t:finish(c"foreach");
 
-    // Claim "for" (defined below) as THIS instantiation's receiver-dispatched
-    // macro method -- same mechanism arr(T) uses, see its own comment on why
-    // a same-named real method could never collide with this.
+    // Claim "for" (defined below) as this instantiation's receiver-dispatched macro method.
     yapi->register_macro_method(res, c"for", c"for");
 
     ret res;
@@ -320,25 +291,12 @@ yExpr fn new(yType K, yType V) {
     ret yapi->block_expr(stmts);
 }
 
-// new_dict(V): value-yielding constructor for a byte@-keyed (C string)
-// hashmap -- i.e. a "dictionary" in the Python/JS sense, string keys to any
-// V. `hashmap->new:(byte@, V)` works directly too (a macro call's
-// type-argument slot used to only resolve a bare identifier like `i32`,
-// never a compound type expression such as `byte@` -- fixed in
-// yap_resolve_macro_type_arg, components/yap-semantic/src/build.c); this
-// is purely ergonomic sugar for the common string-keyed case, sparing the
-// caller from spelling `byte@` out at every call site:
-// `hashmap->new_dict:(test_struct)`.
+// new_dict(V): value-yielding constructor for a byte@-keyed (C string) hashmap, e.g. `hashmap->new_dict:(test_struct)`.
 yExpr fn new_dict(yType V) {
     ret hashmap->new(yapi->ptr_of(yapi->type(c"byte")), V);
 }
 
-// for(self, k, v, body): receiver-dispatched macro-method form of
-// iteration, e.g. `h:for:(+k, +v, { io->print:(c"%d\n", [v]); });` -- +k/+v
-// are hygienic idents the macro itself declares (K-typed key, V-typed
-// value) and the block body can reference them directly, and (unlike the
-// typed-callback foreach(cb) above) can also close over an outer local,
-// same as arr(T)'s own 'for'.
+// for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->print:(c"%d\n", [v]); });`.
 yStmt fn for(yExpr self, yIdent k, yIdent v, yStmt body) {
     _ entry_ptr_t = yapi->field_type(yapi->type_of(self), c"_phantom");
     _ entry_t = yapi->pointee_type(entry_ptr_t);

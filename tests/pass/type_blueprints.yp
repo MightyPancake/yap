@@ -35,7 +35,7 @@ yType fn number_box() {
 
 // --- enum: add_variant chain via enum_t. Variant *names* aren't resolvable as
 // values yet (that's a pre-existing gap in enum semantics generally, unrelated
-// to blueprints -- nasty_types.yap only ever uses enums as anonymous field
+// to blueprints -- nasty_types.yp only ever uses enums as anonymous field
 // types, never constructs/reads a variant by name); a built enum type is
 // otherwise a real, usable type via cast (its variants ARE real C enum
 // constants, just not yet wired into yap's scope/type-checking).

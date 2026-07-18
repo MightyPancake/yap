@@ -1,0 +1,13 @@
+module foo_test_module {
+    version: "0.0.1",
+    prefix: "foo_test_module_"
+}
+
+i32 fn add_default(i32 a, i32 b = 10) {
+    ret a + b;
+}
+
+// Exercises calling a sibling function by its bare, unprefixed name.
+i32 fn add_default_via_sibling(i32 a) {
+    ret add_default(.a=a, .b=2);
+}

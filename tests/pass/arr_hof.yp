@@ -1,6 +1,6 @@
 // Higher-order methods on arr(T) (map/filter/fold), driven by function
 // literals. The callback params are declared with exact function types
-// (yapi->func_typeN in modules/arr/arr.yap), so passing a wrongly-typed
+// (yapi->func_typeN in modules/arr/arr.yp), so passing a wrongly-typed
 // function is a compile-time "Argument type mismatch" error.
 import io
 import arr

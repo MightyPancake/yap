@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs tests/pass/*.yap and tests/fail/*/ in parallel under valgrind, with a
+# Runs tests/pass/*.yp and tests/fail/*/ in parallel under valgrind, with a
 # live gum-rendered status table. Invoked by `make test`.
 set -uo pipefail
 
@@ -19,13 +19,13 @@ trap 'exit 130' INT TERM
 
 # Each entry: test_file|expect|err_file
 entries=()
-for f in tests/pass/*.yap; do
+for f in tests/pass/*.yp; do
     [ -e "$f" ] || { echo "No pass test files found in ./tests/pass"; exit 1; }
     entries+=("$f|pass|")
 done
 for d in tests/fail/*/; do
     [ -d "$d" ] || continue
-    entries+=("${d}test.yap|fail|${d}err.txt")
+    entries+=("${d}test.yp|fail|${d}err.txt")
 done
 
 names=()

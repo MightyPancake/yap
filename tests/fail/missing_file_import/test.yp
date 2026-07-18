@@ -1,0 +1,3 @@
+import "./this_file_does_not_exist.yp"
+
+fn main() {}

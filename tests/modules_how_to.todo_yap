@@ -3,7 +3,7 @@ module {
 }
 
 // Import a file
-import "file.yap"
+import "file.yp"
 
 import math
 

@@ -54,7 +54,7 @@ int yap_gen_c_bind(yap_args args) {
         return 1;
     }
     const char *header = args.gen_c_bind_header;
-    const char *outfile = args.output_file ? args.output_file : "binds.yap";
+    const char *outfile = args.output_file ? args.output_file : "binds.yp";
     yap_log("gen-c-bind: header=%s  output=%s", header, outfile);
 
     FILE *tmp = fopen("/tmp/yap_bindgen_input.c", "w");

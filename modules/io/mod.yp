@@ -3,5 +3,5 @@ module io {
     prefix: "io_"
 }
 
-import "binds.yap"
-import "sugar.yap"
+import "binds.yp"
+import "sugar.yp"

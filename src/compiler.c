@@ -114,22 +114,6 @@ int compile(yap_args args){
     yap_compiler_load_semantic_component(&compiler, _sem, args.semantic_component);
     free(_ts); free(_c); free(_sem); free(_yh);
 
-
-    // void* front_handle = yap_get_handle("./components/yap-ts/libyap_ts.so");
-    // void* back_handle = yap_get_handle("./components/yap-c/libyap_c.so");
-    // yap_log("libyap_ts.so loaded at %p\n", front_handle);
-    // void* sym = dlsym(front_handle, "yap_parse");
-    // yap_log("yap_parse symbol at %p\n", sym);
-
-    //Incremental expansion function
-    // TODO
-    // compiler.front_module.incremental_eval = load_func_dynamically(front_handle, front_name, yap_expand_incremental_fn, "yap_eval_incremental");
-
-    //Function to print errors
-    
-    //Do the compilation procces here
-    //Step 0: Create a context and attach callbacks
-    //Fresh context
     yap_ctx* ctx = yap_ctx_new();
     //Callbacks from loaded components
     ctx->print_error = compiler.frontend.print_error;
@@ -172,15 +156,6 @@ int compile(yap_args args){
         ctx = compiler.backend.emit(ctx);
         yap_quit_if_errors(ctx, compiler);
     }
-
-    // //TODO: Change this, right now we check semantic run because incremental is not there yet
-    // ctx = compiler.internal_module.build(ctx, args);
-    // if (yap_ctx_dispatch_errors(ctx)) return yap_early_compile_error_return(compiler, ctx, 1);
-
-    //Step 2: Semantic analysis of incremental blocks
-    //Step 3: Execute incremental blocks
-    //Step 4: Semantic analysis of expanded code
-    //Step 5: Final codegen and emission
 
     //Handle possible errors
     yap_quit_if_errors(ctx, compiler);
@@ -311,9 +286,6 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
         darr_push(args->extra, arg);
         break;
     case ARGP_KEY_END:
-        // if (state->arg_num < 1)
-        // //No source provided
-        // argp_usage(state);
         break;
     default:
         return ARGP_ERR_UNKNOWN;
