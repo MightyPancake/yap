@@ -34,6 +34,8 @@
               # libclang for C binding generation
               clang
               libclang
+              # emcc, for -bcc=emcc wasm builds
+              emscripten
               # gum: renders the live test-status table in tests/run_tests.sh
               gum
               # python with matplotlib for benchmark plots

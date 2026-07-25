@@ -32,8 +32,11 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
     ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int");
     yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "unsigned int");
-    yap_ctx_push_new_primitive_type(ctx, 8, true, false, "i64", "i64", "long");
-    yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "unsigned long");
+    // "long"/"unsigned long" are only 8 bytes under LP64 (x86-64 Linux); wasm32/emscripten and
+    // Windows both size 'long' at 4 bytes, silently truncating i64/u64. "long long" is 8 bytes
+    // on every target that matters here, so spell it that way unconditionally.
+    yap_ctx_push_new_primitive_type(ctx, 8, true, false, "i64", "i64", "long long");
+    yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "unsigned long long");
     ctx->float_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, true, "f32", "f32", "float");
     yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
 
@@ -304,7 +307,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
     .decls = darr_new(yap_decl_node),
     .module_ctx = NULL,
     .scope = yap_ctx_new_scope(ctx, ctx->global_scope),
-    .lib_paths = darr_new(char*)
+    .lib_paths = darr_new(char*),
+    .native_lib_paths = darr_new(char*)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, name);

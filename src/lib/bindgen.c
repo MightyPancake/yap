@@ -248,6 +248,28 @@ int yap_gen_c_bind(yap_args args) {
         printf("Generated %s\n", a_path);
         printf("Generated %s\n", so_path);
 
+        // Best-effort wasm-flavored variant (lib<name>_wasm.a), for -bcc=emcc builds. Never
+        // fails the native build above if emcc isn't installed -- this runs by default as
+        // part of `make bindings` on every machine, most of which won't have emcc.
+        if (system("command -v emcc >/dev/null 2>&1") == 0) {
+            char wasm_obj_path[PATH_MAX], wasm_a_path[PATH_MAX];
+            snprintf(wasm_obj_path, sizeof(wasm_obj_path), "%swrapper_wasm.o", outdir);
+            snprintf(wasm_a_path, sizeof(wasm_a_path), "%slib%s_wasm.a", outdir, libname);
+
+            snprintf(cmd, sizeof(cmd), "emcc -fPIC -c \"%s\" -o \"%s\"", wrapper_path, wasm_obj_path);
+            if (system(cmd) != 0) {
+                fprintf(stderr, "Warning: failed to compile wasm wrapper for '%s'\n", libname);
+            } else {
+                snprintf(cmd, sizeof(cmd), "ar rcs \"%s\" \"%s\"", wasm_a_path, wasm_obj_path);
+                if (system(cmd) != 0) {
+                    fprintf(stderr, "Warning: failed to create wasm static library for '%s'\n", libname);
+                } else {
+                    printf("Generated %s\n", wasm_a_path);
+                }
+                unlink(wasm_obj_path);
+            }
+        }
+
 wrapper_cleanup:
         for (size_t i = 0; i < darr_len(s_wrapper_entries); i++) {
             free(s_wrapper_entries[i].c_name);

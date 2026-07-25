@@ -56,7 +56,8 @@ kenobi_new_struct_free(yap_module,
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
   yap_scope* scope; //Module-level scope for namespaced symbol lookup
-  darr(char*) lib_paths; //Paths to static/shared libraries for this module
+  darr(char*) lib_paths; //Paths to static/shared libraries for this module, in whichever flavor (native or wasm) matches the selected backend -- used for the final link
+  darr(char*) native_lib_paths; //Always-native (.a/.so) library paths, regardless of backend -- used to resolve macro-typed function symbols in the embedded host-native TCC, which can never load wasm object code
 );
 
 // One dynamic association made by yapi->register_macro_method(owner, name, backing_fn_name).

@@ -1,6 +1,19 @@
 #include "yap/all.h"
 #include <dirent.h>
 
+// Whether the selected backend compiler targets wasm (emcc), not native ELF. A native .so
+// can never link into a wasm build, so module library scanning needs to know which flavor
+// of artifact to look for. Re-derives the '-bcc=' parsing yap-c's own resolver does, since
+// core can't reach into a dlopen'd backend component to ask it directly.
+static bool yap_target_is_wasm(yap_args* args){
+    if (!args) return false;
+    for_darr(i, flag, args->backend_flags){
+        if (flag && strncmp(flag, "cc=", 3) == 0 && strstr(flag + 3, "emcc"))
+            return true;
+    }
+    return false;
+}
+
 void yap_resolve_module_decl(yap_ctx* ctx){
     yap_log("\n\nPhase 0: Module declaration resolution\n");
 
@@ -84,6 +97,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
 
                 yap_module* imp_mod = yap_ctx_get_module(ctx, imp_name);
                 if (imp_mod) {
+                    bool wasm_target = yap_target_is_wasm(ctx->args);
                     for_darr(pi, lookup_path, ctx->module_lookup_paths){
                         char* mod_dir = strus_newf("%s/%s", lookup_path, imp_name);
                         DIR* dir = opendir(mod_dir);
@@ -91,14 +105,32 @@ void yap_resolve_module_decl(yap_ctx* ctx){
                             struct dirent* ent;
                             while ((ent = readdir(dir)) != NULL) {
                                 size_t nlen = strlen(ent->d_name);
-                                bool is_lib = (nlen > 3 && strcmp(ent->d_name + nlen - 2, ".a") == 0
-                                               && ent->d_name[0] == 'l' && ent->d_name[1] == 'i' && ent->d_name[2] == 'b')
-                                           || (nlen > 4 && strcmp(ent->d_name + nlen - 3, ".so") == 0
-                                               && ent->d_name[0] == 'l' && ent->d_name[1] == 'i' && ent->d_name[2] == 'b');
+                                bool has_lib_prefix = nlen > 3
+                                    && ent->d_name[0] == 'l' && ent->d_name[1] == 'i' && ent->d_name[2] == 'b';
+                                bool is_wasm_a = has_lib_prefix && nlen > 7
+                                    && strcmp(ent->d_name + nlen - 7, "_wasm.a") == 0;
+                                bool is_a = has_lib_prefix && nlen > 2
+                                    && strcmp(ent->d_name + nlen - 2, ".a") == 0 && !is_wasm_a;
+                                bool is_so = has_lib_prefix && nlen > 3
+                                    && strcmp(ent->d_name + nlen - 3, ".so") == 0;
+                                // A native .so can never link into a wasm build, and a wasm-flavored
+                                // .a should never be picked up by a native build even if both sit in
+                                // the same module directory -- only one flavor is ever collected here.
+                                bool is_lib = wasm_target ? is_wasm_a : (is_a || is_so);
                                 if (is_lib) {
                                     char* lib_path = strus_newf("%s/%s", mod_dir, ent->d_name);
                                     darr_push(imp_mod->lib_paths, lib_path);
                                     yap_log("Module '%s': found library '%s'", imp_name, lib_path);
+                                }
+                                // native_lib_paths is collected independent of wasm_target: macro-typed
+                                // function bodies run through an embedded host-native TCC regardless of
+                                // the selected backend, and TCC can never load wasm object code -- it
+                                // always needs the native .a/.so flavor to resolve symbols, even when
+                                // the final link (lib_paths above) targets wasm.
+                                if (is_a || is_so) {
+                                    char* native_lib_path = strus_newf("%s/%s", mod_dir, ent->d_name);
+                                    darr_push(imp_mod->native_lib_paths, native_lib_path);
+                                    yap_log("Module '%s': found native library '%s'", imp_name, native_lib_path);
                                 }
                             }
                             closedir(dir);

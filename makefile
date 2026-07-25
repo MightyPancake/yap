@@ -52,7 +52,7 @@ RM := rm -fr
 CP := cp -r
 MV := mv
 
-.PHONY: default compiler lib build release test test_file path workflow bindings hello native_modules
+.PHONY: default compiler lib build release test test_file path workflow bindings hello native_modules wasm_modules
 
 default: all
 
@@ -130,6 +130,23 @@ native_modules:
 		ar rcs "$${d}lib$$name.a" "$${d}wrapper.o"; \
 		$(CC) -shared -o "$${d}lib$$name.so" "$${d}wrapper.o"; \
 		rm "$${d}wrapper.o"; \
+	done
+
+# Wasm-flavored variant of each module library, for -bcc=emcc builds. Static-only
+# (lib<name>_wasm.a) -- there's no wasm equivalent of a native .so here, dynamic wasm
+# linking is a different model entirely. Opt-in and not part of `build`/`all` so machines
+# without emcc are unaffected; skips (rather than fails) if emcc isn't on PATH.
+wasm_modules:
+	@if ! command -v emcc >/dev/null 2>&1; then \
+		echo $(CYAN)"emcc not found on PATH; skipping wasm_modules"$(RESET); \
+		exit 0; \
+	fi
+	@for d in $(dir $(wildcard modules/*/wrapper.c)); do \
+		name=$$(basename $$d); \
+		echo $(PURPLE)Building wasm module $$name$(RESET); \
+		emcc -fPIC -c "$${d}wrapper.c" -o "$${d}wrapper_wasm.o" || exit 1; \
+		ar rcs "$${d}lib$${name}_wasm.a" "$${d}wrapper_wasm.o"; \
+		rm "$${d}wrapper_wasm.o"; \
 	done
 
 # Optimized build (-O2, no -g/-DYAP_DEBUG/-DYAP_LOG). Cleans yap-ts's
