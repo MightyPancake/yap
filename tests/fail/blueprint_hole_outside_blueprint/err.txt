@@ -1,0 +1,1 @@
+'$T' is a blueprint hole and can only appear inside a type${...} blueprint body
