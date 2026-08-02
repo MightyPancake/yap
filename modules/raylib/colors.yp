@@ -1,0 +1,12 @@
+// Color constants: raylib.h defines these as #define macros, which bindgen can't see.
+Color fn RAYWHITE() { ret [245, 245, 245, 255].(Color); }
+Color fn LIGHTGRAY() { ret [200, 200, 200, 255].(Color); }
+Color fn DARKGRAY() { ret [80, 80, 80, 255].(Color); }
+Color fn RED() { ret [230, 41, 55, 255].(Color); }
+Color fn MAROON() { ret [190, 33, 55, 255].(Color); }
+Color fn GREEN() { ret [0, 228, 48, 255].(Color); }
+Color fn BLUE() { ret [0, 121, 241, 255].(Color); }
+Color fn GRAY() { ret [130, 130, 130, 255].(Color); }
+Color fn DARKGREEN() { ret [0, 117, 44, 255].(Color); }
+Color fn DARKBLUE() { ret [0, 82, 172, 255].(Color); }
+Color fn WHITE() { ret [255, 255, 255, 255].(Color); }

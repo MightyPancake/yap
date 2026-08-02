@@ -1,0 +1,8 @@
+module raylib {
+    version: "6.0.0",
+    prefix: "raylib_"
+}
+
+import "binds.yp"
+import "colors.yp"
+import "constants.yp"

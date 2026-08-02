@@ -1,0 +1,25 @@
+// Port of raylib's official examples/core/core_basic_window.c
+import raylib
+
+i32 fn main() {
+    i32 screenWidth = 800;
+    i32 screenHeight = 450;
+
+    raylib->InitWindow(screenWidth, screenHeight, c"raylib [core] example - basic window");
+
+    raylib->SetTargetFPS(60);
+
+    while (!raylib->WindowShouldClose()) {
+        raylib->BeginDrawing();
+
+        raylib->ClearBackground(raylib->RAYWHITE());
+
+        raylib->DrawText(c"Congrats! You created your first window!", 190, 200, 20, raylib->LIGHTGRAY());
+
+        raylib->EndDrawing();
+    }
+
+    raylib->CloseWindow();
+
+    ret 0;
+}

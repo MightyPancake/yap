@@ -41,6 +41,7 @@ static bool type_uses_reserved_r(yap_ctx *ctx, yap_type_id id, int depth) {
     }
     if (t->kind == yap_type_enum && t->enumeration.name) return is_reserved_name(t->enumeration.name);
     if (t->kind == yap_type_ptr) return type_uses_reserved_r(ctx, t->pointer_type, depth + 1);
+    if (t->kind == yap_type_array) return type_uses_reserved_r(ctx, t->array.element_type, depth + 1);
     return false;
 }
 
@@ -211,6 +212,18 @@ int yap_gen_c_bind(yap_args args) {
                 continue;
             }
 
+            // va_list's libclang-captured spelling ('struct __va_list_tag*') doesn't always
+            // match the compiling gcc's own <stdarg.h> expansion closely enough to satisfy
+            // -Wincompatible-pointer-types (a hard error on newer gcc); yap can't construct
+            // a va_list value from source anyway, so there's nothing useful to wrap.
+            bool has_valist = strstr(we->c_ret_spelling, "va_list") != NULL;
+            for (size_t j = 0; !has_valist && j < darr_len(we->c_param_types); j++)
+                if (strstr(we->c_param_types[j], "va_list")) has_valist = true;
+            if (has_valist) {
+                yap_log("bindgen: skipping wrapper for '%s' (va_list type)", we->c_name);
+                continue;
+            }
+
             bool is_void = strcmp(we->c_ret_spelling, "void") == 0;
 
             fprintf(wf, "__attribute__((visibility(\"default\")))\n");
@@ -323,6 +336,11 @@ static void print_type_inline(yap_ctx *ctx, FILE *out, yap_type_id id) {
   } else if (typ->kind == yap_type_ptr) {
     print_type_inline(ctx, out, typ->pointer_type);
     fprintf(out, "@");
+  } else if (typ->kind == yap_type_array) {
+    // Recurse via print_type_inline, not the debug-string formatter: that prefixes
+    // named struct/enum/union elements with "struct "/etc, invalid in a type position.
+    print_type_inline(ctx, out, typ->array.element_type);
+    fprintf(out, "[%zu]", typ->array.size);
   } else if (typ->kind == yap_type_func) {
     yap_type *ret_typ = yap_ctx_get_type(ctx, typ->func.return_type);
     if (ret_typ) { fprintf(out, "("); print_type_inline(ctx, out, typ->func.return_type); fprintf(out, " fn"); }
@@ -382,7 +400,14 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
       yap_type ptr = { .kind = yap_type_ptr, .pointer_type = pointee };
       return yap_ctx_insert_type_if_not_exists(ctx, ptr);
     }
-    case CXType_ConstantArray: case CXType_IncompleteArray: {
+    case CXType_ConstantArray: {
+      // Fixed-size (e.g. struct field 'char name[32]'): a real inline array, not a
+      // pointer -- collapsing it loses 28 bytes and shifts every later field's offset.
+      yap_type_id elt = process_type(ctx, clang_getArrayElementType(canon));
+      return yap_ctx_get_array_of_type_id(ctx, elt, (size_t)clang_getArraySize(canon));
+    }
+    case CXType_IncompleteArray: {
+      // Unsized (e.g. 'char name[]'): no size to encode, pointer is the only option.
       yap_type_id elt = process_type(ctx, clang_getArrayElementType(canon));
       yap_type ptr = { .kind = yap_type_ptr, .pointer_type = elt };
       return yap_ctx_insert_type_if_not_exists(ctx, ptr);

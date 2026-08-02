@@ -1,0 +1,85 @@
+// 3D model with skeletal animation, using raylib 6.0's own example asset
+// (examples/models/resources/models/gltf/robot.glb, from raylib's models_animation_timing.c).
+//
+// This raylib build has SUPPORT_GPU_SKINNING enabled (a raylib compile-time flag): with it on,
+// UpdateModelAnimation() only updates model.boneMatrices and skips the CPU animVertices path
+// entirely, so the default (non-skinning) shader renders the mesh frozen in its rest pose no
+// matter what frame is requested -- confirmed against a plain C program using the same .so
+// before assigning a shader, ruling out a yap/bindings bug. A skinning-aware shader (vendored
+// from raylib's own examples/models/resources/shaders/glsl330/skinning.{vs,fs}) must be loaded
+// and assigned to every material for the GPU to actually apply bone transforms per vertex.
+// Run from the repo root so the "examples/resources/..." paths resolve.
+import raylib
+
+i32 fn main() {
+    i32 screenWidth = 800;
+    i32 screenHeight = 450;
+
+    raylib->InitWindow(screenWidth, screenHeight, c"raylib [models] example - model animation (glTF, GPU skinning)");
+
+    Camera3D camera;
+    camera.position = [6.0, 6.0, 6.0].(Vector3);
+    camera.target = [0.0, 2.0, 0.0].(Vector3);
+    camera.up = [0.0, 1.0, 0.0].(Vector3);
+    camera.fovy = 45.0;
+    camera.projection = raylib->CAMERA_PERSPECTIVE();
+
+    Model model = raylib->LoadModel(c"examples/resources/models/gltf/robot.glb");
+    Vector3 position = [0.0, 0.0, 0.0].(Vector3);
+
+    Shader skinningShader = raylib->LoadShader(
+        c"examples/resources/shaders/glsl330/skinning.vert.glsl",
+        c"examples/resources/shaders/glsl330/skinning.frag.glsl");
+    i32 mi = 0;
+    while (mi < model.materialCount) {
+        model.materials:[mi].shader = skinningShader;
+        mi = mi + 1;
+    }
+
+    i32 animsCount = 0;
+    ModelAnimation@ anims = raylib->LoadModelAnimations(c"examples/resources/models/gltf/robot.glb", animsCount@);
+    i32 animIndex = 10; // "Robot_Walking"
+    f32 animFrame = 0.0;
+
+    raylib->SetTargetFPS(60);
+
+    while (!raylib->WindowShouldClose()) {
+        raylib->UpdateCamera(camera@, raylib->CAMERA_ORBITAL());
+
+        if (raylib->IsKeyPressed(raylib->KEY_RIGHT())) {
+            animIndex = (animIndex + 1) % animsCount;
+            animFrame = 0.0;
+        } else if (raylib->IsKeyPressed(raylib->KEY_LEFT())) {
+            animIndex = (animIndex + animsCount - 1) % animsCount;
+            animFrame = 0.0;
+        }
+
+        if (animsCount > 0) {
+            animFrame = animFrame + 1.0;
+            if (animFrame >= anims:[animIndex].keyframeCount.(f32)) animFrame = 0.0;
+            raylib->UpdateModelAnimation(model, anims:[animIndex], animFrame);
+        }
+
+        raylib->BeginDrawing();
+        raylib->ClearBackground(raylib->RAYWHITE());
+
+        raylib->BeginMode3D(camera);
+        raylib->DrawModel(model, position, 1.0, raylib->WHITE());
+        raylib->DrawGrid(10, 1.0);
+        raylib->EndMode3D();
+
+        raylib->DrawText(c"Use the LEFT/RIGHT keys to switch animation", 10, 10, 20, raylib->GRAY());
+        raylib->DrawText(c"Current animation:", 10, 40, 20, raylib->MAROON());
+        raylib->DrawText((anims:[animIndex].name:[0])@, 220, 40, 20, raylib->MAROON());
+
+        raylib->EndDrawing();
+    }
+
+    raylib->UnloadShader(skinningShader);
+    raylib->UnloadModelAnimations(anims, animsCount);
+    raylib->UnloadModel(model);
+
+    raylib->CloseWindow();
+
+    ret 0;
+}

@@ -1,0 +1,12 @@
+// Enum-variant constants: yap has no source-level syntax yet to reference a
+// named enum's variant as a value, so these mirror raylib.h's real values.
+i32 fn KEY_SPACE() { ret 32; }
+i32 fn KEY_P() { ret 80; }
+i32 fn KEY_RIGHT() { ret 262; }
+i32 fn KEY_LEFT() { ret 263; }
+i32 fn KEY_DOWN() { ret 264; }
+i32 fn KEY_UP() { ret 265; }
+i32 fn CAMERA_ORBITAL() { ret 2; }
+i32 fn CAMERA_FIRST_PERSON() { ret 3; }
+i32 fn CAMERA_PERSPECTIVE() { ret 0; }
+i32 fn MATERIAL_MAP_ALBEDO() { ret 0; }
