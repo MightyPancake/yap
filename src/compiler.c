@@ -372,6 +372,8 @@ int main(int argc, char** argv) {
     };
 
     int res = argp_parse(&argp, argc, argv, ARGP_NO_HELP, 0, &args);
+    args.run_argc = argc;
+    args.run_argv = argv;
     if (res){
         fprintf(stderr, "Error while resolving arguments using argp.\n");
         yap_free_args(args);

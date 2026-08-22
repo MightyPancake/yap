@@ -6,15 +6,8 @@
 #include "prototypes.h"
 
 int main(int argc, char** argv){
-_yap_slice_2471c74dfadca618 args = { .data = argv, .len = (unsigned long)argc };
-int code = 0;
-if (args.len == 0)
-{
-code = code + 1;
-}
-if (args.data[0][0] == 0)
-{
-code = code + 1;
-}
-return code;
+_yap_slice_41d06a1f7c3b87d9 s = ((struct { char* data; unsigned long len; }){ .data = "hello\000world", .len = 11 });
+if (s.len == 11)
+return 0;
+return 1;
 }

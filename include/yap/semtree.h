@@ -112,6 +112,7 @@ kenobi_new_struct_free(yap_var_declarator,
 
 kenobi_new_struct_free(yap_literal,
   yap_literal_kind kind;
+  size_t text_len;
   union {
     yap_blob blob;
     char* text;

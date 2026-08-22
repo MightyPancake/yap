@@ -43,6 +43,8 @@ typedef struct yap_args{
   // --prefix: symbol prefix for wrapper library (e.g. "yap_io_")
   char* gen_c_bind_prefix;
   bool run;
+  int run_argc;
+  char** run_argv;
   darr(char*) backend_flags;
   darr(char*) frontend_flags;
   char* backend_component;

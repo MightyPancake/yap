@@ -1,0 +1,13 @@
+// ct_make_float used %g (6 sig digits), truncating values like 1.0000001 to 1.
+// Fixed to %.17g.
+
+yExpr fn precise_float() {
+    ret yapi->float(1.0000001);
+}
+
+i32 fn main() {
+    f64 v = precise_float:();
+    // %g emits "1"; %.17g preserves the fractional part
+    if (v > 1.00000005) ret 0;
+    ret 1;
+}

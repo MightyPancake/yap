@@ -26,6 +26,7 @@ kenobi_new_struct_free(yap_block_node,
 kenobi_new_struct_free(yap_string_literal_node,
     char prefix[4]; // e.g. L for wide string literals, currently unused
     char* value;
+    size_t value_len;
     yap_loc loc;
 );
 

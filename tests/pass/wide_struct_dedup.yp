@@ -1,0 +1,53 @@
+// Layout hash for ct_type_finish was truncated at 64 fields, so two structs
+// with identical first 64 fields but different 65th fields hashed identically.
+// wide_pair:(i32) and wide_pair:(f32) must be distinct; before the fix,
+// wide_pair:(f32) collapsed to wide_pair:(i32)'s type and wb.extra = 2.5 failed.
+
+yType fn wide_pair(yType T) {
+    _ st = yapi->struct_t();
+    _ i32_t = yapi->type(c"i32");
+    st:add_field(i32_t, c"g00"); st:add_field(i32_t, c"g01");
+    st:add_field(i32_t, c"g02"); st:add_field(i32_t, c"g03");
+    st:add_field(i32_t, c"g04"); st:add_field(i32_t, c"g05");
+    st:add_field(i32_t, c"g06"); st:add_field(i32_t, c"g07");
+    st:add_field(i32_t, c"g08"); st:add_field(i32_t, c"g09");
+    st:add_field(i32_t, c"g10"); st:add_field(i32_t, c"g11");
+    st:add_field(i32_t, c"g12"); st:add_field(i32_t, c"g13");
+    st:add_field(i32_t, c"g14"); st:add_field(i32_t, c"g15");
+    st:add_field(i32_t, c"g16"); st:add_field(i32_t, c"g17");
+    st:add_field(i32_t, c"g18"); st:add_field(i32_t, c"g19");
+    st:add_field(i32_t, c"g20"); st:add_field(i32_t, c"g21");
+    st:add_field(i32_t, c"g22"); st:add_field(i32_t, c"g23");
+    st:add_field(i32_t, c"g24"); st:add_field(i32_t, c"g25");
+    st:add_field(i32_t, c"g26"); st:add_field(i32_t, c"g27");
+    st:add_field(i32_t, c"g28"); st:add_field(i32_t, c"g29");
+    st:add_field(i32_t, c"g30"); st:add_field(i32_t, c"g31");
+    st:add_field(i32_t, c"g32"); st:add_field(i32_t, c"g33");
+    st:add_field(i32_t, c"g34"); st:add_field(i32_t, c"g35");
+    st:add_field(i32_t, c"g36"); st:add_field(i32_t, c"g37");
+    st:add_field(i32_t, c"g38"); st:add_field(i32_t, c"g39");
+    st:add_field(i32_t, c"g40"); st:add_field(i32_t, c"g41");
+    st:add_field(i32_t, c"g42"); st:add_field(i32_t, c"g43");
+    st:add_field(i32_t, c"g44"); st:add_field(i32_t, c"g45");
+    st:add_field(i32_t, c"g46"); st:add_field(i32_t, c"g47");
+    st:add_field(i32_t, c"g48"); st:add_field(i32_t, c"g49");
+    st:add_field(i32_t, c"g50"); st:add_field(i32_t, c"g51");
+    st:add_field(i32_t, c"g52"); st:add_field(i32_t, c"g53");
+    st:add_field(i32_t, c"g54"); st:add_field(i32_t, c"g55");
+    st:add_field(i32_t, c"g56"); st:add_field(i32_t, c"g57");
+    st:add_field(i32_t, c"g58"); st:add_field(i32_t, c"g59");
+    st:add_field(i32_t, c"g60"); st:add_field(i32_t, c"g61");
+    st:add_field(i32_t, c"g62"); st:add_field(i32_t, c"g63");
+    st:add_field(T, c"extra");
+    ret st:finish(c"wide_pair");
+}
+
+i32 fn main() {
+    wide_pair:(i32) wa;
+    wide_pair:(f32) wb;
+    wa.g00 = 7;
+    wa.extra = 11;
+    wb.extra = 2.5;
+    if (wa.extra == 11) ret 0;
+    ret 1;
+}

@@ -215,4 +215,4 @@ static inline void* yStmtBlueprint_fill_var(void* s,const char* n,void* t,const 
 static inline void* yStmtBlueprint_finish(void* s){(void)s;return 0;}
 #endif
 
-typedef struct { char ** data; unsigned long len; } _yap_slice_2471c74dfadca618;
+typedef struct { char* data; unsigned long len; } _yap_slice_41d06a1f7c3b87d9;
