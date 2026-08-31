@@ -13,3 +13,7 @@
 [submodule "include/utils"]
 	path = include/utils
 	url = https://github.com/MightyPancake/utils
+[submodule "components/llvm-yap"]
+	path = components/llvm-yap
+	url = https://github.com/MightyPancake/llvm-yap
+	branch = main
