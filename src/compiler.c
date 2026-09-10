@@ -340,6 +340,12 @@ static void yap_print_help(yap_args* args){
 static struct argp argp = { options, parse_args, args_doc, doc, .children=NULL};
 
 char* yap_get_yap_home_path(){
+        const char* env_home = getenv("YAP_HOME");
+        if (env_home && env_home[0] != '\0') {
+                char* resolved_env_home = yap_resolve_path(env_home);
+                if (resolved_env_home) return resolved_env_home;
+                fprintf(stderr, "YAP_HOME is set to '%s' but could not be resolved; falling back to the executable's location\n", env_home);
+        }
         char* exec_path = yap_get_self_path();
         char* resolved_yap_exec = yap_resolve_path(exec_path);
         char* yap_home_dir = yap_get_parent_dir(resolved_yap_exec);
