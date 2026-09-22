@@ -1,0 +1,1 @@
+Dependency 'clay' uses a git source, which is not yet supported

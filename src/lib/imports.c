@@ -54,22 +54,8 @@ static void yap_check_module_deps(yap_ctx* ctx){
             yap_module* loaded = yap_ctx_get_module(ctx, dep.name);
             if (!loaded || !loaded->declared) continue;
 
-            bool ok = true;
-            char* wanted = NULL;
-            switch (dep.kind){
-                case yap_dep_exact:
-                    ok = yap_version_cmp(loaded->version, dep.version) == 0;
-                    wanted = yap_ctx_strus_newf(ctx, "%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
-                    break;
-                case yap_dep_caret:
-                    ok = yap_version_satisfies_caret(dep.version, loaded->version);
-                    wanted = yap_ctx_strus_newf(ctx, "^%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
-                    break;
-                case yap_dep_latest:
-                case yap_dep_local:
-                    continue;
-            }
-            if (ok) continue;
+            if (yap_dep_satisfied_by(dep, loaded->version)) continue;
+            char* wanted = yap_dep_spec_string(ctx, dep);
 
             yap_ctx_push_error(ctx, (yap_error){
                 .kind  = yap_error_pos,

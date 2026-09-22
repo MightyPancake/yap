@@ -40,3 +40,23 @@ bool yap_version_satisfies_caret(yap_version req, yap_version have){
     if (req.minor > 0) return have.major == 0 && have.minor == req.minor;
     return have.major == 0 && have.minor == 0 && have.patch == req.patch;
 }
+
+bool yap_dep_satisfied_by(yap_dep_node dep, yap_version have){
+    switch (dep.kind){
+        case yap_dep_exact: return yap_version_cmp(have, dep.version) == 0;
+        case yap_dep_caret: return yap_version_satisfies_caret(dep.version, have);
+        case yap_dep_latest:
+        case yap_dep_local:
+        default: return true;
+    }
+}
+
+char* yap_dep_spec_string(yap_ctx* ctx, yap_dep_node dep){
+    switch (dep.kind){
+        case yap_dep_exact: return yap_ctx_strus_newf(ctx, "%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
+        case yap_dep_caret: return yap_ctx_strus_newf(ctx, "^%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
+        case yap_dep_local: return "local";
+        case yap_dep_latest:
+        default: return "latest";
+    }
+}

@@ -1,0 +1,10 @@
+module impossible {
+    version: "0.1.0",
+    deps: ["vertest@^5.0.0"]
+}
+
+import vertest
+
+i32 fn main(){
+    ret 0;
+}
