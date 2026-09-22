@@ -117,6 +117,7 @@ int compile(yap_args args){
     yap_ctx* ctx = yap_ctx_new();
     //Callbacks from loaded components
     ctx->print_error = compiler.frontend.print_error;
+    ctx->parse_module = compiler.frontend.parse_module;
     ctx->gen_decl = compiler.backend.gen_decl;
     ctx->ensure_symbol = compiler.backend.ensure_symbol;
     ctx->set_macro_name = compiler.backend.set_macro_name;
@@ -206,6 +207,7 @@ void yap_compiler_load_frontend_component(yap_compiler* compiler, const char* pa
     compiler->frontend_handle = yap_get_handle(path);
     compiler->frontend.parse = load_func_dynamically(compiler->frontend_handle, name, yap_parse_fn, "yap_parse");
     compiler->frontend.print_error = load_func_dynamically(compiler->frontend_handle, name, yap_print_error_fn, "yap_print_error");
+    compiler->frontend.parse_module = load_func_dynamically(compiler->frontend_handle, name, yap_parse_module_fn, "yap_parse_module");
 }
 
 void yap_compiler_load_backend_component(yap_compiler* compiler, const char* path, const char* name){
