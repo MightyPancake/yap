@@ -77,7 +77,7 @@ typedef void* (*yap_ensure_symbol_fn)(yap_ctx* ctx, const char* name);
 typedef void (*yap_set_macro_name_fn)(const char* name);
 typedef void (*yap_set_macro_loc_fn)(yap_source* src, yap_loc loc);
 typedef void (*yap_pop_macro_loc_fn)(void);
-// Parses a module by name mid-compilation; supplied by the frontend so the semantic phase can pull in a module the parse phase never saw.
+// Supplied by the frontend so the semantic phase can pull in a module parsing never saw.
 typedef bool (*yap_parse_module_fn)(yap_ctx* ctx, char* module_name, yap_loc loc);
 
 kenobi_new_struct_free(yap_ctx,
