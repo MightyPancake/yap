@@ -28,6 +28,40 @@ static void yap_resolve_module_version(yap_ctx* ctx, yap_source* src, yap_module
     });
 }
 
+/* A module that declares itself opts into its deps being authoritative; a plain
+ * program or script declares none and is left alone. */
+static void yap_check_module_imports(yap_ctx* ctx){
+    for_darr(si, src, ctx->sources){
+        if (!src || !src->source_node) continue;
+
+        yap_module* owner = src->from_module_import
+            ? yap_ctx_get_module(ctx, src->from_module_import)
+            : yap_ctx_current_module(ctx);
+        if (!owner || !owner->declared) continue;
+
+        for_darr(ii, imp, src->imports){
+            if (imp.kind != yap_import_module || !imp.module_name) continue;
+
+            bool listed = false;
+            if (owner->deps){
+                for_darr(di, dep, owner->deps){
+                    if (dep.name && strcmp(dep.name, imp.module_name) == 0){ listed = true; break; }
+                }
+            }
+            if (listed) continue;
+
+            yap_ctx_push_error(ctx, (yap_error){
+                .kind  = yap_error_pos,
+                .src   = src,
+                .range = imp.loc.range,
+                .loc   = imp.loc,
+                .msg   = strus_newf("Module '%s' imports '%s', which is not listed in its deps",
+                                    owner->name, imp.module_name)
+            });
+        }
+    }
+}
+
 void yap_resolve_module_decl(yap_ctx* ctx){
     yap_log("\n\nPhase 0: Module declaration resolution\n");
 
@@ -89,7 +123,11 @@ void yap_resolve_module_decl(yap_ctx* ctx){
 
     yap_log("Resolved module: name='%s' prefix='%s' version=%u.%u.%u",
         mod_name, mod_prefix, mod_version.major, mod_version.minor, mod_version.patch);
-    yap_ctx_create_new_module(ctx, mod_name, mod_prefix, mod_version);
+    yap_module* root_mod = yap_ctx_create_new_module(ctx, mod_name, mod_prefix, mod_version);
+    if (root_mod && first_decl){
+        root_mod->declared = true;
+        root_mod->deps = first_decl->deps;
+    }
     yap_ctx_switch_module(ctx, mod_name);
 
     // Pass 2: Register imported modules from module-imported sources
@@ -113,6 +151,8 @@ void yap_resolve_module_decl(yap_ctx* ctx){
 
                 yap_module* imp_mod = yap_ctx_get_module(ctx, imp_name);
                 if (imp_mod) {
+                    imp_mod->declared = true;
+                    imp_mod->deps = mdecl->deps;
                     bool wasm_target = yap_target_is_wasm(ctx->args);
                     for_darr(pi, lookup_path, ctx->module_lookup_paths){
                         char* mod_dir = strus_newf("%s/%s", lookup_path, imp_name);
@@ -157,4 +197,6 @@ void yap_resolve_module_decl(yap_ctx* ctx){
             }
         }
     }
+
+    yap_check_module_imports(ctx);
 }

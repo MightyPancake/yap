@@ -63,6 +63,8 @@ kenobi_new_struct_free(yap_module,
   char* name;
   yap_version version;
   char* key; //"name@major.minor.patch"; the identity coexisting versions would be keyed by
+  bool declared; //Came from a real module{} block, which is what opts into deps enforcement
+  darr(yap_dep_node) deps;
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
