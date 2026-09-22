@@ -154,9 +154,11 @@ void yap_resolve_module_decl(yap_ctx* ctx){
                     imp_mod->declared = true;
                     imp_mod->deps = mdecl->deps;
                     bool wasm_target = yap_target_is_wasm(ctx->args);
-                    for_darr(pi, lookup_path, ctx->module_lookup_paths){
-                        char* mod_dir = strus_newf("%s/%s", lookup_path, imp_name);
-                        DIR* dir = opendir(mod_dir);
+                    /* Taken from the mod.yp actually loaded, not rebuilt from the lookup path,
+                     * so a module under <name>/<version>/ finds the libraries beside it. */
+                    char* mod_dir = yap_get_parent_dir(src->origin);
+                    {
+                        DIR* dir = mod_dir ? opendir(mod_dir) : NULL;
                         if (dir) {
                             struct dirent* ent;
                             while ((ent = readdir(dir)) != NULL) {

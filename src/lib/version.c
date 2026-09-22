@@ -24,3 +24,10 @@ bool yap_version_parse(const char* str, yap_version* out){
     }
     return false;
 }
+
+int yap_version_cmp(yap_version a, yap_version b){
+    if (a.major != b.major) return a.major < b.major ? -1 : 1;
+    if (a.minor != b.minor) return a.minor < b.minor ? -1 : 1;
+    if (a.patch != b.patch) return a.patch < b.patch ? -1 : 1;
+    return 0;
+}
