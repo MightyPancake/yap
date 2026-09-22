@@ -1,0 +1,9 @@
+// Same program as bind_rival_layouts with the imports reversed. Emitted type
+// names come from the layout, not from which module was built first, so both
+// orders produce the same pair of C types.
+import bindrival_b
+import bindrival_a
+
+i32 fn main(){
+    ret (bindrival_a->width() * 10) + bindrival_b->width() - 57;
+}
