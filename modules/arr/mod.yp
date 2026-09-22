@@ -1,6 +1,7 @@
 module arr {
-    version: "0.0.1",
-    prefix: "arr_"
+    version: "0.1.0",
+    prefix: "arr_",
+    deps: ["stdlib@^0.1.0"]
 }
 
 import stdlib

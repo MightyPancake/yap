@@ -1,5 +1,5 @@
 module foo_test_module {
-    version: "0.0.1",
+    version: "0.1.0",
     prefix: "foo_test_module_"
 }
 
