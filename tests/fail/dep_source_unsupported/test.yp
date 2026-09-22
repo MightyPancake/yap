@@ -1,7 +1,7 @@
-module wantsgit {
+module wantsregistry {
     version: "0.1.0",
     deps: [
-        { name: "clay", version: "^2.0.0", git: "https://github.com/nicbarker/clay", tag: "v2.0.1" }
+        { name: "json", version: "^1.0.0", registry: "https://yap.pkg/x" }
     ]
 }
 

@@ -97,6 +97,25 @@ static void yap_describe_all_component_flags(FILE* out, yap_args* args){
     free(yap_home);
 }
 
+/* Fetch needs only the frontend, to read a module block out of a cloned repo. */
+static int yap_fetch(yap_args args){
+    yap_compiler compiler = (yap_compiler){0};
+    compiler.args = &args;
+    char* yh = yap_get_yap_home_path();
+    char* ts = yap_component_so_path(yh, args.frontend_component);
+    yap_compiler_load_frontend_component(&compiler, ts, args.frontend_component);
+    free(ts); free(yh);
+
+    yap_ctx* ctx = yap_ctx_new();
+    ctx->print_error = compiler.frontend.print_error;
+    ctx->read_manifest = compiler.frontend.read_manifest;
+    ctx->args = &args;
+
+    int rc = yap_fetch_deps(ctx, args);
+    if (yap_ctx_dispatch_errors(ctx)) rc = 1;
+    return rc;
+}
+
 int compile(yap_args args){
     yap_log("YAP_HAS_VALGRIND: %d", YAP_HAS_VALGRIND);
     yap_log("Source files count: %ld", darr_len(args.extra));
@@ -118,6 +137,7 @@ int compile(yap_args args){
     //Callbacks from loaded components
     ctx->print_error = compiler.frontend.print_error;
     ctx->parse_module = compiler.frontend.parse_module;
+    ctx->read_manifest = compiler.frontend.read_manifest;
     ctx->gen_decl = compiler.backend.gen_decl;
     ctx->ensure_symbol = compiler.backend.ensure_symbol;
     ctx->set_macro_name = compiler.backend.set_macro_name;
@@ -125,7 +145,15 @@ int compile(yap_args args){
     ctx->pop_macro_loc = compiler.backend.pop_macro_loc;
     ctx->args = compiler.args;
 
-    //Module lookup paths
+    //Module lookup paths. Fetched deps sit beside the source under .yap/modules and are
+    //searched before the stdlib, so a project can pin a module the installation also ships.
+    if (darr_len(args.extra) > 0){
+        char* src_dir = yap_get_parent_dir(darr_first(args.extra));
+        if (src_dir){
+            darr_push(ctx->module_lookup_paths, strus_newf("%s/.yap/modules", src_dir));
+            free(src_dir);
+        }
+    }
     char* yap_home = yap_get_yap_home_path();
     char* modules_path = strus_newf("%s/modules", yap_home);
     darr_push(ctx->module_lookup_paths, modules_path);
@@ -208,6 +236,7 @@ void yap_compiler_load_frontend_component(yap_compiler* compiler, const char* pa
     compiler->frontend.parse = load_func_dynamically(compiler->frontend_handle, name, yap_parse_fn, "yap_parse");
     compiler->frontend.print_error = load_func_dynamically(compiler->frontend_handle, name, yap_print_error_fn, "yap_print_error");
     compiler->frontend.parse_module = load_func_dynamically(compiler->frontend_handle, name, yap_parse_module_fn, "yap_parse_module");
+    compiler->frontend.read_manifest = load_func_dynamically(compiler->frontend_handle, name, yap_read_manifest_fn, "yap_read_manifest");
 }
 
 void yap_compiler_load_backend_component(yap_compiler* compiler, const char* path, const char* name){
@@ -228,11 +257,15 @@ void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* pa
 }
 
 #define OPT_COMPONENT_FLAGS 0x1000
+#define OPT_FETCH 0x1001
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
     yap_args* args = state->input;
 
     switch(key) {
+    case OPT_FETCH:
+        args->command = "fetch";
+        break;
     case OPT_COMPONENT_FLAGS:
         args->command = "component_flags";
         break;
@@ -306,6 +339,7 @@ static struct argp_option options[] = {
     {"backend-flag", 'b', "FLAG", 0, "Raw flag forwarded to the backend component, e.g. -bO2 for optimization level, -bc to stop after emitting C (copied to ./out), -bcc=clang to pick the C compiler (gcc, clang, tcc supported), -bf=-Wall to forward a raw flag to that compiler. Resolved by the backend, not the core compiler.", 1},
     {"frontend-flag", 'f', "FLAG", 0, "Raw flag forwarded to the frontend component. Resolved by the frontend.", 1},
     {"select-component", 's', "COMPONENT=NAME", 0, "Select which directory under components/ implements a compiler stage, e.g. -sback=yap-c, -sfront=yap-ts, -ssem=yap-semantic.", 1},
+    {"fetch", OPT_FETCH, NULL, 0, "Clone the git dependencies declared in the source file's manifest into .yap/modules beside it.", 1},
     {"component-flags", OPT_COMPONENT_FLAGS, NULL, 0, "List the raw -b/-f flags supported by the currently selected components (also shown under --help).", 1},
     {"help", 'h', NULL, 0, "Give this help list.", 4},
     {0}
@@ -412,6 +446,9 @@ int main(int argc, char** argv) {
         yap_free_args(args);
     }strus_case(args.command, "gen_c_bind"){
         result = yap_gen_c_bind(args);
+        yap_free_args(args);
+    }strus_case(args.command, "fetch"){
+        result = yap_fetch(args);
         yap_free_args(args);
     }strus_case(args.command, "component_flags"){
         yap_describe_all_component_flags(stdout, &args);

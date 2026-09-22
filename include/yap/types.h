@@ -96,6 +96,8 @@ typedef void (*yap_set_macro_loc_fn)(yap_source* src, yap_loc loc);
 typedef void (*yap_pop_macro_loc_fn)(void);
 // Supplied by the frontend so the semantic phase can pull in a module parsing never saw.
 typedef bool (*yap_parse_module_fn)(yap_ctx* ctx, char* module_name, yap_loc loc);
+// Reads a file's module block without parsing the rest of it.
+typedef bool (*yap_read_manifest_fn)(yap_ctx* ctx, char* path, yap_module_decl_node* out);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -161,6 +163,7 @@ kenobi_new_struct_free(yap_ctx,
   yap_set_macro_loc_fn set_macro_loc;
   yap_pop_macro_loc_fn pop_macro_loc;
   yap_parse_module_fn parse_module;
+  yap_read_manifest_fn read_manifest;
 
   //Module lookup paths
   darr(char*) module_lookup_paths;
