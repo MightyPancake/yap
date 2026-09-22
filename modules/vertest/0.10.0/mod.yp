@@ -1,6 +1,6 @@
 module vertest {
     version: "0.10.0",
-    prefix: "vertest_0_10_0_"
+    prefix: "vertest_"
 }
 
 i32 fn which_version() {

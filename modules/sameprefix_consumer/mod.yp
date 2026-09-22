@@ -1,0 +1,9 @@
+module sameprefix_consumer {
+    version: "0.1.0",
+    prefix: "spc_",
+    deps: ["sameprefix@^0.1.0"]
+}
+
+import sameprefix
+
+i32 fn via_old() { ret sameprefix->tag(); }

@@ -71,6 +71,33 @@ static void yap_check_module_deps(yap_ctx* ctx){
     }
 }
 
+static bool yap_collect_module(const void* item, void* udata){
+    darr(yap_module*)* out = udata;
+    darr_push(*out, (yap_module*)item);
+    return true;
+}
+
+/* Two versions of one module would otherwise emit the same C names for the same
+ * functions, so a duplicated name folds its version into the prefix. Names with a single
+ * version keep the prefix they declared, which is the common case. */
+static void yap_version_duplicate_prefixes(yap_ctx* ctx){
+    darr(yap_module*) mods = darr_new(yap_module*);
+    hashmap_scan(ctx->modules, yap_collect_module, &mods);
+
+    for_darr(i, m, mods){
+        unsigned versions = 0;
+        for_darr(j, other, mods){
+            if (strcmp(m->name, other->name) == 0) versions++;
+        }
+        if (versions < 2) continue;
+
+        m->prefix = yap_ctx_strus_newf(ctx, "%s%u_%u_%u_",
+            m->prefix ? m->prefix : "", m->version.major, m->version.minor, m->version.patch);
+        yap_log("Module '%s' shares its name with another version, prefixing as '%s'", m->key, m->prefix);
+    }
+    darr_free(mods);
+}
+
 /* A module that declares itself opts into its deps being authoritative; a plain
  * program or script declares none and is left alone. */
 static void yap_check_module_imports(yap_ctx* ctx){
@@ -244,6 +271,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
         }
     }
 
+    yap_version_duplicate_prefixes(ctx);
     yap_check_module_imports(ctx);
     yap_check_module_deps(ctx);
 }

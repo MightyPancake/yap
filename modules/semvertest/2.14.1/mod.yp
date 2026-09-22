@@ -1,6 +1,6 @@
 module semvertest {
     version: "2.14.1",
-    prefix: "svt_2_14_1_"
+    prefix: "svt_"
 }
 
 i32 fn tag() {

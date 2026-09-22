@@ -1,0 +1,8 @@
+module sameprefix {
+    version: "0.1.0",
+    prefix: "sp_"
+}
+
+i32 fn tag() {
+    ret 1;
+}
