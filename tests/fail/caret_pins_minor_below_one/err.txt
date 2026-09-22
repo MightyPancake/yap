@@ -1,0 +1,1 @@
+Module 'caretminor' requires 'vertest@^0.9.0', but 'vertest' 0.10.0 is loaded

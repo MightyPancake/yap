@@ -31,3 +31,12 @@ int yap_version_cmp(yap_version a, yap_version b){
     if (a.patch != b.patch) return a.patch < b.patch ? -1 : 1;
     return 0;
 }
+
+/* Semver caret: the leftmost non-zero component is pinned, so ^0.1.0 allows 0.1.x
+ * but not 0.2.0, and ^0.0.1 allows nothing but itself. */
+bool yap_version_satisfies_caret(yap_version req, yap_version have){
+    if (yap_version_cmp(have, req) < 0) return false;
+    if (req.major > 0) return have.major == req.major;
+    if (req.minor > 0) return have.major == 0 && have.minor == req.minor;
+    return have.major == 0 && have.minor == 0 && have.patch == req.patch;
+}

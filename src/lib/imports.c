@@ -28,6 +28,62 @@ static void yap_resolve_module_version(yap_ctx* ctx, yap_source* src, yap_module
     });
 }
 
+/* Latest-wins lookup picks a version before anyone's constraints are known, so every
+ * declared constraint is verified against what actually loaded. Two modules wanting
+ * incompatible versions of one dep surface here, as whichever constraint the loaded
+ * version fails. */
+static void yap_check_module_deps(yap_ctx* ctx){
+    for_darr(si, src, ctx->sources){
+        if (!src || !src->source_node) continue;
+
+        /* Only the source carrying the manifest, so a module's deps are checked once
+         * rather than once per file that belongs to it. */
+        bool carries_manifest = false;
+        for_darr(di, dnode, src->source_node->declarations){
+            if (dnode.kind == yap_decl_module_decl){ carries_manifest = true; break; }
+        }
+        if (!carries_manifest) continue;
+
+        yap_module* owner = src->from_module_import
+            ? yap_ctx_get_module(ctx, src->from_module_import)
+            : yap_ctx_current_module(ctx);
+        if (!owner || !owner->declared || !owner->deps) continue;
+
+        for_darr(di, dep, owner->deps){
+            if (!dep.name) continue;
+            yap_module* loaded = yap_ctx_get_module(ctx, dep.name);
+            if (!loaded || !loaded->declared) continue;
+
+            bool ok = true;
+            char* wanted = NULL;
+            switch (dep.kind){
+                case yap_dep_exact:
+                    ok = yap_version_cmp(loaded->version, dep.version) == 0;
+                    wanted = yap_ctx_strus_newf(ctx, "%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
+                    break;
+                case yap_dep_caret:
+                    ok = yap_version_satisfies_caret(dep.version, loaded->version);
+                    wanted = yap_ctx_strus_newf(ctx, "^%u.%u.%u", dep.version.major, dep.version.minor, dep.version.patch);
+                    break;
+                case yap_dep_latest:
+                case yap_dep_local:
+                    continue;
+            }
+            if (ok) continue;
+
+            yap_ctx_push_error(ctx, (yap_error){
+                .kind  = yap_error_pos,
+                .src   = src,
+                .range = dep.loc.range,
+                .loc   = dep.loc,
+                .msg   = strus_newf("Module '%s' requires '%s@%s', but '%s' %u.%u.%u is loaded",
+                                    owner->name, dep.name, wanted, dep.name,
+                                    loaded->version.major, loaded->version.minor, loaded->version.patch)
+            });
+        }
+    }
+}
+
 /* A module that declares itself opts into its deps being authoritative; a plain
  * program or script declares none and is left alone. */
 static void yap_check_module_imports(yap_ctx* ctx){
@@ -201,4 +257,5 @@ void yap_resolve_module_decl(yap_ctx* ctx){
     }
 
     yap_check_module_imports(ctx);
+    yap_check_module_deps(ctx);
 }

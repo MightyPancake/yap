@@ -1,0 +1,11 @@
+// An exact pin against the version io actually declares.
+module pinned {
+    version: "0.1.0",
+    deps: ["io@0.1.0"]
+}
+
+import io
+
+i32 fn main(){
+    ret 0;
+}
