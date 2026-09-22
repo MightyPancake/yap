@@ -1,21 +1,38 @@
 #include "yap/all.h"
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 /* Fetching is a separate command rather than part of a build: the compiler stays offline
  * and a build either finds what it needs or names the command that would get it. */
 
-static bool yap_run_git(const char* fmt, ...){
-    va_list ap;
-    va_start(ap, fmt);
-    char* cmd = NULL;
-    int n = vasprintf(&cmd, fmt, ap);
-    va_end(ap);
-    if (n < 0 || !cmd) return false;
+/* Arguments are handed to exec directly and never to a shell, because every one of them
+ * comes out of a dependency's manifest -- a URL containing a quote would otherwise run
+ * whatever followed it. */
+static bool yap_exec(char* const argv[]){
+    if (!argv || !argv[0]) return false;
 
-    yap_log("fetch: %s", cmd);
-    int rc = system(cmd);
-    free(cmd);
-    return rc == 0;
+    for (char* const* a = argv; *a; a++) yap_log("fetch arg: %s", *a);
+
+    pid_t pid = fork();
+    if (pid < 0) return false;
+    if (pid == 0){
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    int status = 0;
+    if (waitpid(pid, &status, 0) < 0) return false;
+    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
+static bool yap_rm_rf(char* path){
+    char* argv[] = { "rm", "-rf", "--", path, NULL };
+    return yap_exec(argv);
+}
+
+static bool yap_mkdir_p(char* path){
+    char* argv[] = { "mkdir", "-p", "--", path, NULL };
+    return yap_exec(argv);
 }
 
 /* Clones into a staging directory, reads the version the module declares for itself, then
@@ -23,25 +40,29 @@ static bool yap_run_git(const char* fmt, ...){
  * the manifest's constraint is verified afterwards rather than driving the fetch. */
 static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_root){
     char* staging = strus_newf("%s/.staging-%s", dest_root, dep.name);
-    yap_run_git("rm -rf '%s'", staging);
+    yap_rm_rf(staging);
 
     bool ok;
     if (dep.tag || dep.branch){
-        ok = yap_run_git("git clone --quiet --depth 1 --branch '%s' '%s' '%s'",
-                         dep.tag ? dep.tag : dep.branch, dep.git, staging);
+        char* ref = dep.tag ? dep.tag : dep.branch;
+        char* argv[] = { "git", "clone", "--quiet", "--depth", "1", "--branch", ref, "--", dep.git, staging, NULL };
+        ok = yap_exec(argv);
     } else {
-        ok = yap_run_git("git clone --quiet '%s' '%s'", dep.git, staging);
+        char* argv[] = { "git", "clone", "--quiet", "--", dep.git, staging, NULL };
+        ok = yap_exec(argv);
     }
-    if (ok && dep.rev)
-        ok = yap_run_git("git -C '%s' fetch --quiet --depth 1 origin '%s' && git -C '%s' checkout --quiet '%s'",
-                         staging, dep.rev, staging, dep.rev);
+    if (ok && dep.rev){
+        char* fetch_argv[]    = { "git", "-C", staging, "fetch", "--quiet", "--depth", "1", "origin", dep.rev, NULL };
+        char* checkout_argv[] = { "git", "-C", staging, "checkout", "--quiet", dep.rev, NULL };
+        ok = yap_exec(fetch_argv) && yap_exec(checkout_argv);
+    }
 
     if (!ok){
         yap_ctx_push_error(ctx, (yap_error){
             .kind = yap_error_no_pos,
             .msg  = strus_newf("Could not clone '%s' from %s", dep.name, dep.git)
         });
-        yap_run_git("rm -rf '%s'", staging);
+        yap_rm_rf(staging);
         free(staging);
         return false;
     }
@@ -58,7 +79,7 @@ static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_r
             .kind = yap_error_no_pos,
             .msg  = strus_newf("'%s' has no mod.yp with a module declaration at its root", dep.name)
         });
-        yap_run_git("rm -rf '%s'", staging);
+        yap_rm_rf(staging);
         free(staging);
         return false;
     }
@@ -69,15 +90,18 @@ static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_r
             .msg  = strus_newf("'%s' declares version %u.%u.%u, which does not satisfy '%s'",
                                dep.name, got.major, got.minor, got.patch, yap_dep_spec_string(ctx, dep))
         });
-        yap_run_git("rm -rf '%s'", staging);
+        yap_rm_rf(staging);
         free(staging);
         return false;
     }
 
     char* dest = strus_newf("%s/%s/%u.%u.%u", dest_root, dep.name, got.major, got.minor, got.patch);
-    yap_run_git("rm -rf '%s'", dest);
-    yap_run_git("mkdir -p '%s/%s'", dest_root, dep.name);
-    bool moved = yap_run_git("mv '%s' '%s'", staging, dest);
+    char* dest_parent = strus_newf("%s/%s", dest_root, dep.name);
+    yap_rm_rf(dest);
+    yap_mkdir_p(dest_parent);
+    free(dest_parent);
+    /* Staging sits inside the destination tree, so a rename never crosses a filesystem. */
+    bool moved = rename(staging, dest) == 0;
     if (moved)
         printf("Fetched %s %u.%u.%u\n", dep.name, got.major, got.minor, got.patch);
     free(dest);
@@ -108,7 +132,7 @@ int yap_fetch_deps(yap_ctx* ctx, yap_args args){
 
     char* src_dir = yap_get_parent_dir(resolved);
     char* dest_root = strus_newf("%s/.yap/modules", src_dir);
-    yap_run_git("mkdir -p '%s'", dest_root);
+    yap_mkdir_p(dest_root);
 
     unsigned fetched = 0, failed = 0, skipped = 0;
     for_darr(i, dep, manifest.deps){
