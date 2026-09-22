@@ -1,0 +1,9 @@
+module typeclash_consumer {
+    version: "0.1.0",
+    prefix: "tcc_",
+    deps: ["typeclash@^0.1.0"]
+}
+
+import typeclash
+
+i32 fn via_old() { ret typeclash->make(); }

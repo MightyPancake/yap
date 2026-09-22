@@ -1,0 +1,13 @@
+module typeclash {
+    version: "0.1.0",
+    prefix: "tc_"
+}
+
+struct Thing {
+    i32 a,
+}
+
+i32 fn make() {
+    Thing t = [7];
+    ret t.a;
+}
