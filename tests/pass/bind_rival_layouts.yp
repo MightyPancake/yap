@@ -1,0 +1,9 @@
+// Two modules bind the same C name with different layouts, so they are distinct
+// types: the second is emitted under a layout-hashed name and each module keeps
+// resolving RivalThing to its own. a->width() is 5, b->width() is 3+4.
+import bindrival_a
+import bindrival_b
+
+i32 fn main(){
+    ret (bindrival_a->width() * 10) + bindrival_b->width() - 57;
+}

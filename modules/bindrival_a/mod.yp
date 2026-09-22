@@ -1,0 +1,13 @@
+module bindrival_a {
+    version: "0.1.0",
+    prefix: "bra_"
+}
+
+bind struct RivalThing {
+    i32 a,
+}
+
+i32 fn width() {
+    RivalThing t = [5];
+    ret t.a;
+}

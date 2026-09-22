@@ -1,0 +1,9 @@
+// stdlib and time both bind struct timespec. A bound type is identified by its
+// C name and layout, so the two descriptions resolve to one type and it is
+// emitted once -- importing both modules together used to fail to compile.
+import stdlib
+import time
+
+i32 fn main(){
+    ret 0;
+}

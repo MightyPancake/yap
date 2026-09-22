@@ -336,6 +336,7 @@ kenobi_new_struct_free(yap_scope,
 kenobi_new_struct_free(yap_named_type_decl,
   char* name;
   char* c_name;
+  bool is_bind;
   yap_named_type_decl_kind kind;
   yap_type_id type_id;
 );

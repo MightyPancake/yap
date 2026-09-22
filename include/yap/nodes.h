@@ -334,6 +334,8 @@ kenobi_new_struct_free(yap_enum_variant_node,
 kenobi_new_struct_free(yap_named_type_decl_node,
     yap_named_type_decl_kind kind;
     yap_identifier_node name;
+    bool is_bind; //Declares a C type: identity is its C name plus layout, not this module
+
     union {
         struct {
             darr(yap_var_decl_node) fields; // struct fields

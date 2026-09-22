@@ -367,7 +367,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, ya
     .module_ctx = NULL,
     .scope = yap_ctx_new_scope(ctx, ctx->global_scope),
     .lib_paths = darr_new(char*),
-    .native_lib_paths = darr_new(char*)
+    .native_lib_paths = darr_new(char*),
+    .own_types = darr_new(yap_module_type)
   };
   hashmap_set(ctx->modules, &new_module);
   return yap_ctx_get_module(ctx, key);

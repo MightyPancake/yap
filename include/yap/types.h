@@ -59,12 +59,18 @@ typedef struct yap_args{
   char* semantic_component;
 }yap_args;
 
+kenobi_new_struct(yap_module_type,
+  char* name;      //Name as written in this module's source
+  yap_type_id id;  //Type it resolved to, which may carry a layout suffix
+);
+
 kenobi_new_struct_free(yap_module,
   char* name;
   yap_version version;
   char* key; //"name@major.minor.patch"; the identity coexisting versions would be keyed by
   bool declared; //Came from a real module{} block, which is what opts into deps enforcement
   darr(yap_dep_node) deps;
+  darr(yap_module_type) own_types; //Types this module declared, looked up before the global table
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
