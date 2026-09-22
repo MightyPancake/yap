@@ -600,6 +600,27 @@ yap_type_id yap_ctx_push_new_primitive_type(yap_ctx* ctx, size_t bytes, bool is_
   return yap_ctx_push_named_type(ctx, name, c_name, yap_primitive_type(bytes, is_signed, is_float, name, mangled_name, c_name));
 }
 
+char* yap_ctx_type_c_name(yap_type* t){
+  if (!t) return NULL;
+  if (t->kind == yap_type_struct) return t->structure.c_name;
+  if (t->kind == yap_type_union)  return t->uni.c_name;
+  if (t->kind == yap_type_enum)   return t->enumeration.c_name;
+  return NULL;
+}
+
+/* Points another name at a type that already exists, rather than minting a second one. */
+void yap_ctx_alias_named_type(yap_ctx* ctx, char* name_p, yap_type_id id){
+  if (!ctx || !name_p || !id) return;
+  yap_type* t = yap_ctx_get_type(ctx, id);
+  if (!t) return;
+  yap_named_type named = {
+    .id = id,
+    .name = yap_ctx_strus_cpy(ctx, name_p),
+    .c_name = yap_ctx_type_c_name(t)
+  };
+  hashmap_set(ctx->named_types, &named);
+}
+
 yap_type_id yap_ctx_push_named_type(yap_ctx* ctx, char* name_p, char* c_name_p, yap_type typ){
   yap_type t = typ;
   t.is_const = false;

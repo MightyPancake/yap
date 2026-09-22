@@ -1,0 +1,9 @@
+// A C type described by two modules is nameable from outside them: the plain
+// name resolves to the one type, whose C name carries its layout.
+import stdlib
+import time
+
+i32 fn main(){
+    timespec t;
+    ret 0;
+}
