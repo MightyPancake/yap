@@ -6,9 +6,10 @@ imports `Z` at 2.0 directly, and also imports `Y`, which was written against
 `<lookup_path>/<name>/mod.yp` (`components/yap-ts/src/parse.c:310`), one path
 per name, so both imports silently resolve to whatever single copy is on disk.
 
-The design below makes module identity version-aware everywhere, while
-deliberately keeping a single-version policy on top of it. See section 10 for
-why coexistence is deferred rather than built.
+Running both versions at once is the goal ; section 10 describes what that
+takes. Everything before it is needed either way, and a single-version policy
+holds in the meantime because a clear conflict error beats the silent
+mis-resolution there is today.
 
 ## 0. Where it stands today
 
@@ -268,44 +269,66 @@ dropping it would save no format work.
 
 Not needed until modules are actually fetched from somewhere.
 
-## 10. Coexistence is deferred, not designed away
+## 10. Coexistence
 
-Allowing two versions of one module in a single binary requires type
-namespacing. The `c_name` plumbing exists on types but is intentionally not
-applied, so `Z.Thing` from 1.0 and from 2.0 resolve to the same nominal type
-and unify silently.
+Two versions of one module in one binary is what this is all for. It comes
+last in the build order because everything before it is required either way,
+not because it is optional.
 
-That halfway state is worse than no support: two `z_init` functions operating
-on what the compiler believes is one type. So the policy stays **one version
-per module name**, enforced, with a clear error.
+What stands in the way is narrower than it first appears. Types live in a
+single global map keyed by the bare name (`yap_ctx_push_named_type`,
+`src/lib/ctx.c:552`), so two versions of `Z` each declaring `struct Thing`
+collide in one table. Modules get their own `yap_scope` for symbols, but
+there is no equivalent for types.
 
-Keying by `(name, version)` from the start is what makes this a later switch
-rather than a rewrite. Turning coexistence on means relaxing the
-single-version check, deriving the prefix from the version
-(`z_1_0_` / `z_2_0_`), and enabling type prefixing — not re-plumbing the
-registry, scopes, `from_module_import` and mangling.
+Symbols, types and mangling all need the same question answered: given this
+source, which module does a bare name refer to? Today that is global. Under
+coexistence it is per-importer — `z->foo` written inside `Y` means Y's `Z`,
+not the program's.
+
+That is one mechanism, in four parts:
+
+1. Each module carries a `name -> resolved module` map for its own deps. The
+   solver in section 6 already produces exactly this ; it reads as conflict
+   detection only because nothing yet consumes the per-importer view.
+2. Module access and type lookup route through the importing source's module
+   instead of the global table. `yap_source_owning_module`
+   (`components/yap-semantic/src/build.c:42`) is the existing hook.
+3. Type names are module-prefixed at registration. The `c_name` plumbing is
+   already on types, just not applied.
+4. Symbols carry the version only for names with more than one version
+   loaded. Version in every symbol buys nothing while the name is unique and
+   churns the ABI on every patch bump ; version in duplicated symbols is the
+   whole mechanism. The graph is known before codegen, so which names are
+   duplicated is known too.
+
+Until those land the policy is one version per name, enforced at registration
+with both versions named in the error. That is not the destination, but it is
+the right behaviour in the meantime, and it is what shows the solver works.
 
 ## Build order
 
-1. Parse the version into `yap_version`, store it on `yap_module`. No
-   behavioural change.
-2. Store the version on `yap_module` and enforce single-version at
-   registration, reporting both versions on a clash.
-3. `deps:` in the grammar, with the recursive value slot and the unknown-key
+1. Parse the version into `yap_version` and store it on `yap_module`,
+   enforcing single-version at registration with both versions named on a
+   clash.
+2. `deps:` in the grammar, with the recursive value slot and the unknown-key
    error.
-4. Normalize the in-tree manifests: bump the nine `0.0.1` modules to `0.1.0`
+3. Normalize the in-tree manifests: bump the nine `0.0.1` modules to `0.1.0`
    so that `^` is meaningful (section 4), and add a `deps:` list to each of the
    ten `modules/*/mod.yp`, which is what declaring a module now opts into.
    `raylib` stays at `6.0.0` on the convention that a binding tracks its
    upstream's version while a native module versions itself.
-5. Version directories `<name>/<version>/mod.yp`, falling back to
+4. Version directories `<name>/<version>/mod.yp`, falling back to
    `<name>/mod.yp` for backwards compatibility.
-6. Manifest scan and solver.
-7. Lockfile, once fetching exists.
-8. Coexistence and type namespacing, if ever needed.
+5. Manifest scan and solver, producing each module's per-importer dep map.
+6. Per-importer resolution for symbols and types (section 10, parts 1-2).
+7. Module-prefixed type names (part 3).
+8. Conditional version mangling (part 4) — coexistence works.
+9. Lockfile, once modules are fetched from somewhere.
 
-Steps 1 and 2 are invisible plumbing that make everything after them
-incremental.
+Step 1 is invisible plumbing. Steps 6-8 are the largest of the lot, and 6
+touches the most call sites ; nothing in them is blocked on a design question
+this document has not already settled.
 
 ## Appendix: a manifest using every idiom
 
