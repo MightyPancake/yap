@@ -55,12 +55,19 @@ patch will do, `^1.4.0` says so. Bare is exact, ranges carry a sigil.
 ## 2. Module identity is (name, version)
 
 - `yap_module` gains `version`, plus a precomputed `key` (`"io@0.0.1"`).
-- `ctx->modules` hashes and compares on `key` rather than `name`. `name` and
-  `version` stay as separate fields for diagnostics.
-- `src->from_module_import` carries the key. It is already an opaque string
-  fed straight to `yap_ctx_get_module`, so this is mechanical.
+- `ctx->modules` stays keyed by `name` while the single-version policy holds,
+  because that policy is exactly what makes the name unique. User code writes
+  bare names — `io->puts` reaches `yap_ctx_get_module` with `"io"`
+  (`components/yap-semantic/src/build.c:2768`) — so a name-to-module path is
+  load-bearing and cannot be replaced by a key lookup. Rekeying the map to
+  `key` belongs with coexistence, alongside the name resolution step that
+  would then have to choose between candidates.
+- `src->from_module_import` likewise stays a name until then.
 - The prefix stays `<name>_` while the single-version policy holds. It only
   needs to incorporate the version under coexistence (section 10).
+
+Registration is where the policy is enforced: a second module of the same
+name reports the two versions by number rather than a bare "already exists".
 
 Every module under `modules/` already declares both `version` and `prefix`
 explicitly, so nothing about emitted symbol names changes.
@@ -282,8 +289,8 @@ registry, scopes, `from_module_import` and mangling.
 
 1. Parse the version into `yap_version`, store it on `yap_module`. No
    behavioural change.
-2. Key the registry by `(name, version)`, single-version enforced. No
-   behavioural change, since only one version exists today.
+2. Store the version on `yap_module` and enforce single-version at
+   registration, reporting both versions on a clash.
 3. `deps:` in the grammar, with the recursive value slot and the unknown-key
    error.
 4. Normalize the in-tree manifests: bump the nine `0.0.1` modules to `0.1.0`
