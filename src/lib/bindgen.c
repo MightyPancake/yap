@@ -89,9 +89,9 @@ int yap_gen_c_bind(yap_args args) {
     for (size_t i = 0; i < darr_len(ctx->types); i++) {
         yap_type *typ = &ctx->types[i];
         if (typ->kind == yap_type_struct && typ->structure.name && !darr_len(typ->structure.fields) && !is_reserved_name(typ->structure.name))
-            fprintf(out, "type %s\n", typ->structure.name);
+            fprintf(out, "bind type %s\n", typ->structure.name);
         else if (typ->kind == yap_type_union && typ->uni.name && !darr_len(typ->uni.variants) && !is_reserved_name(typ->uni.name))
-            fprintf(out, "type %s\n", typ->uni.name);
+            fprintf(out, "bind type %s\n", typ->uni.name);
     }
     fprintf(out, "\n");
 
@@ -104,7 +104,7 @@ int yap_gen_c_bind(yap_args args) {
             for (size_t j = 0; j < darr_len(typ->structure.fields); j++)
                 if (type_uses_reserved(ctx, typ->structure.fields[j].type)) { has_reserved = true; break; }
             if (has_reserved) continue;
-            fprintf(out, "struct %s {\n", typ->structure.name);
+            fprintf(out, "bind struct %s {\n", typ->structure.name);
             for (size_t j = 0; j < darr_len(typ->structure.fields); j++) {
                 fprintf(out, "    ");
                 print_type_inline(ctx, out, typ->structure.fields[j].type);
@@ -117,7 +117,7 @@ int yap_gen_c_bind(yap_args args) {
             for (size_t j = 0; j < darr_len(typ->uni.variants); j++)
                 if (type_uses_reserved(ctx, typ->uni.variants[j].type)) { has_reserved_u = true; break; }
             if (has_reserved_u) continue;
-            fprintf(out, "union %s {\n", typ->uni.name);
+            fprintf(out, "bind union %s {\n", typ->uni.name);
             for (size_t j = 0; j < darr_len(typ->uni.variants); j++) {
                 fprintf(out, "    ");
                 print_type_inline(ctx, out, typ->uni.variants[j].type);
@@ -127,7 +127,7 @@ int yap_gen_c_bind(yap_args args) {
         } else if (typ->kind == yap_type_enum) {
             if (!typ->enumeration.name || is_reserved_name(typ->enumeration.name)
                 || strchr(typ->enumeration.name, '(') || strchr(typ->enumeration.name, '/')) continue;
-            fprintf(out, "enum %s {\n", typ->enumeration.name);
+            fprintf(out, "bind enum %s {\n", typ->enumeration.name);
             for (size_t j = 0; j < darr_len(typ->enumeration.variants); j++)
                 fprintf(out, "    %s,\n", typ->enumeration.variants[j].name);
             fprintf(out, "}\n\n");
