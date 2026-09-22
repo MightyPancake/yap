@@ -1,5 +1,6 @@
 #include "yap/all.h"
 #include <sys/stat.h>
+#include <dirent.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -38,7 +39,7 @@ static bool yap_mkdir_p(char* path){
 /* Clones into a staging directory, reads the version the module declares for itself, then
  * moves it to <dest>/<name>/<version>. The version cannot be known before the clone, so
  * the manifest's constraint is verified afterwards rather than driving the fetch. */
-static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_root){
+static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_root, char** out_dest){
     char* staging = strus_newf("%s/.staging-%s", dest_root, dep.name);
     yap_rm_rf(staging);
 
@@ -102,55 +103,120 @@ static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_r
     free(dest_parent);
     /* Staging sits inside the destination tree, so a rename never crosses a filesystem. */
     bool moved = rename(staging, dest) == 0;
-    if (moved)
-        printf("Fetched %s %u.%u.%u\n", dep.name, got.major, got.minor, got.patch);
-    free(dest);
+    if (moved){
+        printf("  fetched %s %u.%u.%u\n", dep.name, got.major, got.minor, got.patch);
+        if (out_dest) *out_dest = dest; else free(dest);
+    } else free(dest);
     free(staging);
     return moved;
 }
 
-int yap_fetch_deps(yap_ctx* ctx, yap_args args){
-    if (darr_len(args.extra) == 0){
-        printf("No source file given; --fetch reads its manifest.\n");
+/* A project names its manifest the same way a module does, so mod.yp wins; main.yp is
+ * the conventional entry point for a program. Anything else is ambiguous and says so. */
+static char* yap_find_project_manifest(yap_ctx* ctx, const char* dir){
+    const char* candidates[] = { "mod.yp", "main.yp", NULL };
+    for (const char** c = candidates; *c; c++){
+        char* path = strus_newf("%s/%s", dir, *c);
+        if (access(path, R_OK) == 0) return path;
+        free(path);
+    }
+
+    /* Fall back to a lone .yp that declares a module. */
+    char* found = NULL;
+    unsigned matches = 0;
+    DIR* d = opendir(dir);
+    if (d){
+        struct dirent* ent;
+        while ((ent = readdir(d)) != NULL){
+            size_t n = strlen(ent->d_name);
+            if (n < 4 || strcmp(ent->d_name + n - 3, ".yp") != 0) continue;
+            char* path = strus_newf("%s/%s", dir, ent->d_name);
+            yap_module_decl_node m = {0};
+            if (ctx->read_manifest && ctx->read_manifest(ctx, path, &m)){
+                matches++;
+                if (!found) found = path; else free(path);
+            } else free(path);
+        }
+        closedir(d);
+    }
+    if (matches == 1) return found;
+    free(found);
+    return NULL;
+}
+
+static bool yap_already_fetched(darr(char*) done, char* name){
+    for_darr(i, n, done) if (strcmp(n, name) == 0) return true;
+    return false;
+}
+
+/* Walks the graph rather than just the root manifest: a fetched module's own git deps are
+ * queued as it lands, so one install brings in everything a build will look for. */
+int yap_install(yap_ctx* ctx, const char* where){
+    char* dir = yap_resolve_path(where && where[0] ? where : ".");
+    if (!dir){
+        printf("No such directory: %s\n", where ? where : ".");
         return 1;
     }
 
-    char* source = darr_first(args.extra);
-    char* resolved = yap_resolve_path(source);
-    if (!resolved){
-        printf("Source file '%s' not found\n", source);
+    char* manifest_path = yap_find_project_manifest(ctx, dir);
+    if (!manifest_path){
+        printf("No manifest found in %s (looked for mod.yp, main.yp, or a single .yp declaring a module)\n", dir);
+        free(dir);
         return 1;
     }
 
     yap_module_decl_node manifest = {0};
-    bool have = ctx->read_manifest && ctx->read_manifest(ctx, resolved, &manifest);
-    if (!have || !manifest.deps){
-        printf("Nothing to fetch: '%s' declares no deps.\n", source);
-        free(resolved);
-        return 0;
+    if (!ctx->read_manifest || !ctx->read_manifest(ctx, manifest_path, &manifest)){
+        printf("%s has no module declaration\n", manifest_path);
+        free(manifest_path); free(dir);
+        return 1;
     }
+    printf("Installing dependencies for %s\n", manifest_path);
 
-    char* src_dir = yap_get_parent_dir(resolved);
-    char* dest_root = strus_newf("%s/.yap/modules", src_dir);
+    char* dest_root = strus_newf("%s/.yap/modules", dir);
     yap_mkdir_p(dest_root);
 
+    darr(yap_dep_node) queue = darr_new(yap_dep_node);
+    darr(char*) done = darr_new(char*);
+    if (manifest.deps) for_darr(i, d, manifest.deps) darr_push(queue, d);
+
     unsigned fetched = 0, failed = 0, skipped = 0;
-    for_darr(i, dep, manifest.deps){
-        if (!dep.name) continue;
+    for (size_t qi = 0; qi < darr_len(queue); qi++){
+        yap_dep_node dep = queue[qi];
+        if (!dep.name || yap_already_fetched(done, dep.name)) continue;
+
         if (dep.registry || dep.path){
-            printf("Skipping '%s': only git sources are fetched for now\n", dep.name);
+            printf("  skipping %s: only git sources are fetched for now\n", dep.name);
             skipped++;
             continue;
         }
         if (!dep.git){ skipped++; continue; }
 
-        if (yap_fetch_git_dep(ctx, dep, dest_root)) fetched++;
-        else failed++;
+        char* landed = NULL;
+        if (!yap_fetch_git_dep(ctx, dep, dest_root, &landed)){ failed++; continue; }
+        fetched++;
+        darr_push(done, dep.name);
+
+        /* Whatever just landed may itself depend on something. */
+        char* sub_manifest = landed ? yap_find_project_manifest(ctx, landed) : NULL;
+        free(landed);
+        if (!sub_manifest) continue;
+        yap_module_decl_node sub_decl = {0};
+        if (ctx->read_manifest(ctx, sub_manifest, &sub_decl) && sub_decl.deps)
+            for_darr(k, d, sub_decl.deps) darr_push(queue, d);
+        free(sub_manifest);
     }
 
-    printf("Fetched %u, failed %u, skipped %u\n", fetched, failed, skipped);
-    free(dest_root);
-    free(src_dir);
-    free(resolved);
+    printf("%u fetched, %u failed, %u skipped\n", fetched, failed, skipped);
+    darr_free(queue); darr_free(done);
+    free(dest_root); free(manifest_path); free(dir);
     return failed ? 1 : 0;
+}
+
+int yap_fetch_deps(yap_ctx* ctx, yap_args args){
+    if (darr_len(args.extra) == 0) return yap_install(ctx, ".");
+    char* dir = yap_get_parent_dir(darr_first(args.extra));
+    int rc = yap_install(ctx, dir ? dir : ".");
+    free(dir);
+    return rc;
 }

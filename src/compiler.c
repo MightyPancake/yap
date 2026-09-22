@@ -97,6 +97,27 @@ static void yap_describe_all_component_flags(FILE* out, yap_args* args){
     free(yap_home);
 }
 
+/* Installing a project's dependencies takes a directory, defaulting to the one you are
+ * standing in, and reads whichever file there carries the manifest. */
+static int yap_install_cmd(yap_args args){
+    yap_compiler compiler = (yap_compiler){0};
+    compiler.args = &args;
+    char* yh = yap_get_yap_home_path();
+    char* ts = yap_component_so_path(yh, args.frontend_component);
+    yap_compiler_load_frontend_component(&compiler, ts, args.frontend_component);
+    free(ts); free(yh);
+
+    yap_ctx* ctx = yap_ctx_new();
+    ctx->print_error = compiler.frontend.print_error;
+    ctx->read_manifest = compiler.frontend.read_manifest;
+    ctx->args = &args;
+
+    const char* where = darr_len(args.extra) > 0 ? darr_first(args.extra) : ".";
+    int rc = yap_install(ctx, where);
+    if (yap_ctx_dispatch_errors(ctx)) rc = 1;
+    return rc;
+}
+
 /* Fetch needs only the frontend, to read a module block out of a cloned repo. */
 static int yap_fetch(yap_args args){
     yap_compiler compiler = (yap_compiler){0};
@@ -346,7 +367,7 @@ static struct argp_option options[] = {
 };
 
 static char doc[] = "The tool for yap programming language.";
-static char args_doc[] = "source file(s)";
+static char args_doc[] = "source file(s)\n  install [DIR]\tFetch the git dependencies a project declares (DIR defaults to .)";
 
 static void yap_print_help(yap_args* args){
     printf(aesc_bold_on "Usage:" aesc_reset " yap [OPTION...] %s\n\n", args_doc);
@@ -394,8 +415,10 @@ int main(int argc, char** argv) {
     int result = 0;
 
     bool run_subcommand = false;
-    if (argc > 1 && strcmp(argv[1], "run") == 0){
-        run_subcommand = true;
+    bool install_subcommand = false;
+    if (argc > 1 && (strcmp(argv[1], "run") == 0 || strcmp(argv[1], "install") == 0)){
+        run_subcommand = strcmp(argv[1], "run") == 0;
+        install_subcommand = !run_subcommand;
         for (int i = 1; i < argc - 1; i++) argv[i] = argv[i + 1];
         argc--;
     }
@@ -404,7 +427,7 @@ int main(int argc, char** argv) {
     yap_args args = (yap_args){
       .output_file = "a.out",
       .extra = darr_new(char*),
-      .command = "compile",
+      .command = install_subcommand ? "install" : "compile",
       .run = run_subcommand,
       .backend_flags = darr_new(char*),
       .frontend_flags = darr_new(char*),
@@ -449,6 +472,9 @@ int main(int argc, char** argv) {
         yap_free_args(args);
     }strus_case(args.command, "fetch"){
         result = yap_fetch(args);
+        yap_free_args(args);
+    }strus_case(args.command, "install"){
+        result = yap_install_cmd(args);
         yap_free_args(args);
     }strus_case(args.command, "component_flags"){
         yap_describe_all_component_flags(stdout, &args);
