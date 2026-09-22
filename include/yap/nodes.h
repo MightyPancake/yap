@@ -392,10 +392,19 @@ kenobi_new_struct_free(yap_decl_node,
     yap_loc loc;
 );
 
+/* Build state of one parsed file. 'in_progress' is what makes import cycles
+ * detectable: meeting it again mid-walk means we re-entered a source we never
+ * finished. Zero-initialised sources start out unvisited. */
+typedef enum {
+    yap_source_unvisited = 0,
+    yap_source_in_progress,
+    yap_source_built,
+} yap_source_status;
+
 kenobi_new_struct_free(yap_source_node,
     darr(yap_decl_node) declarations;
     yap_loc loc;
-    bool was_built;
+    yap_source_status status;
 );
 
 typedef enum {
