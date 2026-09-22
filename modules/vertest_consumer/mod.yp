@@ -1,0 +1,12 @@
+module vertest_consumer {
+    version: "0.1.0",
+    prefix: "vtc_",
+    deps: ["vertest@^0.9.0"]
+}
+
+import vertest
+
+// Reports whichever vertest THIS module resolved, not whichever the program did.
+i32 fn consumed_version() {
+    ret vertest->which_version();
+}

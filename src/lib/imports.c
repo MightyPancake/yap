@@ -51,7 +51,8 @@ static void yap_check_module_deps(yap_ctx* ctx){
 
         for_darr(di, dep, owner->deps){
             if (!dep.name) continue;
-            yap_module* loaded = yap_ctx_get_module(ctx, dep.name);
+            /* The version this importer resolved, not whichever one happens to be loaded. */
+            yap_module* loaded = yap_ctx_resolve_module(ctx, src, dep.name);
             if (!loaded || !loaded->declared) continue;
 
             if (yap_dep_satisfied_by(dep, loaded->version)) continue;
@@ -170,7 +171,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
         root_mod->declared = true;
         root_mod->deps = first_decl->deps;
     }
-    yap_ctx_switch_module(ctx, mod_name);
+    if (root_mod) yap_ctx_switch_module(ctx, root_mod->key);
 
     // Pass 2: Register imported modules from module-imported sources
     for_darr(si, src, ctx->sources){
@@ -186,12 +187,13 @@ void yap_resolve_module_decl(yap_ctx* ctx){
             char* imp_prefix = mdecl->prefix ? mdecl->prefix : yap_ctx_strus_newf(ctx, "%s_", imp_name);
             yap_version imp_version = {0};
             yap_resolve_module_version(ctx, src, mdecl, &imp_version);
+            char* imp_key = yap_module_key_for(ctx, imp_name, imp_version);
 
-            if (!yap_ctx_get_module(ctx, imp_name)){
-                yap_log("Registering imported module: name='%s' prefix='%s'", imp_name, imp_prefix);
+            if (!yap_ctx_get_module(ctx, imp_key)){
+                yap_log("Registering imported module: key='%s' prefix='%s'", imp_key, imp_prefix);
                 yap_ctx_create_new_module(ctx, imp_name, imp_prefix, imp_version);
 
-                yap_module* imp_mod = yap_ctx_get_module(ctx, imp_name);
+                yap_module* imp_mod = yap_ctx_get_module(ctx, imp_key);
                 if (imp_mod) {
                     imp_mod->declared = true;
                     imp_mod->deps = mdecl->deps;

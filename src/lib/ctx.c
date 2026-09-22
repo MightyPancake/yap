@@ -1,7 +1,17 @@
 #include "yap/all.h"
 
 declare_map_for(named_type);
-declare_map_for(module);
+/* Modules are keyed by "name@version", not by name, so two versions can be registered
+ * at once; bare names are resolved per importer instead. */
+uint64_t map_hash_module_f(const void* item, uint64_t seed0, uint64_t seed1){
+  const yap_module* m = item;
+  return hashmap_murmur(m->key, strlen(m->key), seed0, seed1);
+}
+int map_cmp_module_f(const void* a, const void* b, void* udata){
+  (void)udata;
+  return strcmp(((const yap_module*)a)->key, ((const yap_module*)b)->key);
+}
+map new_module_map(){ return new_map(yap_module, map_hash_module_f, map_cmp_module_f); }
 
 yap_ctx* yap_ctx_new(){
     yap_log("Creating new ctx");
@@ -24,7 +34,7 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_push_new_scope(ctx); //Push global scope
     ctx->global_scope = yap_ctx_current_scope(ctx);
     yap_ctx_create_new_module(ctx, "global", "", (yap_version){0}); //The global module lacks prefix for mangling since it's the root module
-    yap_ctx_switch_module(ctx, "global");
+    yap_ctx_switch_module(ctx, "global@0.0.0");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
     ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "internal_error_t", "ie_t", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
@@ -281,28 +291,68 @@ void yap_ctx_init_root_source(yap_ctx* ctx){
     yap_ctx_push_source(ctx, ctx->root_source);
 }
 
-yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name){
-  if (!ctx || !name) return NULL;
-  const yap_module dummy = {.name = name};
+yap_module* yap_ctx_get_module(yap_ctx* ctx, char* key){
+  if (!ctx || !key) return NULL;
+  const yap_module dummy = {.key = key};
   return (yap_module*)hashmap_get(ctx->modules, &dummy);
+}
+
+char* yap_module_key_for(yap_ctx* ctx, char* name, yap_version v){
+  return yap_ctx_strus_newf(ctx, "%s@%u.%u.%u", name, v.major, v.minor, v.patch);
+}
+
+static bool yap_module_iter_by_name(const void* item, void* udata){
+  const yap_module* m = item;
+  void** state = udata;
+  if (strcmp(m->name, (char*)state[0]) != 0) return true;
+  state[1] = (void*)m;
+  return false;
+}
+
+/* Only meaningful where a name has a single loaded version; per-importer resolution
+ * goes through yap_ctx_resolve_module instead. */
+yap_module* yap_ctx_find_module_by_name(yap_ctx* ctx, char* name){
+  if (!ctx || !name) return NULL;
+  void* state[2] = { name, NULL };
+  hashmap_scan(ctx->modules, yap_module_iter_by_name, state);
+  return (yap_module*)state[1];
+}
+
+yap_module* yap_ctx_resolve_module(yap_ctx* ctx, yap_source* src, char* name){
+  if (!ctx || !name) return NULL;
+
+  if (src){
+    for_darr(i, imp, src->imports){
+      if (imp.kind == yap_import_module && imp.module_key && imp.module_name
+          && strcmp(imp.module_name, name) == 0)
+        return yap_ctx_get_module(ctx, imp.module_key);
+    }
+    /* A module's other files inherit what its mod.yp imported. */
+    for_darr(si, s, ctx->sources){
+      if (!s || s == src) continue;
+      bool same_module = s->from_module_import == src->from_module_import
+        || (s->from_module_import && src->from_module_import
+            && strcmp(s->from_module_import, src->from_module_import) == 0);
+      if (!same_module) continue;
+      for_darr(i, imp, s->imports){
+        if (imp.kind == yap_import_module && imp.module_key && imp.module_name
+            && strcmp(imp.module_name, name) == 0)
+          return yap_ctx_get_module(ctx, imp.module_key);
+      }
+    }
+  }
+  return yap_ctx_find_module_by_name(ctx, name);
 }
 
 yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, yap_version version){
   if (!ctx || !name || !ctx->global_scope) return NULL;
-  yap_module* module = yap_ctx_get_module(ctx, name);
+  char* key = yap_module_key_for(ctx, name, version);
+  yap_module* module = yap_ctx_get_module(ctx, key);
   if (module){
-    /* Only one version of a name may be loaded; keyed by name until coexistence exists. */
-    char* msg = (module->version.major != version.major
-              || module->version.minor != version.minor
-              || module->version.patch != version.patch)
-      ? strus_newf("Module '%s' is already loaded at version %u.%u.%u, cannot also load %u.%u.%u",
-                   name, module->version.major, module->version.minor, module->version.patch,
-                   version.major, version.minor, version.patch)
-      : strus_newf("Module '%s' already exists", name);
     yap_ctx_push_error(ctx, (yap_error){
       .kind = yap_error_no_pos,
       .src = NULL,
-      .msg = msg
+      .msg = strus_newf("Module '%s' already exists", key)
     });
     return NULL;
   }
@@ -311,7 +361,7 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, ya
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
     .version = version,
-    .key = yap_ctx_strus_newf(ctx, "%s@%u.%u.%u", name, version.major, version.minor, version.patch),
+    .key = key,
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .decls = darr_new(yap_decl_node),
     .module_ctx = NULL,
@@ -320,14 +370,14 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, ya
     .native_lib_paths = darr_new(char*)
   };
   hashmap_set(ctx->modules, &new_module);
-  return yap_ctx_get_module(ctx, name);
+  return yap_ctx_get_module(ctx, key);
 }
 
-yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
-  if (!ctx || !name) return NULL;
-  yap_module* module = yap_ctx_get_module(ctx, name);
+yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* key){
+  if (!ctx || !key) return NULL;
+  yap_module* module = yap_ctx_get_module(ctx, key);
   if (!module){
-    char* msg = strus_newf("Module '%s' does not exist", name);
+    char* msg = strus_newf("Module '%s' does not exist", key);
     yap_ctx_push_error(ctx, (yap_error){
       .kind = yap_error_no_pos,
       .src = NULL,
@@ -335,7 +385,7 @@ yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name){
     });
     return NULL;
   }
-  ctx->current_module_name = module->name;
+  ctx->current_module_name = module->key;
   return module;
 }
 

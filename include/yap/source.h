@@ -11,6 +11,7 @@ typedef enum {
 kenobi_new_struct_free(yap_import,
   yap_import_kind kind;
   yap_loc loc; //Where this import was declared
+  char* module_key; //"name@major.minor.patch" of the module this import resolved to
   union {
     char* module_name; //For module imports
     char* identity; //Identity for source
