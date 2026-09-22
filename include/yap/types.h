@@ -52,8 +52,17 @@ typedef struct yap_args{
   char* semantic_component;
 }yap_args;
 
+/* major.minor.patch only; absent components complete with zero. */
+typedef struct yap_version {
+  uint16_t major;
+  uint16_t minor;
+  uint16_t patch;
+} yap_version;
+
 kenobi_new_struct_free(yap_module,
   char* name;
+  yap_version version;
+  char* key; //"name@major.minor.patch"; the identity coexisting versions would be keyed by
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end

@@ -1,0 +1,1 @@
+Invalid version '1.0.0-rc.1' in module 'badver'; expected major.minor.patch

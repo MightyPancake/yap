@@ -8,6 +8,7 @@
 
 //Functions are grouped based on their scope
 #include "log.h"
+#include "version.h"
 #include "source.h"
 #include "scope.h"
 #include "ctx.h"

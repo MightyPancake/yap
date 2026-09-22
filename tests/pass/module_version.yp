@@ -1,0 +1,8 @@
+// Absent version components complete with zero, so this is 1.4.0.
+module partialver {
+    version: "1.4"
+}
+
+i32 fn main(){
+    ret 0;
+}

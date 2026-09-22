@@ -23,7 +23,7 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_init_root_source(ctx);
     yap_ctx_push_new_scope(ctx); //Push global scope
     ctx->global_scope = yap_ctx_current_scope(ctx);
-    yap_ctx_create_new_module(ctx, "global", ""); //The global module lacks prefix for mangling since it's the root module
+    yap_ctx_create_new_module(ctx, "global", "", (yap_version){0}); //The global module lacks prefix for mangling since it's the root module
     yap_ctx_switch_module(ctx, "global");
     //Default types (requires <stdint.h> for fixed width integer types and <stdbool.h> for bool)
     ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "internal_error_t", "ie_t", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
@@ -69,7 +69,7 @@ yap_ctx* yap_ctx_new(){
 
     //Comptime builder module: yapi
     {
-        yap_module* yapi = yap_ctx_create_new_module(ctx, "yapi", "yapi_");
+        yap_module* yapi = yap_ctx_create_new_module(ctx, "yapi", "yapi_", (yap_version){0});
 
         yap_type_id ye = ctx->yexpr_type_id;
         yap_type_id i  = ctx->int_type_id;
@@ -287,11 +287,18 @@ yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name){
   return (yap_module*)hashmap_get(ctx->modules, &dummy);
 }
 
-yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, yap_version version){
   if (!ctx || !name || !ctx->global_scope) return NULL;
   yap_module* module = yap_ctx_get_module(ctx, name);
   if (module){
-    char* msg = strus_newf("Module '%s' already exists", name);
+    /* Only one version of a name may be loaded; keyed by name until coexistence exists. */
+    char* msg = (module->version.major != version.major
+              || module->version.minor != version.minor
+              || module->version.patch != version.patch)
+      ? strus_newf("Module '%s' is already loaded at version %u.%u.%u, cannot also load %u.%u.%u",
+                   name, module->version.major, module->version.minor, module->version.patch,
+                   version.major, version.minor, version.patch)
+      : strus_newf("Module '%s' already exists", name);
     yap_ctx_push_error(ctx, (yap_error){
       .kind = yap_error_no_pos,
       .src = NULL,
@@ -303,6 +310,8 @@ yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix){
   /* Parented to global_scope (not NULL) so a module's own source can still reach builtins registered there (e.g. yapi.md builder methods). */
   yap_module new_module = {
     .name = yap_ctx_strus_cpy(ctx, name),
+    .version = version,
+    .key = yap_ctx_strus_newf(ctx, "%s@%u.%u.%u", name, version.major, version.minor, version.patch),
     .prefix = yap_ctx_strus_cpy(ctx, prefix),
     .decls = darr_new(yap_decl_node),
     .module_ctx = NULL,

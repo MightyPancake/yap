@@ -14,6 +14,20 @@ static bool yap_target_is_wasm(yap_args* args){
     return false;
 }
 
+static void yap_resolve_module_version(yap_ctx* ctx, yap_source* src, yap_module_decl_node* mdecl, yap_version* out){
+    if (!mdecl->version) return;
+    if (yap_version_parse(mdecl->version, out)) return;
+
+    yap_ctx_push_error(ctx, (yap_error){
+        .kind  = yap_error_pos,
+        .src   = src,
+        .range = mdecl->loc.range,
+        .loc   = mdecl->loc,
+        .msg   = strus_newf("Invalid version '%s' in module '%s'; expected major.minor.patch",
+                            mdecl->version, mdecl->name.value ? mdecl->name.value : "(anon)")
+    });
+}
+
 void yap_resolve_module_decl(yap_ctx* ctx){
     yap_log("\n\nPhase 0: Module declaration resolution\n");
 
@@ -58,6 +72,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
 
     char* mod_name;
     char* mod_prefix;
+    yap_version mod_version = {0};
 
     if (first_decl){
         mod_name = first_decl->name.value ? first_decl->name.value : "main";
@@ -66,16 +81,15 @@ void yap_resolve_module_decl(yap_ctx* ctx){
         } else {
             mod_prefix = yap_ctx_strus_newf(ctx, "%s_", mod_name);
         }
-        if (first_decl->version){
-            yap_log("Module version: %s", first_decl->version);
-        }
+        yap_resolve_module_version(ctx, first_src, first_decl, &mod_version);
     } else {
         mod_name = "main";
         mod_prefix = "";
     }
 
-    yap_log("Resolved module: name='%s' prefix='%s'", mod_name, mod_prefix);
-    yap_ctx_create_new_module(ctx, mod_name, mod_prefix);
+    yap_log("Resolved module: name='%s' prefix='%s' version=%u.%u.%u",
+        mod_name, mod_prefix, mod_version.major, mod_version.minor, mod_version.patch);
+    yap_ctx_create_new_module(ctx, mod_name, mod_prefix, mod_version);
     yap_ctx_switch_module(ctx, mod_name);
 
     // Pass 2: Register imported modules from module-imported sources
@@ -90,10 +104,12 @@ void yap_resolve_module_decl(yap_ctx* ctx){
 
             char* imp_name = mdecl->name.value ? mdecl->name.value : src->from_module_import;
             char* imp_prefix = mdecl->prefix ? mdecl->prefix : yap_ctx_strus_newf(ctx, "%s_", imp_name);
+            yap_version imp_version = {0};
+            yap_resolve_module_version(ctx, src, mdecl, &imp_version);
 
             if (!yap_ctx_get_module(ctx, imp_name)){
                 yap_log("Registering imported module: name='%s' prefix='%s'", imp_name, imp_prefix);
-                yap_ctx_create_new_module(ctx, imp_name, imp_prefix);
+                yap_ctx_create_new_module(ctx, imp_name, imp_prefix, imp_version);
 
                 yap_module* imp_mod = yap_ctx_get_module(ctx, imp_name);
                 if (imp_mod) {
