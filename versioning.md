@@ -2,14 +2,14 @@
 
 Motivated by the case where two modules disagree about a third: a program
 imports `Z` at 2.0 directly, and also imports `Y`, which was written against
-`Z` 1.0. Today that question cannot even be asked ; module lookup builds
-`<lookup_path>/<name>/mod.yp` (`components/yap-ts/src/parse.c:310`), one path
-per name, so both imports silently resolve to whatever single copy is on disk.
+`Z` 1.0. That question could not even be asked at the outset -- module lookup
+built `<lookup_path>/<name>/mod.yp`, one path per name, so both imports
+silently resolved to whatever single copy was on disk.
 
-Running both versions at once is the goal ; section 10 describes what that
-takes. Everything before it is needed either way, and a single-version policy
-holds in the meantime because a clear conflict error beats the silent
-mis-resolution there is today.
+Running both versions at once was the goal, and it works ; section 10 describes
+how. Section 11 covers `bind`, which separates a type C owns from a type a
+module owns -- the distinction the whole thing turns on once two versions are
+loaded at once.
 
 ## 0. Where it stands today
 
@@ -271,64 +271,100 @@ Not needed until modules are actually fetched from somewhere.
 
 ## 10. Coexistence
 
-Two versions of one module in one binary is what this is all for. It comes
-last in the build order because everything before it is required either way,
-not because it is optional.
+Two versions of one module in one binary is what this is all for, and it works.
 
-What stands in the way is narrower than it first appears. Types live in a
-single global map keyed by the bare name (`yap_ctx_push_named_type`,
-`src/lib/ctx.c:552`), so two versions of `Z` each declaring `struct Thing`
-collide in one table. Modules get their own `yap_scope` for symbols, but
-there is no equivalent for types.
+Types live in a single global map keyed by the bare name
+(`yap_ctx_push_named_type`, `src/lib/ctx.c`), and modules have their own
+`yap_scope` for symbols but no equivalent for types. Symbols, types and
+mangling therefore all needed the same question answered: given this source,
+which module does a bare name refer to? That answer is now per-importer --
+`z->foo` written inside `Y` means Y's `Z`, not the program's.
 
-Symbols, types and mangling all need the same question answered: given this
-source, which module does a bare name refer to? Today that is global. Under
-coexistence it is per-importer — `z->foo` written inside `Y` means Y's `Z`,
-not the program's.
+Four parts, all in place:
 
-That is one mechanism, in four parts:
-
-1. Each module carries a `name -> resolved module` map for its own deps. The
-   solver in section 6 already produces exactly this ; it reads as conflict
-   detection only because nothing yet consumes the per-importer view.
+1. Each module carries a `name -> resolved module` map for its own deps, built
+   from the import records the parse phase stamps with a resolved key.
 2. Module access and type lookup route through the importing source's module
-   instead of the global table. `yap_source_owning_module`
-   (`components/yap-semantic/src/build.c:42`) is the existing hook.
-3. Type names are module-prefixed at registration. The `c_name` plumbing is
-   already on types, just not applied.
-4. Symbols carry the version only for names with more than one version
-   loaded. Version in every symbol buys nothing while the name is unique and
-   churns the ABI on every patch bump ; version in duplicated symbols is the
-   whole mechanism. The graph is known before codegen, so which names are
-   duplicated is known too.
+   rather than the global table, via `yap_source_owning_module`. A module's own
+   types are recorded in `yap_module.own_types` and consulted first.
+3. A module's types are emitted under its prefix, so two versions of a module
+   may each declare `struct Thing` without colliding.
+4. A name loaded at more than one version folds the version into its prefix
+   (`sp_` becomes `sp_0_1_0_` and `sp_0_2_0_`). A name with one version keeps
+   exactly what it declared, which is every module in the tree today.
 
-Until those land the policy is one version per name, enforced at registration
-with both versions named in the error. That is not the destination, but it is
-the right behaviour in the meantime, and it is what shows the solver works.
+Under it all sits one rule: **an emitted C name is a function of the thing's
+identity**, never of build order. Functions are identified by module, version
+and name ; a module's own types the same way ; a bound type by its C name and
+layout. Three failure modes came from breaking that rule in three different
+places, and they are covered by `module_coexistence`,
+`module_type_coexistence` and `version_prefix_mangling`.
+
+## 11. `bind` marks a C type
+
+A type declared in C is not owned by the module that describes it. `stdlib` and
+`time` both describe `struct timespec`, and they must land on one type or a
+`timespec` could not cross between them. A module's own type is the opposite:
+two versions of it must stay distinct.
+
+The two cannot be told apart syntactically, so bound types are marked:
+
+```
+bind type _IO_marker
+bind struct timespec {
+    i64 tv_sec,
+    i64 tv_nsec,
+}
+```
+
+bindgen emits the marker, and `modules/*/binds.yp` is generated, so nobody
+writes it by hand. The rule it selects:
+
+- **Identity is the C name plus the layout.** Same name and layout is one type,
+  shared and emitted once. Same name, different layout -- glibc's `FILE` beside
+  musl's -- are distinct types, and mixing them is a type error rather than
+  silent corruption.
+- **The C name always carries the layout hash** (`timespec__b477af42`), never
+  conditionally. Deciding it per-conflict made the emitted name depend on which
+  module was built first, so the same layout could be emitted under different
+  names depending on import order.
+- **The yap-level name stays as written**, which is what diagnostics and
+  in-module lookups use. This is the same `name`/`c_name` split that function
+  prefixing already relies on.
+
+The one thing this does not constrain is linkage. yap re-declares bound types
+in its own `types.h` rather than including the C header, and C does not encode
+type names in symbols, so a bound type's C name never reaches the linker --
+only its layout has to match. Sharing is the reason for the rule, not naming.
+
+Marked types skip module prefixing ; unmarked ones get it (section 10, part 3).
 
 ## Build order
 
-1. Parse the version into `yap_version` and store it on `yap_module`,
-   enforcing single-version at registration with both versions named on a
-   clash.
+1. Parse the version into `yap_version` and store it on `yap_module`, enforcing
+   single-version at registration with both versions named on a clash. *(done,
+   since superseded by coexistence)*
 2. `deps:` in the grammar, with the recursive value slot and the unknown-key
-   error.
-3. Normalize the in-tree manifests: bump the nine `0.0.1` modules to `0.1.0`
-   so that `^` is meaningful (section 4), and add a `deps:` list to each of the
-   ten `modules/*/mod.yp`, which is what declaring a module now opts into.
+   error. *(done)*
+3. Normalize the in-tree manifests: the nine `0.0.1` modules bumped to `0.1.0`
+   so `^` is meaningful, and a `deps:` list on the modules that need one.
    `raylib` stays at `6.0.0` on the convention that a binding tracks its
-   upstream's version while a native module versions itself.
+   upstream's version while a native module versions itself. *(done)*
 4. Version directories `<name>/<version>/mod.yp`, falling back to
-   `<name>/mod.yp` for backwards compatibility.
+   `<name>/mod.yp`. *(done)*
 5. Manifest scan and solver, producing each module's per-importer dep map.
-6. Per-importer resolution for symbols and types (section 10, parts 1-2).
-7. Module-prefixed type names (part 3).
-8. Conditional version mangling (part 4) — coexistence works.
-9. Lockfile, once modules are fetched from somewhere.
+   *(done)*
+6. Per-importer resolution for symbols and types. *(done)*
+7. Module-prefixed type names. *(done)*
+8. Conditional version mangling. *(done)*
+9. Lockfile, once modules are fetched from somewhere. *(open)*
 
-Step 1 is invisible plumbing. Steps 6-8 are the largest of the lot, and 6
-touches the most call sites ; nothing in them is blocked on a design question
-this document has not already settled.
+Fetching for `git:`, `path:` and `registry:` sources is open too, and is
+blocked on deciding where packages come from rather than on code ; until then
+those deps parse and are refused at resolution. Smaller debts: the importer's
+manifest is re-read on every module import while walking the parent chain ; an
+import cycle carrying a real back-reference still fails, needing a pass 1
+hoisted across all sources ; hard links to one file still read as two.
 
 ## Appendix: a manifest using every idiom
 
