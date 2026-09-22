@@ -1,0 +1,9 @@
+module noname {
+    deps: [
+        { version: "^1.0.0" }
+    ]
+}
+
+i32 fn main(){
+    ret 0;
+}

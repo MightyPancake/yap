@@ -27,6 +27,13 @@ typedef struct hashmap* map;
 //Node kinds
 #include "node_kinds.h"
 
+/* major.minor.patch only; absent components complete with zero. */
+typedef struct yap_version {
+  uint16_t major;
+  uint16_t minor;
+  uint16_t patch;
+} yap_version;
+
 //Nodes (parsing output types)
 #include "nodes.h"
 
@@ -51,13 +58,6 @@ typedef struct yap_args{
   char* frontend_component;
   char* semantic_component;
 }yap_args;
-
-/* major.minor.patch only; absent components complete with zero. */
-typedef struct yap_version {
-  uint16_t major;
-  uint16_t minor;
-  uint16_t patch;
-} yap_version;
 
 kenobi_new_struct_free(yap_module,
   char* name;

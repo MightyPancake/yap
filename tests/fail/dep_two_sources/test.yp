@@ -1,0 +1,9 @@
+module twosrc {
+    deps: [
+        { name: "foo", git: "https://example.com/foo", path: "../foo" }
+    ]
+}
+
+i32 fn main(){
+    ret 0;
+}

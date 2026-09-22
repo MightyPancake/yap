@@ -1,0 +1,27 @@
+// Every dependency idiom the manifest schema accepts. Nothing resolves them
+// yet; this pins the format down.
+module depsdemo {
+    version: "1.4.2",
+    prefix: "dd_",
+    author: "MightyPancake",
+    webpage: "https://nullptr.free/depsdemo",
+    license: "MIT",
+    description: "Dependency spec coverage",
+    deps: [
+        "hashmap",
+        "stdlib@0.0.1",
+        "arr@^0.1.0",
+        "io@latest",
+        "laydoh@local",
+        { name: "math", version: "^0.2.0" },
+        { name: "clay", version: "^2.0.0", git: "https://github.com/nicbarker/clay", tag: "v2.0.1" },
+        { name: "raylib", git: "https://gitlab.com/mirror/raylib", rev: "9f4c2e1" },
+        { name: "experiment", git: "https://github.com/x/experiment", branch: "main" },
+        { name: "sibling", path: "../sibling" },
+        { name: "json", version: "^1.0.0", registry: "https://yap.pkg/x" },
+    ],
+}
+
+i32 fn main(){
+    ret 0;
+}

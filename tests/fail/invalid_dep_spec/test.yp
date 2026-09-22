@@ -1,0 +1,7 @@
+module badspec {
+    deps: ["foo@>=1.0"]
+}
+
+i32 fn main(){
+    ret 0;
+}

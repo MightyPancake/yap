@@ -371,10 +371,32 @@ kenobi_new_struct_free(yap_module_import_node,
     yap_loc loc;
 );
 
+typedef enum {
+    yap_dep_exact,
+    yap_dep_caret,
+    yap_dep_latest,
+    yap_dep_local,
+} yap_dep_kind;
+
+/* Source fields answer where a dep comes from, kind/version which one; at most one source. */
+kenobi_new_struct(yap_dep_node,
+    char* name;
+    yap_dep_kind kind;
+    yap_version version;
+    char* git;
+    char* tag;
+    char* rev;
+    char* branch;
+    char* path;
+    char* registry;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_module_decl_node,
     yap_identifier_node name;
     char* prefix;
     char* version;
+    darr(yap_dep_node) deps;
     yap_loc loc;
 );
 
