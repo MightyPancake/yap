@@ -1,0 +1,6 @@
+// Imports its own importer back, closing the cycle.
+import "../import_cycle.yp"
+
+i32 fn cycle_helper_double(i32 n){
+    ret n * 2;
+}

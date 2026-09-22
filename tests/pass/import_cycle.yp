@@ -1,0 +1,11 @@
+// Two files importing each other. The second import of a file that is still
+// being parsed is dropped rather than followed, so the cycle neither recurses
+// forever nor builds the same declarations twice.
+// Note the cycle carries no back-reference: a file built earlier in the walk
+// still cannot call into one built later, cycle or not.
+
+import "imports/cycle_helper.yp"
+
+i32 fn main(){
+    ret cycle_helper_double(21) - 42;
+}
