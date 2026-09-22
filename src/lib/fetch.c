@@ -184,6 +184,32 @@ static char* yap_find_project_manifest(yap_ctx* ctx, const char* dir){
 
 /* The lock is a manifest with every constraint already resolved, so the compiler reads it
  * with the same machinery and nothing new has to parse it. */
+/* A module fetched from git arrives as source, so its wrapper is compiled here the way
+ * `make native_modules` does for the in-tree ones -- otherwise the final link has no
+ * library to resolve the module's C bindings against. */
+static bool yap_build_native_module(const char* dir, const char* name){
+    char* wrapper = strus_newf("%s/wrapper.c", dir);
+    if (access(wrapper, R_OK) != 0){ free(wrapper); return true; }
+
+    char* cc = getenv("CC");
+    if (!cc || !cc[0]) cc = "gcc";
+
+    char* obj = strus_newf("%s/wrapper.o", dir);
+    char* archive = strus_newf("%s/lib%s.a", dir, name);
+    char* shared = strus_newf("%s/lib%s.so", dir, name);
+
+    char* compile[] = { cc, "-fPIC", "-fvisibility=hidden", "-I", (char*)dir, "-c", wrapper, "-o", obj, NULL };
+    char* ar_argv[] = { "ar", "rcs", archive, obj, NULL };
+    char* link[]    = { cc, "-shared", "-o", shared, obj, NULL };
+
+    bool ok = yap_exec(compile) && yap_exec(ar_argv) && yap_exec(link);
+    if (ok) printf("  built lib%s for %s\n", name, name);
+    else printf("  could not build lib%s; the module's C bindings will not link\n", name);
+
+    free(wrapper); free(obj); free(archive); free(shared);
+    return ok;
+}
+
 static void yap_write_lock(const char* dir, darr(yap_lock_entry) locked){
     char* path = strus_newf("%s/yap.lock", dir);
     FILE* f = fopen(path, "w");
@@ -258,6 +284,7 @@ int yap_install(yap_ctx* ctx, const char* where){
         darr_push(locked, entry);
         fetched++;
         darr_push(done, dep.name);
+        if (landed) yap_build_native_module(landed, dep.name);
 
         /* Whatever just landed may itself depend on something. */
         char* sub_manifest = landed ? yap_find_project_manifest(ctx, landed) : NULL;

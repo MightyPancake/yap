@@ -179,8 +179,17 @@ int yap_gen_c_bind(yap_args args) {
         FILE *wf = fopen(wrapper_path, "w");
         if (!wf) { fprintf(stderr, "Error: failed to open '%s'\n", wrapper_path); goto wrapper_cleanup; }
 
-        if (header[0] == '<') fprintf(wf, "#include %s\n\n", header);
-        else fprintf(wf, "#include \"%s\"\n\n", header);
+        /* A header sitting in the module's own directory is included by name, so the
+         * wrapper still compiles once the module is moved or fetched elsewhere. */
+        if (header[0] == '<'){
+            fprintf(wf, "#include %s\n\n", header);
+        } else {
+            const char* base = strrchr(header, '/');
+            base = base ? base + 1 : header;
+            char beside[PATH_MAX];
+            snprintf(beside, sizeof(beside), "%s%s", outdir, base);
+            fprintf(wf, "#include \"%s\"\n\n", access(beside, R_OK) == 0 ? base : header);
+        }
 
         for (size_t i = 0; i < darr_len(ctx->semantic_decls); i++) {
             yap_decl *d = &ctx->semantic_decls[i];
