@@ -42,3 +42,18 @@ jobs:
 
       - name: Hello world
         run: make hello
+
+      # Built last, since it rebuilds everything at -O2 with logging compiled out.
+      # Catches breakage the debug build hides, and checks a release compile emits
+      # nothing on stdout or stderr on success.
+      - name: Release build
+        run: make release
+
+      - name: Release build stays quiet
+        run: |
+          ./yap tests/pass/arrays.yp -o /tmp/release_check >/tmp/rel.out 2>/tmp/rel.err
+          if [ -s /tmp/rel.out ] || [ -s /tmp/rel.err ]; then
+            echo "release build wrote to stdout/stderr on a successful compile:"
+            cat /tmp/rel.out /tmp/rel.err
+            exit 1
+          fi

@@ -233,10 +233,12 @@ int compile(yap_args args){
 int yap_early_compile_error_return(yap_compiler compiler, yap_ctx* ctx, int error_code){
     if (compiler.backend.free)
         compiler.backend.free(ctx);
-    yap_free_compiler(compiler);
-    yap_free_compiler_handles(compiler);
+    /* The context is freed before the handles: its teardown calls back into the frontend
+     * to release the parser, which would be unmapped code once the handles are closed. */
     yap_ctx_free(*ctx);
     free(ctx);
+    yap_free_compiler(compiler);
+    yap_free_compiler_handles(compiler);
     return error_code;
 }
 

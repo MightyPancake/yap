@@ -70,7 +70,13 @@ run_one() {
             fi
         fi
     else
-        if [ "$run_exit" -ne 0 ] && grep -qF -- "$(cat "$err_file")" "$cmd_log"; then
+        # A fail test must fail *cleanly*: report the error and exit with a small code.
+        # Exit codes above 128 mean the compiler died on a signal, which is a crash even
+        # when the expected message was printed first.
+        if [ "$run_exit" -ge 128 ]; then
+            test_failed=1
+            echo "compiler died on signal (exit $run_exit) after reporting the error" >> "$cmd_log"
+        elif [ "$run_exit" -ne 0 ] && grep -qF -- "$(cat "$err_file")" "$cmd_log"; then
             test_failed=0
         else
             test_failed=1
