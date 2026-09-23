@@ -1,0 +1,12 @@
+// Exercises the new comptime builders directly: build a yDeclList naming two
+// modules. Nothing consumes it yet; this only checks the API is callable.
+yDeclList fn probe() {
+    _ l = yapi->decl_list_new();
+    l = yapi->decl_list_push(l, yapi->import_module(c"io"));
+    l = yapi->decl_list_push(l, yapi->import_module(c"math"));
+    ret l;
+}
+
+i32 fn main(){
+    ret 0;
+}

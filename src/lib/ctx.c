@@ -69,6 +69,9 @@ yap_ctx* yap_ctx_new(){
     ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
     //yCallArgs: opaque growable handle for a yapi->call(func, args) argument list, unlike the fixed-size yExprList above.
     ctx->ycallargs_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yCallArgs",  "yCallArgs",  "void*");
+    //yDecl/yDeclList: what a module's __import macro returns, naming further modules to import.
+    ctx->ydecl_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDecl",      "yDecl",      "void*");
+    ctx->ydecllist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDeclList",  "yDeclList",  "void*");
 
     //Comptime builder templates (yapi.md): opaque handles for the incremental
     //struct/enum/union/func builders, distinct from the finished yType/yFn they emit.
@@ -91,6 +94,8 @@ yap_ctx* yap_ctx_new(){
         yap_type_id ys = ctx->ystmt_type_id;
         yap_type_id v  = ctx->void_type_id;
         yap_type_id ysl = ctx->ystmtlist_type_id;
+        yap_type_id yd  = ctx->ydecl_type_id;
+        yap_type_id ydl = ctx->ydecllist_type_id;
         yap_type_id yca = ctx->ycallargs_type_id;
         yap_type_id yst = ctx->ystructt_type_id;
         yap_type_id yen = ctx->yenumt_type_id;
@@ -149,6 +154,9 @@ yap_ctx* yap_ctx_new(){
             { "uniq_name",     yi,      {ye},         0 },
             { "stmt_list_new",  ysl,    {ys},         0 },
             { "stmt_list_push", ysl,    {ysl, ys},    2 },
+            { "import_module",  yd,     {bp},         1 },
+            { "decl_list_new",  ydl,    {yd},         0 },
+            { "decl_list_push", ydl,    {ydl, yd},    2 },
             { "struct_t",      yst,     {i},          0 },
             { "enum_t",        yen,     {i},          0 },
             { "union_t",       yun,     {i},          0 },
