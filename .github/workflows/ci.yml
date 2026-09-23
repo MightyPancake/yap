@@ -20,9 +20,10 @@ jobs:
       - name: Initialize submodules
         run: |
           git submodule sync --recursive
-          git submodule update --init --recursive include/utils components/yap-ts
-          git submodule update --init --recursive --remote components/yap-c
-          git submodule update --init --recursive --remote components/yap-semantic
+          # No --remote: the superproject's recorded commits are the point of pinning.
+          # With it, CI checked out each submodule's main and ignored the pointer, so a
+          # branch that changes a component and its consumer together could not build.
+          git submodule update --init --recursive include/utils components/yap-ts components/yap-c components/yap-semantic
           git -C components/yap-c submodule update --init --recursive tinycc
 
       - name: Ensure Valgrind headers are available
