@@ -73,6 +73,73 @@ static bool yap_mkdir_p(char* path){
  * the manifest's constraint is verified afterwards rather than driving the fetch. */
 typedef struct { char* name; yap_version version; char* git; char* ref; char* rev; } yap_lock_entry;
 
+/* A path dep is linked, not copied: it points at a module being edited alongside the
+ * project -- a repo's own examples, or two modules developed together -- so changes to it
+ * must show up without reinstalling. */
+static bool yap_link_path_dep(yap_ctx* ctx, yap_dep_node dep, const char* project_dir,
+                              const char* dest_root, char** out_dest){
+    char* target = dep.path[0] == '/'
+        ? strus_copy(dep.path)
+        : strus_newf("%s/%s", project_dir, dep.path);
+    char* resolved = yap_resolve_path(target);
+    free(target);
+    if (!resolved){
+        yap_ctx_push_error(ctx, (yap_error){
+            .kind = yap_error_no_pos,
+            .msg  = strus_newf("Dependency '%s' points at '%s', which does not exist", dep.name, dep.path)
+        });
+        return false;
+    }
+
+    char* manifest_path = strus_newf("%s/mod.yp", resolved);
+    yap_module_decl_node manifest = {0};
+    yap_version got = {0};
+    bool have = ctx->read_manifest && ctx->read_manifest(ctx, manifest_path, &manifest);
+    if (have && manifest.version) yap_version_parse(manifest.version, &got);
+    free(manifest_path);
+
+    if (!have){
+        yap_ctx_push_error(ctx, (yap_error){
+            .kind = yap_error_no_pos,
+            .msg  = strus_newf("'%s' has no mod.yp with a module declaration at %s", dep.name, resolved)
+        });
+        free(resolved);
+        return false;
+    }
+    if (!yap_dep_satisfied_by(dep, got)){
+        yap_ctx_push_error(ctx, (yap_error){
+            .kind = yap_error_no_pos,
+            .msg  = strus_newf("'%s' at %s declares version %u.%u.%u, which does not satisfy '%s'",
+                               dep.name, resolved, got.major, got.minor, got.patch,
+                               yap_dep_spec_string(ctx, dep))
+        });
+        free(resolved);
+        return false;
+    }
+
+    char* parent = strus_newf("%s/%s", dest_root, dep.name);
+    yap_mkdir_p(parent);
+    free(parent);
+
+    char* dest = strus_newf("%s/%s/%u.%u.%u", dest_root, dep.name, got.major, got.minor, got.patch);
+    yap_rm_rf(dest);
+    bool ok = symlink(resolved, dest) == 0;
+    if (ok){
+        printf("  linked %s %u.%u.%u -> %s\n", dep.name, got.major, got.minor, got.patch, resolved);
+        if (out_dest) *out_dest = dest; else free(dest);
+    } else {
+        yap_ctx_push_error(ctx, (yap_error){
+            .kind = yap_error_no_pos,
+            .msg  = strus_newf("Could not link '%s' into %s", dep.name, dest)
+        });
+        free(dest);
+    }
+    free(resolved);
+    return ok;
+}
+
+
+
 static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_root, char** out_dest, yap_lock_entry* out_lock){
     char* staging = strus_newf("%s/.staging-%s", dest_root, dep.name);
     yap_rm_rf(staging);
@@ -290,17 +357,24 @@ int yap_install(yap_ctx* ctx, const char* where, bool global){
         yap_dep_node dep = queue[qi];
         if (!dep.name || yap_already_fetched(done, dep.name)) continue;
 
-        if (dep.registry || dep.path){
-            printf("  skipping %s: only git sources are fetched for now\n", dep.name);
+        if (dep.registry){
+            printf("  skipping %s: registry sources are not fetched yet\n", dep.name);
             skipped++;
             continue;
         }
-        if (!dep.git){ skipped++; continue; }
 
         char* landed = NULL;
         yap_lock_entry entry = {0};
-        if (!yap_fetch_git_dep(ctx, dep, dest_root, &landed, &entry)){ failed++; continue; }
-        darr_push(locked, entry);
+        if (dep.path){
+            if (!yap_link_path_dep(ctx, dep, dir, dest_root, &landed)){ failed++; continue; }
+            /* A link has no revision to pin, so it is deliberately left out of the lock. */
+        } else if (dep.git){
+            if (!yap_fetch_git_dep(ctx, dep, dest_root, &landed, &entry)){ failed++; continue; }
+            darr_push(locked, entry);
+        } else {
+            skipped++;
+            continue;
+        }
         fetched++;
         darr_push(done, dep.name);
         if (landed) yap_build_native_module(landed, dep.name);

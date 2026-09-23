@@ -348,8 +348,9 @@ Marked types skip module prefixing ; unmarked ones get it (section 10, part 3).
    error. *(done)*
 3. Normalize the in-tree manifests: the nine `0.0.1` modules bumped to `0.1.0`
    so `^` is meaningful, and a `deps:` list on the modules that need one.
-   `raylib` stays at `6.0.0` on the convention that a binding tracks its
-   upstream's version while a native module versions itself. *(done)*
+   `raylib` was later moved out of the tree entirely, to its own repository at
+   github.com/MightyPancake/raylib-yap, and is consumed as a git dependency.
+   *(done)*
 4. Version directories `<name>/<version>/mod.yp`, falling back to
    `<name>/mod.yp`. *(done)*
 5. Manifest scan and solver, producing each module's per-importer dep map.
@@ -359,9 +360,10 @@ Marked types skip module prefixing ; unmarked ones get it (section 10, part 3).
 8. Conditional version mangling. *(done)*
 9. Lockfile, once modules are fetched from somewhere. *(open)*
 
-Fetching for `git:`, `path:` and `registry:` sources is open too, and is
-blocked on deciding where packages come from rather than on code ; until then
-those deps parse and are refused at resolution. Smaller debts: the importer's
+`git:` and `path:` sources are fetched ; `path:` is linked rather than copied,
+so a module edited alongside its consumer -- a repo's own examples, say -- is
+picked up without reinstalling. `registry:` still parses and is refused, since
+there is no registry to fetch from. Smaller debts: the importer's
 manifest is re-read on every module import while walking the parent chain ; an
 import cycle carrying a real back-reference still fails, needing a pass 1
 hoisted across all sources ; hard links to one file still read as two.
