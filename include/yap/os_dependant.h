@@ -5,6 +5,9 @@
 
 char* yap_resolve_path(const char* path);
 char* yap_get_parent_dir(const char *full_path);
+// Run a program with an argv array -- never a shell, since arguments come from manifests.
+bool yap_exec(char* const argv[]);
+char* yap_exec_capture(char* const argv[]);
 char* yap_get_self_path();
 char* yap_cwd();
 void yap_cd(const char* path);

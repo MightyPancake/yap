@@ -71,6 +71,52 @@ static void yap_check_module_deps(yap_ctx* ctx){
     }
 }
 
+/* Matching, not parsing: an entry with no target applies everywhere, one with a target
+ * applies when it names the current build target. */
+static const char* yap_current_target(yap_ctx* ctx){
+    if (yap_target_is_wasm(ctx->args)) return "wasm";
+#if defined(__APPLE__)
+    return "macos";
+#elif defined(_WIN32)
+    return "windows";
+#else
+    return "linux";
+#endif
+}
+
+/* pkg-config knows where a library actually lives, which a bare -l does not; falling back
+ * to -l is right for libraries that ship no .pc file, but it is reported either way so a
+ * missing .pc shows up here rather than as undefined symbols at link time. */
+static void yap_resolve_module_libs(yap_ctx* ctx, yap_module* mod, darr(yap_lib_node) libs){
+    if (!mod || !libs) return;
+    const char* target = yap_current_target(ctx);
+
+    for_darr(i, lib, libs){
+        if (!lib.name) continue;
+        if (lib.target && strcmp(lib.target, target) != 0){
+            yap_log("Module '%s': skipping library '%s', it targets %s", mod->name, lib.name, lib.target);
+            continue;
+        }
+
+        if (lib.framework){
+            darr_push(mod->system_libs, strus_newf("-framework %s", lib.name));
+            continue;
+        }
+
+        char* probe[] = { "pkg-config", "--libs", lib.name, NULL };
+        char* flags = yap_exec_capture(probe);
+        if (flags && flags[0]){
+            yap_log("Module '%s': pkg-config resolved '%s' to %s", mod->name, lib.name, flags);
+            darr_push(mod->system_libs, flags);
+        } else {
+            free(flags);
+            yap_log("Module '%s': no pkg-config entry for '%s', linking it as -l%s",
+                mod->name, lib.name, lib.name);
+            darr_push(mod->system_libs, strus_newf("-l%s", lib.name));
+        }
+    }
+}
+
 static bool yap_collect_module(const void* item, void* udata){
     darr(yap_module*)* out = udata;
     darr_push(*out, (yap_module*)item);
@@ -197,6 +243,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
     if (root_mod && first_decl){
         root_mod->declared = true;
         root_mod->deps = first_decl->deps;
+        yap_resolve_module_libs(ctx, root_mod, first_decl->libs);
     }
     if (root_mod) yap_ctx_switch_module(ctx, root_mod->key);
 
@@ -224,6 +271,7 @@ void yap_resolve_module_decl(yap_ctx* ctx){
                 if (imp_mod) {
                     imp_mod->declared = true;
                     imp_mod->deps = mdecl->deps;
+                    yap_resolve_module_libs(ctx, imp_mod, mdecl->libs);
                     bool wasm_target = yap_target_is_wasm(ctx->args);
                     /* Taken from the mod.yp actually loaded, not rebuilt from the lookup path,
                      * so a module under <name>/<version>/ finds the libraries beside it. */

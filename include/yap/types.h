@@ -70,6 +70,7 @@ kenobi_new_struct_free(yap_module,
   char* key; //"name@major.minor.patch"; the identity coexisting versions would be keyed by
   bool declared; //Came from a real module{} block, which is what opts into deps enforcement
   darr(yap_dep_node) deps;
+  darr(char*) system_libs; //Resolved link flags for the libraries this module's bindings need
   darr(yap_module_type) own_types; //Types this module declared, looked up before the global table
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module

@@ -10,7 +10,7 @@
 /* Arguments are handed to exec directly and never to a shell, because every one of them
  * comes out of a dependency's manifest -- a URL containing a quote would otherwise run
  * whatever followed it. */
-static bool yap_exec(char* const argv[]){
+bool yap_exec(char* const argv[]){
     if (!argv || !argv[0]) return false;
 
     for (char* const* a = argv; *a; a++) yap_log("fetch arg: %s", *a);
@@ -27,7 +27,7 @@ static bool yap_exec(char* const argv[]){
 }
 
 /* Same no-shell rule as yap_exec, but the child's stdout is read back. */
-static char* yap_exec_capture(char* const argv[]){
+char* yap_exec_capture(char* const argv[]){
     int fds[2];
     if (pipe(fds) != 0) return NULL;
 
@@ -42,9 +42,13 @@ static char* yap_exec_capture(char* const argv[]){
     }
     close(fds[1]);
 
-    char buf[256];
-    ssize_t n = read(fds[0], buf, sizeof(buf) - 1);
+    char buf[8192];
+    size_t total = 0;
+    ssize_t n;
+    while (total < sizeof(buf) - 1 && (n = read(fds[0], buf + total, sizeof(buf) - 1 - total)) > 0)
+        total += (size_t)n;
     close(fds[0]);
+    n = (ssize_t)total;
     int status = 0;
     waitpid(pid, &status, 0);
     if (n <= 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) return NULL;

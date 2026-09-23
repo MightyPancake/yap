@@ -92,6 +92,8 @@ void yap_module_free(yap_module module){
   for_darr(i, lp, module.native_lib_paths) free(lp);
   darr_free(module.native_lib_paths);
   darr_free(module.own_types);
+  for_darr(i, sl, module.system_libs) free(sl);
+  darr_free(module.system_libs);
 }
 
 void yap_type_free(yap_type typ){

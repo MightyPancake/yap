@@ -1,6 +1,7 @@
 module raylib {
     version: "6.0.0",
-    prefix: "raylib_"
+    prefix: "raylib_",
+    libs: ["raylib"]
 }
 
 import "binds.yp"

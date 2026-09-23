@@ -1,0 +1,12 @@
+module libtest {
+    version: "0.1.0",
+    prefix: "lt_",
+    libs: [
+        { name: "definitely_not_installed", target: "windows" },
+        { name: "AlsoNotHere", target: "macos", framework: true }
+    ]
+}
+
+i32 fn ping() {
+    ret 7;
+}

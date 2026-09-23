@@ -394,11 +394,21 @@ kenobi_new_struct(yap_dep_node,
     yap_loc loc;
 );
 
+/* A system library the module's C bindings link against. 'target' restricts it to one
+ * build target; absent means every target. */
+kenobi_new_struct(yap_lib_node,
+    char* name;
+    char* target;
+    bool framework;
+    yap_loc loc;
+);
+
 kenobi_new_struct_free(yap_module_decl_node,
     yap_identifier_node name;
     char* prefix;
     char* version;
     darr(yap_dep_node) deps;
+    darr(yap_lib_node) libs;
     yap_loc loc;
 );
 
