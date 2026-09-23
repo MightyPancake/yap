@@ -1,0 +1,5 @@
+// A yExprList parameter takes a blob literal. Passing a bare string used to be
+// accepted and read as the wrong struct; it is refused now.
+import containers:("arr")
+
+i32 fn main(){ ret 0; }
