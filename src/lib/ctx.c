@@ -155,6 +155,7 @@ yap_ctx* yap_ctx_new(){
             { "stmt_list_new",  ysl,    {ys},         0 },
             { "stmt_list_push", ysl,    {ysl, ys},    2 },
             { "import_module",  yd,     {bp},         1 },
+            { "string_value",   bp,     {ye},         1 },
             { "decl_list_new",  ydl,    {yd},         0 },
             { "decl_list_push", ydl,    {ydl, yd},    2 },
             { "struct_t",      yst,     {i},          0 },

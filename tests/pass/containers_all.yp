@@ -1,0 +1,13 @@
+// An empty argument list means everything containers offers, so both arr and
+// hashmap arrive without being named.
+import containers:()
+
+i32 fn main(){
+    arr:(i32) nums;
+    nums:init();
+    nums:push(1);
+    nums:free();
+
+    hashmap->hashmap:(byte@, i32) m;
+    ret 0;
+}
