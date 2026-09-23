@@ -100,6 +100,8 @@ typedef void (*yap_pop_macro_loc_fn)(void);
 typedef bool (*yap_parse_module_fn)(yap_ctx* ctx, char* module_name, yap_loc loc);
 // Reads a file's module block without parsing the rest of it.
 typedef bool (*yap_read_manifest_fn)(yap_ctx* ctx, char* path, yap_module_decl_node* out);
+// The parser outlives parsing -- __import parses modules mid-build -- so it is torn down with the ctx.
+typedef void (*yap_free_parser_fn)(void* parser);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -168,6 +170,7 @@ kenobi_new_struct_free(yap_ctx,
   yap_pop_macro_loc_fn pop_macro_loc;
   yap_parse_module_fn parse_module;
   yap_read_manifest_fn read_manifest;
+  yap_free_parser_fn free_parser;
 
   //Module lookup paths
   darr(char*) module_lookup_paths;

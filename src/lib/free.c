@@ -29,6 +29,10 @@ void yap_block_free(yap_block block){
   }
 }
 void yap_ctx_free(yap_ctx ctx){
+  /* Freed here rather than at the end of parsing: a parameterised import parses further
+   * modules during the build, and the parser holds the locked versions they resolve by. */
+  if (ctx.free_parser && ctx.parser_ctx) ctx.free_parser(ctx.parser_ctx);
+
   yap_log("Freeing state");
   // Free modules
   void* item;

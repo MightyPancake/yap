@@ -110,6 +110,7 @@ static int yap_install_cmd(yap_args args){
     yap_ctx* ctx = yap_ctx_new();
     ctx->print_error = compiler.frontend.print_error;
     ctx->read_manifest = compiler.frontend.read_manifest;
+    ctx->free_parser = compiler.frontend.free_parser;
     ctx->args = &args;
 
     const char* where = darr_len(args.extra) > 0 ? darr_first(args.extra) : ".";
@@ -130,6 +131,7 @@ static int yap_fetch(yap_args args){
     yap_ctx* ctx = yap_ctx_new();
     ctx->print_error = compiler.frontend.print_error;
     ctx->read_manifest = compiler.frontend.read_manifest;
+    ctx->free_parser = compiler.frontend.free_parser;
     ctx->args = &args;
 
     int rc = yap_fetch_deps(ctx, args);
@@ -159,6 +161,7 @@ int compile(yap_args args){
     ctx->print_error = compiler.frontend.print_error;
     ctx->parse_module = compiler.frontend.parse_module;
     ctx->read_manifest = compiler.frontend.read_manifest;
+    ctx->free_parser = compiler.frontend.free_parser;
     ctx->gen_decl = compiler.backend.gen_decl;
     ctx->ensure_symbol = compiler.backend.ensure_symbol;
     ctx->set_macro_name = compiler.backend.set_macro_name;
@@ -258,6 +261,7 @@ void yap_compiler_load_frontend_component(yap_compiler* compiler, const char* pa
     compiler->frontend.print_error = load_func_dynamically(compiler->frontend_handle, name, yap_print_error_fn, "yap_print_error");
     compiler->frontend.parse_module = load_func_dynamically(compiler->frontend_handle, name, yap_parse_module_fn, "yap_parse_module");
     compiler->frontend.read_manifest = load_func_dynamically(compiler->frontend_handle, name, yap_read_manifest_fn, "yap_read_manifest");
+    compiler->frontend.free_parser = load_func_dynamically(compiler->frontend_handle, name, yap_free_parser_fn, "yap_free_parser");
 }
 
 void yap_compiler_load_backend_component(yap_compiler* compiler, const char* path, const char* name){

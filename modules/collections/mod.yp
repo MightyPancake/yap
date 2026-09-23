@@ -1,0 +1,13 @@
+module collections {
+    version: "0.1.0",
+    prefix: "coll_",
+    deps: ["arr@^0.1.0", "hashmap@^0.1.0"]
+}
+
+// Chooses which of this module's own deps the importer gets. Anything not listed
+// in deps above is refused, so the dependency graph stays what the manifest says.
+yDeclList fn __import(yExprList@ names) {
+    _ l = yapi->decl_list_new();
+    l = yapi->decl_list_push(l, yapi->import_module(c"arr"));
+    ret l;
+}

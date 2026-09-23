@@ -178,76 +178,9 @@ static void yap_check_module_imports(yap_ctx* ctx){
     }
 }
 
-void yap_resolve_module_decl(yap_ctx* ctx){
-    yap_log("\n\nPhase 0: Module declaration resolution\n");
-
-    // Pass 1: Resolve the user's own module (skip sources from module imports)
-    yap_module_decl_node* first_decl = NULL;
-    yap_source* first_src = NULL;
-
-    for_darr(si, src, ctx->sources){
-        if (!src || !src->source_node) continue;
-        if (src->from_module_import) continue;
-        yap_source_node* snode = src->source_node;
-
-        for_darr(di, dnode, snode->declarations){
-            if (dnode.kind != yap_decl_module_decl) continue;
-            yap_module_decl_node* mdecl = &snode->declarations[di].module_decl;
-
-            if (!first_decl){
-                first_decl = mdecl;
-                first_src = src;
-                yap_log("Found module declaration '%s' in %s",
-                    mdecl->name.value ? mdecl->name.value : "(anon)",
-                    src->label ? src->label : "(unknown)");
-                continue;
-            }
-
-            char* msg = strus_newf(
-                "Duplicate module declaration '%s' (first declared as '%s' at %s:%d:%d)",
-                mdecl->name.value ? mdecl->name.value : "(anon)",
-                first_decl->name.value ? first_decl->name.value : "(anon)",
-                first_src->label ? first_src->label : "(unknown)",
-                first_decl->loc.range.start.line + 1,
-                first_decl->loc.range.start.column + 1);
-            yap_ctx_push_error(ctx, (yap_error){
-                .kind = yap_error_pos,
-                .src = src,
-                .range = mdecl->loc.range,
-                .loc = mdecl->loc,
-                .msg = msg
-            });
-        }
-    }
-
-    char* mod_name;
-    char* mod_prefix;
-    yap_version mod_version = {0};
-
-    if (first_decl){
-        mod_name = first_decl->name.value ? first_decl->name.value : "main";
-        if (first_decl->prefix){
-            mod_prefix = first_decl->prefix;
-        } else {
-            mod_prefix = yap_ctx_strus_newf(ctx, "%s_", mod_name);
-        }
-        yap_resolve_module_version(ctx, first_src, first_decl, &mod_version);
-    } else {
-        mod_name = "main";
-        mod_prefix = "";
-    }
-
-    yap_log("Resolved module: name='%s' prefix='%s' version=%u.%u.%u",
-        mod_name, mod_prefix, mod_version.major, mod_version.minor, mod_version.patch);
-    yap_module* root_mod = yap_ctx_create_new_module(ctx, mod_name, mod_prefix, mod_version);
-    if (root_mod && first_decl){
-        root_mod->declared = true;
-        root_mod->deps = first_decl->deps;
-        yap_resolve_module_libs(ctx, root_mod, first_decl->libs);
-    }
-    if (root_mod) yap_ctx_switch_module(ctx, root_mod->key);
-
-    // Pass 2: Register imported modules from module-imported sources
+/* Idempotent: every registration is guarded on the module not already existing, so this
+ * can run again after __import parses modules phase 0 never saw. */
+void yap_register_imported_modules(yap_ctx* ctx){
     for_darr(si, src, ctx->sources){
         if (!src || !src->source_node) continue;
         if (!src->from_module_import) continue;
@@ -318,6 +251,79 @@ void yap_resolve_module_decl(yap_ctx* ctx){
             }
         }
     }
+
+}
+
+void yap_resolve_module_decl(yap_ctx* ctx){
+    yap_log("\n\nPhase 0: Module declaration resolution\n");
+
+    // Pass 1: Resolve the user's own module (skip sources from module imports)
+    yap_module_decl_node* first_decl = NULL;
+    yap_source* first_src = NULL;
+
+    for_darr(si, src, ctx->sources){
+        if (!src || !src->source_node) continue;
+        if (src->from_module_import) continue;
+        yap_source_node* snode = src->source_node;
+
+        for_darr(di, dnode, snode->declarations){
+            if (dnode.kind != yap_decl_module_decl) continue;
+            yap_module_decl_node* mdecl = &snode->declarations[di].module_decl;
+
+            if (!first_decl){
+                first_decl = mdecl;
+                first_src = src;
+                yap_log("Found module declaration '%s' in %s",
+                    mdecl->name.value ? mdecl->name.value : "(anon)",
+                    src->label ? src->label : "(unknown)");
+                continue;
+            }
+
+            char* msg = strus_newf(
+                "Duplicate module declaration '%s' (first declared as '%s' at %s:%d:%d)",
+                mdecl->name.value ? mdecl->name.value : "(anon)",
+                first_decl->name.value ? first_decl->name.value : "(anon)",
+                first_src->label ? first_src->label : "(unknown)",
+                first_decl->loc.range.start.line + 1,
+                first_decl->loc.range.start.column + 1);
+            yap_ctx_push_error(ctx, (yap_error){
+                .kind = yap_error_pos,
+                .src = src,
+                .range = mdecl->loc.range,
+                .loc = mdecl->loc,
+                .msg = msg
+            });
+        }
+    }
+
+    char* mod_name;
+    char* mod_prefix;
+    yap_version mod_version = {0};
+
+    if (first_decl){
+        mod_name = first_decl->name.value ? first_decl->name.value : "main";
+        if (first_decl->prefix){
+            mod_prefix = first_decl->prefix;
+        } else {
+            mod_prefix = yap_ctx_strus_newf(ctx, "%s_", mod_name);
+        }
+        yap_resolve_module_version(ctx, first_src, first_decl, &mod_version);
+    } else {
+        mod_name = "main";
+        mod_prefix = "";
+    }
+
+    yap_log("Resolved module: name='%s' prefix='%s' version=%u.%u.%u",
+        mod_name, mod_prefix, mod_version.major, mod_version.minor, mod_version.patch);
+    yap_module* root_mod = yap_ctx_create_new_module(ctx, mod_name, mod_prefix, mod_version);
+    if (root_mod && first_decl){
+        root_mod->declared = true;
+        root_mod->deps = first_decl->deps;
+        yap_resolve_module_libs(ctx, root_mod, first_decl->libs);
+    }
+    if (root_mod) yap_ctx_switch_module(ctx, root_mod->key);
+
+    yap_register_imported_modules(ctx);
 
     yap_version_duplicate_prefixes(ctx);
     yap_check_module_imports(ctx);

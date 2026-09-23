@@ -1,0 +1,5 @@
+import badcollections:()
+
+i32 fn main(){
+    ret 0;
+}
