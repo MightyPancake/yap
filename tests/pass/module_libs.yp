@@ -1,0 +1,8 @@
+// libtest declares libraries for other targets only, so none are linked here.
+// An entry with no target would apply everywhere; these do not match, and a
+// missing library would otherwise fail the link.
+import libtest
+
+i32 fn main(){
+    ret libtest->ping() - 7;
+}

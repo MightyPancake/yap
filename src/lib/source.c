@@ -6,6 +6,7 @@ char* yap_pos_string(yap_source s, unsigned int line, unsigned int col){
 
 size_t yap_read_file_to_string(const char *path, char **out) {
     *out = NULL;  // default to NULL in case of failure
+    if (!path) return 0;
 
     FILE *f = fopen(path, "rb");
     if (!f) {

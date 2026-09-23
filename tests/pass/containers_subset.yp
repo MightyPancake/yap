@@ -1,0 +1,13 @@
+// containers re-exports a chosen subset of its own deps. Asking for arr alone
+// brings in arr and not hashmap, and the pun lets it be used unprefixed.
+import containers:(["arr"])
+
+i32 fn main(){
+    arr:(i32) nums;
+    nums:init();
+    nums:push(7);
+    nums:push(8);
+    _ n = nums:len().(i32);
+    nums:free();
+    ret n - 2;
+}

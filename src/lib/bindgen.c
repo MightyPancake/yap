@@ -87,49 +87,51 @@ int yap_gen_c_bind(yap_args args) {
 
     /* forward declarations first */
     for (size_t i = 0; i < darr_len(ctx->types); i++) {
-        yap_type *typ = &ctx->types[i];
-        if (typ->kind == yap_type_struct && typ->structure.name && !darr_len(typ->structure.fields) && !is_reserved_name(typ->structure.name))
-            fprintf(out, "type %s\n", typ->structure.name);
-        else if (typ->kind == yap_type_union && typ->uni.name && !darr_len(typ->uni.variants) && !is_reserved_name(typ->uni.name))
-            fprintf(out, "type %s\n", typ->uni.name);
+        /* Copied, not pointed at: the body can push types, which moves ctx->types. */
+        yap_type typ = ctx->types[i];
+        if (typ.kind == yap_type_struct && typ.structure.name && !darr_len(typ.structure.fields) && !is_reserved_name(typ.structure.name))
+            fprintf(out, "bind type %s\n", typ.structure.name);
+        else if (typ.kind == yap_type_union && typ.uni.name && !darr_len(typ.uni.variants) && !is_reserved_name(typ.uni.name))
+            fprintf(out, "bind type %s\n", typ.uni.name);
     }
     fprintf(out, "\n");
 
     /* full type definitions */
     for (size_t i = 0; i < darr_len(ctx->types); i++) {
-        yap_type *typ = &ctx->types[i];
-        if (typ->kind == yap_type_struct) {
-            if (!typ->structure.name || !darr_len(typ->structure.fields) || is_reserved_name(typ->structure.name)) continue;
+        /* Copied, not pointed at: the body can push types, which moves ctx->types. */
+        yap_type typ = ctx->types[i];
+        if (typ.kind == yap_type_struct) {
+            if (!typ.structure.name || !darr_len(typ.structure.fields) || is_reserved_name(typ.structure.name)) continue;
             bool has_reserved = false;
-            for (size_t j = 0; j < darr_len(typ->structure.fields); j++)
-                if (type_uses_reserved(ctx, typ->structure.fields[j].type)) { has_reserved = true; break; }
+            for (size_t j = 0; j < darr_len(typ.structure.fields); j++)
+                if (type_uses_reserved(ctx, typ.structure.fields[j].type)) { has_reserved = true; break; }
             if (has_reserved) continue;
-            fprintf(out, "struct %s {\n", typ->structure.name);
-            for (size_t j = 0; j < darr_len(typ->structure.fields); j++) {
+            fprintf(out, "bind struct %s {\n", typ.structure.name);
+            for (size_t j = 0; j < darr_len(typ.structure.fields); j++) {
                 fprintf(out, "    ");
-                print_type_inline(ctx, out, typ->structure.fields[j].type);
-                fprintf(out, " %s,\n", typ->structure.fields[j].name ? typ->structure.fields[j].name : "_");
+                print_type_inline(ctx, out, typ.structure.fields[j].type);
+                fprintf(out, " %s,\n", typ.structure.fields[j].name ? typ.structure.fields[j].name : "_");
             }
             fprintf(out, "}\n\n");
-        } else if (typ->kind == yap_type_union) {
-            if (!typ->uni.name || !darr_len(typ->uni.variants) || is_reserved_name(typ->uni.name)) continue;
+        } else if (typ.kind == yap_type_union) {
+            if (!typ.uni.name || !darr_len(typ.uni.variants) || is_reserved_name(typ.uni.name)) continue;
             bool has_reserved_u = false;
-            for (size_t j = 0; j < darr_len(typ->uni.variants); j++)
-                if (type_uses_reserved(ctx, typ->uni.variants[j].type)) { has_reserved_u = true; break; }
+            for (size_t j = 0; j < darr_len(typ.uni.variants); j++)
+                if (type_uses_reserved(ctx, typ.uni.variants[j].type)) { has_reserved_u = true; break; }
             if (has_reserved_u) continue;
-            fprintf(out, "union %s {\n", typ->uni.name);
-            for (size_t j = 0; j < darr_len(typ->uni.variants); j++) {
+            fprintf(out, "bind union %s {\n", typ.uni.name);
+            for (size_t j = 0; j < darr_len(typ.uni.variants); j++) {
                 fprintf(out, "    ");
-                print_type_inline(ctx, out, typ->uni.variants[j].type);
-                fprintf(out, " %s,\n", typ->uni.variants[j].name ? typ->uni.variants[j].name : "_");
+                print_type_inline(ctx, out, typ.uni.variants[j].type);
+                fprintf(out, " %s,\n", typ.uni.variants[j].name ? typ.uni.variants[j].name : "_");
             }
             fprintf(out, "}\n\n");
-        } else if (typ->kind == yap_type_enum) {
-            if (!typ->enumeration.name || is_reserved_name(typ->enumeration.name)
-                || strchr(typ->enumeration.name, '(') || strchr(typ->enumeration.name, '/')) continue;
-            fprintf(out, "enum %s {\n", typ->enumeration.name);
-            for (size_t j = 0; j < darr_len(typ->enumeration.variants); j++)
-                fprintf(out, "    %s,\n", typ->enumeration.variants[j].name);
+        } else if (typ.kind == yap_type_enum) {
+            if (!typ.enumeration.name || is_reserved_name(typ.enumeration.name)
+                || strchr(typ.enumeration.name, '(') || strchr(typ.enumeration.name, '/')) continue;
+            fprintf(out, "bind enum %s {\n", typ.enumeration.name);
+            for (size_t j = 0; j < darr_len(typ.enumeration.variants); j++)
+                fprintf(out, "    %s,\n", typ.enumeration.variants[j].name);
             fprintf(out, "}\n\n");
         }
     }
@@ -179,8 +181,17 @@ int yap_gen_c_bind(yap_args args) {
         FILE *wf = fopen(wrapper_path, "w");
         if (!wf) { fprintf(stderr, "Error: failed to open '%s'\n", wrapper_path); goto wrapper_cleanup; }
 
-        if (header[0] == '<') fprintf(wf, "#include %s\n\n", header);
-        else fprintf(wf, "#include \"%s\"\n\n", header);
+        /* A header sitting in the module's own directory is included by name, so the
+         * wrapper still compiles once the module is moved or fetched elsewhere. */
+        if (header[0] == '<'){
+            fprintf(wf, "#include %s\n\n", header);
+        } else {
+            const char* base = strrchr(header, '/');
+            base = base ? base + 1 : header;
+            char beside[PATH_MAX];
+            snprintf(beside, sizeof(beside), "%s%s", outdir, base);
+            fprintf(wf, "#include \"%s\"\n\n", access(beside, R_OK) == 0 ? base : header);
+        }
 
         for (size_t i = 0; i < darr_len(ctx->semantic_decls); i++) {
             yap_decl *d = &ctx->semantic_decls[i];
@@ -357,16 +368,21 @@ static void print_type_inline(yap_ctx *ctx, FILE *out, yap_type_id id) {
   }
 }
 
+/* Carries the owning type's id rather than a pointer into ctx->types: process_type below
+ * registers the field's own type, which can grow that array and move every element. */
 static enum CXChildVisitResult sf_visitor(CXCursor c, CXCursor parent, CXClientData cd) {
   (void)parent;
-  struct { yap_struct_type *st; yap_ctx *ctx; } *data = (void*)cd;
+  struct { yap_type_id owner; bool is_union; yap_ctx *ctx; } *data = (void*)cd;
   if (clang_getCursorKind(c) == CXCursor_FieldDecl) {
     CXType ft = clang_getCursorType(c);
     yap_type_id fid = process_type(data->ctx, ft);
     CXString ns = clang_getCursorSpelling(c);
     yap_struct_field sf = { .kind = yap_struct_field_valid,
       .name = strdup(clang_getCString(ns)), .type = fid, .default_value = NULL };
-    clang_disposeString(ns); darr_push(data->st->fields, sf);
+    clang_disposeString(ns);
+    yap_type *owner = yap_ctx_get_type(data->ctx, data->owner);
+    if (owner)
+      darr_push(*(data->is_union ? &owner->uni.variants : &owner->structure.fields), sf);
   }
   return CXChildVisit_Continue;
 }
@@ -460,17 +476,10 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
 
       // Now walk fields ; self-references will find the registered name
       if (clang_isCursorDefinition(decl)) {
-        if (is_union) {
-          yap_union_type *ut = &ctx->types[opaque_id].uni;
-          ut->variants = darr_new(yap_struct_field);
-          struct { yap_struct_type *st; yap_ctx *ctx; } fd = {(yap_struct_type*)ut, ctx};
-          clang_visitChildren(decl, sf_visitor, &fd);
-        } else {
-          yap_struct_type *st = &ctx->types[opaque_id].structure;
-          st->fields = darr_new(yap_struct_field);
-          struct { yap_struct_type *st; yap_ctx *ctx; } fd = {st, ctx};
-          clang_visitChildren(decl, sf_visitor, &fd);
-        }
+        if (is_union) ctx->types[opaque_id].uni.variants = darr_new(yap_struct_field);
+        else          ctx->types[opaque_id].structure.fields = darr_new(yap_struct_field);
+        struct { yap_type_id owner; bool is_union; yap_ctx *ctx; } fd = {opaque_id, is_union, ctx};
+        clang_visitChildren(decl, sf_visitor, &fd);
       }
       clang_disposeString(ns);
       return opaque_id;

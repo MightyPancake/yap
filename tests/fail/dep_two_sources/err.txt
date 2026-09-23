@@ -1,0 +1,1 @@
+Dependency 'foo' names more than one source

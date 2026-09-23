@@ -1,0 +1,13 @@
+// reexport has no arr of its own: its __import macro names arr, which is one
+// of its declared deps, and the compiler pulls that module in during the build.
+// Using arr here proves it actually landed rather than merely being named.
+import reexport:()
+
+i32 fn main(){
+    arr->arr:(i32) nums;
+    nums:init();
+    nums:push(4);
+    _ n = nums:len().(i32);
+    nums:free();
+    ret n - 1;
+}

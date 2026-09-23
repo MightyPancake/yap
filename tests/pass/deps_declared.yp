@@ -1,0 +1,12 @@
+// Declaring a module opts into its deps being authoritative; io is listed, so
+// importing it is allowed.
+module strictok {
+    version: "0.1.0",
+    deps: ["io@^0.1.0"]
+}
+
+import io
+
+i32 fn main(){
+    ret 0;
+}

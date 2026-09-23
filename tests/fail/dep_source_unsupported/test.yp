@@ -1,0 +1,10 @@
+module wantsregistry {
+    version: "0.1.0",
+    deps: [
+        { name: "json", version: "^1.0.0", registry: "https://yap.pkg/x" }
+    ]
+}
+
+i32 fn main(){
+    ret 0;
+}

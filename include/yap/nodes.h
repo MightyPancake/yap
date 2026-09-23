@@ -334,6 +334,8 @@ kenobi_new_struct_free(yap_enum_variant_node,
 kenobi_new_struct_free(yap_named_type_decl_node,
     yap_named_type_decl_kind kind;
     yap_identifier_node name;
+    bool is_bind; //Declares a C type: identity is its C name plus layout, not this module
+
     union {
         struct {
             darr(yap_var_decl_node) fields; // struct fields
@@ -368,6 +370,39 @@ kenobi_new_struct_free(yap_file_import_node,
 
 kenobi_new_struct_free(yap_module_import_node,
     yap_identifier_node module_name;
+    /* 'import m:(args)' -- the module's __import macro chooses what else comes in. */
+    bool parameterized;
+    darr(yap_macro_param_node) params;
+    yap_loc loc;
+);
+
+typedef enum {
+    yap_dep_exact,
+    yap_dep_caret,
+    yap_dep_latest,
+    yap_dep_local,
+} yap_dep_kind;
+
+/* Source fields answer where a dep comes from, kind/version which one; at most one source. */
+kenobi_new_struct(yap_dep_node,
+    char* name;
+    yap_dep_kind kind;
+    yap_version version;
+    char* git;
+    char* tag;
+    char* rev;
+    char* branch;
+    char* path;
+    char* registry;
+    yap_loc loc;
+);
+
+/* A system library the module's C bindings link against. 'target' restricts it to one
+ * build target; absent means every target. */
+kenobi_new_struct(yap_lib_node,
+    char* name;
+    char* target;
+    bool framework;
     yap_loc loc;
 );
 
@@ -375,6 +410,8 @@ kenobi_new_struct_free(yap_module_decl_node,
     yap_identifier_node name;
     char* prefix;
     char* version;
+    darr(yap_dep_node) deps;
+    darr(yap_lib_node) libs;
     yap_loc loc;
 );
 
@@ -392,10 +429,17 @@ kenobi_new_struct_free(yap_decl_node,
     yap_loc loc;
 );
 
+/* 'in_progress' is what makes a cycle visible: meeting it mid-walk means re-entry. */
+typedef enum {
+    yap_source_unvisited = 0,
+    yap_source_in_progress,
+    yap_source_built,
+} yap_source_status;
+
 kenobi_new_struct_free(yap_source_node,
     darr(yap_decl_node) declarations;
     yap_loc loc;
-    bool was_built;
+    yap_source_status status;
 );
 
 typedef enum {

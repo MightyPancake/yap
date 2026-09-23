@@ -1,0 +1,9 @@
+// Two files importing each other. The re-entrant import is dropped, so the
+// cycle neither recurses forever nor builds the same declarations twice.
+// No back-reference: a file built earlier still cannot call into a later one.
+
+import "imports/cycle_helper.yp"
+
+i32 fn main(){
+    ret cycle_helper_double(21) - 42;
+}

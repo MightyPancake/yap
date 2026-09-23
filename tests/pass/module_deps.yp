@@ -1,0 +1,23 @@
+// Dependency spec forms that resolve: string and object, exact, caret and
+// latest. Unfetchable sources are covered by tests/fail/dep_source_unsupported.
+module depsdemo {
+    version: "1.4.2",
+    prefix: "dd_",
+    author: "MightyPancake",
+    webpage: "https://nullptr.free/depsdemo",
+    license: "MIT",
+    description: "Dependency spec coverage",
+    deps: [
+        "hashmap",
+        "stdlib@0.1.0",
+        "arr@^0.1.0",
+        "io@latest",
+        "vertest@local",
+        { name: "math", version: "^0.1.0" },
+        { name: "time", version: "0.1.0" },
+    ],
+}
+
+i32 fn main(){
+    ret 0;
+}

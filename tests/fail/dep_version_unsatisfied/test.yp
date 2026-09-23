@@ -1,0 +1,10 @@
+module wantsnewer {
+    version: "0.1.0",
+    deps: ["io@^9.0.0"]
+}
+
+import io
+
+i32 fn main(){
+    ret 0;
+}

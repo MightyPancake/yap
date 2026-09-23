@@ -13,10 +13,7 @@ char* yap_resolve_path(const char* path){
         return NULL;
     }
     char* res = realpath(path, NULL);
-    if (res == NULL) {
-        printf("Couldn't get realpath for %s!", path);
-        return NULL;
-    }
+    if (res == NULL) return NULL;  // callers report the missing file in context
     return res;
 }
 #else

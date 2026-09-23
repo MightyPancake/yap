@@ -1,0 +1,13 @@
+// arr is never named here: reexport's __import brings it in, and the pun makes
+// arr:(i32) mean arr->arr:(i32).
+import reexport:()
+
+i32 fn main(){
+    arr:(i32) nums;
+    nums:init();
+    nums:push(3);
+    nums:push(4);
+    _ n = nums:len().(i32);
+    nums:free();
+    ret n - 2;
+}

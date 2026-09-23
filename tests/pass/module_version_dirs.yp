@@ -1,0 +1,7 @@
+// vertest ships 0.1.0, 0.9.0 and 0.10.0 as version directories. Newest wins,
+// and 0.10.0 beats 0.9.0 only if versions compare numerically, not as strings.
+import vertest
+
+i32 fn main(){
+    ret vertest->which_version() - 10;
+}

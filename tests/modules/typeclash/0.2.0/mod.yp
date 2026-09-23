@@ -1,0 +1,14 @@
+module typeclash {
+    version: "0.2.0",
+    prefix: "tc_"
+}
+
+struct Thing {
+    i32 a,
+    i32 b,
+}
+
+i32 fn make() {
+    Thing t = [3, 4];
+    ret t.a + t.b;
+}

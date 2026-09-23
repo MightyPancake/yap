@@ -1,0 +1,14 @@
+// Two versions of one module in one binary. This program resolves vertest 0.10.0;
+// vertest_consumer declares ^0.9.0 and resolves 0.9.0. Each sees the version it
+// asked for, so the result is 10*10 + 9.
+module coexist {
+    version: "0.1.0",
+    deps: ["vertest@^0.10.0", "vertest_consumer@^0.1.0"]
+}
+
+import vertest
+import vertest_consumer
+
+i32 fn main(){
+    ret (vertest->which_version() * 10) + vertest_consumer->consumed_version() - 109;
+}

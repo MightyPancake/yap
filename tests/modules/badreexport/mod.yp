@@ -1,0 +1,12 @@
+module badreexport {
+    version: "0.1.0",
+    prefix: "badreexp_",
+    deps: ["arr@^0.1.0"]
+}
+
+// Names io, which is not among this module's deps, so the import is refused.
+yDeclList fn __import(yExprList@ names) {
+    _ l = yapi->decl_list_new();
+    l = yapi->decl_list_push(l, yapi->import_module(c"io"));
+    ret l;
+}

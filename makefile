@@ -122,8 +122,10 @@ build: lib compiler native_modules
 # lib*.a/.so are gitignored like every other module binary, so they must be
 # rebuilt from source on a fresh checkout instead of relying on a dev's
 # local build artifacts (this is why CI failed while local tests passed).
+# Fixture modules under tests/modules are built too -- arity_test has a wrapper,
+# and leaving it out reproduced exactly that fresh-checkout failure.
 native_modules:
-	@for d in $(dir $(wildcard modules/*/wrapper.c)); do \
+	@for d in $(dir $(wildcard modules/*/wrapper.c) $(wildcard tests/modules/*/wrapper.c)); do \
 		name=$$(basename $$d); \
 		echo $(PURPLE)Building native module $$name$(RESET); \
 		$(CC) -fPIC -fvisibility=hidden -c "$${d}wrapper.c" -o "$${d}wrapper.o" || exit 1; \
@@ -141,7 +143,7 @@ wasm_modules:
 		echo $(CYAN)"emcc not found on PATH; skipping wasm_modules"$(RESET); \
 		exit 0; \
 	fi
-	@for d in $(dir $(wildcard modules/*/wrapper.c)); do \
+	@for d in $(dir $(wildcard modules/*/wrapper.c) $(wildcard tests/modules/*/wrapper.c)); do \
 		name=$$(basename $$d); \
 		echo $(PURPLE)Building wasm module $$name$(RESET); \
 		emcc -fPIC -c "$${d}wrapper.c" -o "$${d}wrapper_wasm.o" || exit 1; \
@@ -166,7 +168,7 @@ rerun: build
 
 run:
 	@[ -n "$(test)" ] || { echo "Usage: make run test=pass/<name> | test=fail/<name>/test"; exit 1; }
-	valgrind \
+	YAP_MODULE_PATH=$(YAP_PATH)/tests/modules valgrind \
 		--track-origins=yes \
 		--leak-check=full \
 		--error-exitcode=99 \

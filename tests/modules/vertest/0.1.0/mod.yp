@@ -1,0 +1,8 @@
+module vertest {
+    version: "0.1.0",
+    prefix: "vertest_"
+}
+
+i32 fn which_version() {
+    ret 1;
+}

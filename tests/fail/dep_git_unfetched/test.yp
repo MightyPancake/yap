@@ -1,0 +1,10 @@
+module needsfetch {
+    version: "0.1.0",
+    deps: [
+        { name: "notfetched", version: "^1.0.0", git: "https://example.com/notfetched" }
+    ]
+}
+
+i32 fn main(){
+    ret 0;
+}

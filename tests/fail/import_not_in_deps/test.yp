@@ -1,0 +1,9 @@
+module strict {
+    version: "0.1.0"
+}
+
+import io
+
+i32 fn main(){
+    ret 0;
+}

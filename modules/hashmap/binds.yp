@@ -6,7 +6,7 @@
 // so a literal hashmap_* name here would collide at link time.
 //
 // `struct hashmap` stays fully opaque here; the generic, type-safe wrapper lives in hashmap.yp.
-type hashmap
+bind type hashmap
 
 // hash_id/cmp_id select between three hash/compare pairs baked into wrapper.c's yhm_make: 0 for a 4-byte scalar key,
 // 1 for an 8-byte one, 2 for a null-terminated C string key.

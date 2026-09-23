@@ -27,6 +27,13 @@ typedef struct hashmap* map;
 //Node kinds
 #include "node_kinds.h"
 
+/* major.minor.patch only; absent components complete with zero. */
+typedef struct yap_version {
+  uint16_t major;
+  uint16_t minor;
+  uint16_t patch;
+} yap_version;
+
 //Nodes (parsing output types)
 #include "nodes.h"
 
@@ -37,6 +44,7 @@ typedef struct yap_args{
   char* output_file;
   darr(char*) extra;
   bool show_modules_path;
+  bool install_global; //--global: install into YAP_HOME/modules instead of the project
   char* command;
   // --gen-c-bind: header to generate bindings from (e.g. "<stdio.h>")
   char* gen_c_bind_header;
@@ -52,8 +60,19 @@ typedef struct yap_args{
   char* semantic_component;
 }yap_args;
 
+kenobi_new_struct(yap_module_type,
+  char* name;      //Name as written in this module's source
+  yap_type_id id;  //Type it resolved to, which may carry a layout suffix
+);
+
 kenobi_new_struct_free(yap_module,
   char* name;
+  yap_version version;
+  char* key; //"name@major.minor.patch"; the identity coexisting versions would be keyed by
+  bool declared; //Came from a real module{} block, which is what opts into deps enforcement
+  darr(yap_dep_node) deps;
+  darr(char*) system_libs; //Resolved link flags for the libraries this module's bindings need
+  darr(yap_module_type) own_types; //Types this module declared, looked up before the global table
   char* prefix; //Prefix for name mangling, usually derived from the module name
   darr(yap_decl_node) decls; //Parse-level declarations in this module
   void* module_ctx; //This is specific to compiler back end
@@ -77,6 +96,12 @@ typedef void* (*yap_ensure_symbol_fn)(yap_ctx* ctx, const char* name);
 typedef void (*yap_set_macro_name_fn)(const char* name);
 typedef void (*yap_set_macro_loc_fn)(yap_source* src, yap_loc loc);
 typedef void (*yap_pop_macro_loc_fn)(void);
+// Supplied by the frontend so the semantic phase can pull in a module parsing never saw.
+typedef bool (*yap_parse_module_fn)(yap_ctx* ctx, char* module_name, yap_loc loc);
+// Reads a file's module block without parsing the rest of it.
+typedef bool (*yap_read_manifest_fn)(yap_ctx* ctx, char* path, yap_module_decl_node* out);
+// The parser outlives parsing -- __import parses modules mid-build -- so it is torn down with the ctx.
+typedef void (*yap_free_parser_fn)(void* parser);
 
 kenobi_new_struct_free(yap_ctx,
   //Arena
@@ -128,6 +153,8 @@ kenobi_new_struct_free(yap_ctx,
   yap_type_id ystmtblueprint_type_id; //cached type_id for yStmtBlueprint (a yStmt template with named holes)
   yap_type_id yexprlist_type_id;  //cached type_id for yExprList (fixed real slice of yExpr, a macro's own variadic parameter type)
   yap_type_id ystmtlist_type_id;  //cached type_id for yStmtList (growable list of yStmt)
+  yap_type_id ydecl_type_id;      //cached type_id for yDecl (a declaration an __import macro emits)
+  yap_type_id ydecllist_type_id;  //cached type_id for yDeclList (growable list of yDecl)
   yap_type_id ycallargs_type_id;  //cached type_id for yCallArgs (growable list of yExpr, for building an arbitrary-arity yapi->call(func, args) argument list)
   //Comptime builder templates (yapi.md): yStructT/yEnumT/yUnionT/yFnT
   yap_type_id ystructt_type_id;
@@ -141,6 +168,9 @@ kenobi_new_struct_free(yap_ctx,
   yap_set_macro_name_fn set_macro_name;
   yap_set_macro_loc_fn set_macro_loc;
   yap_pop_macro_loc_fn pop_macro_loc;
+  yap_parse_module_fn parse_module;
+  yap_read_manifest_fn read_manifest;
+  yap_free_parser_fn free_parser;
 
   //Module lookup paths
   darr(char*) module_lookup_paths;

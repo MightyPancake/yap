@@ -305,6 +305,23 @@ typedef struct {
   unsigned int cap;
 } yap_stmt_list;
 
+/* What an __import macro builds: declarations it wants added to the importing source.
+ * Only module imports for now, which is all __import is defined to produce. */
+typedef enum {
+  yap_ct_decl_import_module,
+} yap_ct_decl_kind;
+
+typedef struct {
+  yap_ct_decl_kind kind;
+  char* module_name;
+} yap_ct_decl;
+
+typedef struct {
+  yap_ct_decl* items;
+  unsigned int count;
+  unsigned int cap;
+} yap_ct_decl_list;
+
 kenobi_new_struct_free(yap_func_arg,
   enum {
     yap_func_arg_error,
@@ -336,6 +353,7 @@ kenobi_new_struct_free(yap_scope,
 kenobi_new_struct_free(yap_named_type_decl,
   char* name;
   char* c_name;
+  bool is_bind;
   yap_named_type_decl_kind kind;
   yap_type_id type_id;
 );

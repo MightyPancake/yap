@@ -18,9 +18,14 @@ yap_scope* yap_ctx_push_new_loop_scope(yap_ctx* ctx);
 yap_scope* yap_ctx_pop_scope(yap_ctx* ctx);
 
 //Module manipulation
-yap_module* yap_ctx_get_module(yap_ctx* ctx, char* name);
-yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix);
-yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* name);
+char* yap_ctx_type_c_name(yap_type* t);
+void yap_ctx_alias_named_type(yap_ctx* ctx, char* name_p, yap_type_id id);
+yap_module* yap_ctx_get_module(yap_ctx* ctx, char* key);
+char* yap_module_key_for(yap_ctx* ctx, char* name, yap_version v);
+yap_module* yap_ctx_find_module_by_name(yap_ctx* ctx, char* name);
+yap_module* yap_ctx_resolve_module(yap_ctx* ctx, yap_source* src, char* name);
+yap_module* yap_ctx_create_new_module(yap_ctx* ctx, char* name, char* prefix, yap_version version);
+yap_module* yap_ctx_switch_module(yap_ctx* ctx, char* key);
 // Re-resolves by name every call; ctx->modules can relocate entries on resize.
 yap_module* yap_ctx_current_module(yap_ctx* ctx);
 void yap_ctx_push_decl_node(yap_ctx* ctx, yap_decl_node decl);

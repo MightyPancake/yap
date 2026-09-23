@@ -1,0 +1,10 @@
+module badlib {
+    version: "0.1.0",
+    libs: [
+        { name: "m", platform: "linux" }
+    ]
+}
+
+i32 fn main(){
+    ret 0;
+}

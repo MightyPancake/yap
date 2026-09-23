@@ -1,0 +1,8 @@
+module semvertest {
+    version: "3.0.0",
+    prefix: "svt_"
+}
+
+i32 fn tag() {
+    ret 30000;
+}

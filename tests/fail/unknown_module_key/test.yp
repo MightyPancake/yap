@@ -1,0 +1,7 @@
+module typo {
+    verison: "0.0.1"
+}
+
+i32 fn main(){
+    ret 0;
+}

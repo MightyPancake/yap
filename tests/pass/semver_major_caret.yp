@@ -1,0 +1,13 @@
+// semvertest ships 2.9.9, 2.14.1 and 3.0.0. Above 1.0 the caret pins the major,
+// so ^2.9.9 takes 2.14.1: newer than 2.9.9 (minor 14 > 9 numerically, not as a
+// string) and not 3.0.0. tag() encodes the version as major*10000+minor*100+patch.
+module semverprobe {
+    version: "1.0.0",
+    deps: ["semvertest@^2.9.9"]
+}
+
+import semvertest
+
+i32 fn main(){
+    ret semvertest->tag() - 21401;
+}

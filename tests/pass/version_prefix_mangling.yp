@@ -1,0 +1,14 @@
+// Both versions of sameprefix declare prefix "sp_". A name loaded at more than
+// one version folds the version into each prefix, so the emitted C names differ
+// -- without this the two tag() functions collide at compile time.
+module spprobe {
+    version: "0.1.0",
+    deps: ["sameprefix@^0.2.0", "sameprefix_consumer@^0.1.0"]
+}
+
+import sameprefix
+import sameprefix_consumer
+
+i32 fn main(){
+    ret (sameprefix->tag() * 10) + sameprefix_consumer->via_old() - 21;
+}

@@ -26,6 +26,9 @@ typedef const yap_flag_desc* (*yap_describe_flags_fn)(int* count);
 typedef struct yap_compiler_front_component{
   yap_parse_fn parse;
   yap_print_error_fn print_error;
+  yap_parse_module_fn parse_module;
+  yap_read_manifest_fn read_manifest;
+  yap_free_parser_fn free_parser;
 }yap_compiler_front_component;
 
 typedef struct yap_compiler_semantic_component{

@@ -1,0 +1,14 @@
+// Two versions of typeclash each declare their own struct Thing with different
+// fields, and both are loaded at once. A module's types carry its prefix, which
+// folds in the version when a name is loaded twice, so the two do not collide.
+module tcprobe {
+    version: "0.1.0",
+    deps: ["typeclash@^0.2.0", "typeclash_consumer@^0.1.0"]
+}
+
+import typeclash
+import typeclash_consumer
+
+i32 fn main(){
+    ret (typeclash->make() * 10) + typeclash_consumer->via_old() - 77;
+}

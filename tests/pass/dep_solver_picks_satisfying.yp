@@ -1,0 +1,12 @@
+// vertest ships 0.1.0, 0.9.0 and 0.10.0. Latest-wins would take 0.10.0 and fail
+// the constraint; the solver picks the newest version that actually satisfies it.
+module solved {
+    version: "0.1.0",
+    deps: ["vertest@^0.9.0"]
+}
+
+import vertest
+
+i32 fn main(){
+    ret vertest->which_version() - 9;
+}

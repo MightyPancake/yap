@@ -1,0 +1,7 @@
+module badver {
+    version: "1.0.0-rc.1"
+}
+
+i32 fn main(){
+    ret 0;
+}
