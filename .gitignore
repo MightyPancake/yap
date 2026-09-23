@@ -8,12 +8,19 @@ modules/*/binds.yp
 modules/*/*.a
 modules/*/*.so
 modules/*/*.c
+# Fixture modules build the same artifacts, one directory deeper.
+tests/modules/*/*.a
+tests/modules/*/*.so
+tests/modules/*/*.o
 # hkeep hashmap wrapper/binds
 !modules/hashmap/binds.yp
 !modules/hashmap/wrapper.c
 # keep arity_test wrapper/binds (tests/pass/call_arity.yp's fixture module)
 !modules/arity_test/binds.yp
 !modules/arity_test/wrapper.c
+# arity_test moved under tests/ but still ships its generated wrapper by hand.
+!tests/modules/arity_test/binds.yp
+!tests/modules/arity_test/wrapper.c
 thesis
 foo
 foo/*

@@ -1,6 +1,6 @@
-module badcollections {
+module badreexport {
     version: "0.1.0",
-    prefix: "badcoll_",
+    prefix: "badreexp_",
     deps: ["arr@^0.1.0"]
 }
 

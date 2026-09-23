@@ -1,6 +1,6 @@
-module collections {
+module reexport {
     version: "0.1.0",
-    prefix: "coll_",
+    prefix: "reexp_",
     deps: ["arr@^0.1.0", "hashmap@^0.1.0"]
 }
 

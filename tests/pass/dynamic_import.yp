@@ -1,7 +1,7 @@
-// collections has no arr of its own: its __import macro names arr, which is one
+// reexport has no arr of its own: its __import macro names arr, which is one
 // of its declared deps, and the compiler pulls that module in during the build.
 // Using arr here proves it actually landed rather than merely being named.
-import collections:()
+import reexport:()
 
 i32 fn main(){
     arr->arr:(i32) nums;

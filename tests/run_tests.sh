@@ -19,6 +19,10 @@ trap 'exit 130' INT TERM
 
 # Each entry: test_file|expect|err_file
 entries=()
+# Fixture modules live beside the tests rather than in modules/, which holds only the
+# ones that ship. They are found through the lookup path, so nothing is copied about.
+export YAP_MODULE_PATH="$(cd "$(dirname "$0")/modules" && pwd)"
+
 for f in tests/pass/*.yp; do
     [ -e "$f" ] || { echo "No pass test files found in ./tests/pass"; exit 1; }
     entries+=("$f|pass|")

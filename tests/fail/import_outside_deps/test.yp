@@ -1,4 +1,4 @@
-import badcollections:()
+import badreexport:()
 
 i32 fn main(){
     ret 0;

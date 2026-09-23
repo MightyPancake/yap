@@ -1,6 +1,6 @@
-// arr is never named here: collections' __import brings it in, and the pun makes
+// arr is never named here: reexport's __import brings it in, and the pun makes
 // arr:(i32) mean arr->arr:(i32).
-import collections:()
+import reexport:()
 
 i32 fn main(){
     arr:(i32) nums;

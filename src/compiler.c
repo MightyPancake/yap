@@ -178,6 +178,18 @@ int compile(yap_args args){
             free(src_dir);
         }
     }
+    /* YAP_MODULE_PATH is searched after the project's own modules but before the ones
+     * shipped with the installation, so a caller can point at extra module trees -- the
+     * test suite uses it for its fixtures -- without installing anything. */
+    char* env_paths = getenv("YAP_MODULE_PATH");
+    if (env_paths && env_paths[0]){
+        char* copy = strus_copy(env_paths);
+        for (char* tok = strtok(copy, ":"); tok; tok = strtok(NULL, ":")){
+            if (tok[0]) darr_push(ctx->module_lookup_paths, strus_copy(tok));
+        }
+        free(copy);
+    }
+
     char* yap_home = yap_get_yap_home_path();
     char* modules_path = strus_newf("%s/modules", yap_home);
     darr_push(ctx->module_lookup_paths, modules_path);

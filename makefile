@@ -166,7 +166,7 @@ rerun: build
 
 run:
 	@[ -n "$(test)" ] || { echo "Usage: make run test=pass/<name> | test=fail/<name>/test"; exit 1; }
-	valgrind \
+	YAP_MODULE_PATH=$(YAP_PATH)/tests/modules valgrind \
 		--track-origins=yes \
 		--leak-check=full \
 		--error-exitcode=99 \
