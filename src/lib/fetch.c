@@ -144,13 +144,20 @@ static bool yap_fetch_git_dep(yap_ctx* ctx, yap_dep_node dep, const char* dest_r
     char* staging = strus_newf("%s/.staging-%s", dest_root, dep.name);
     yap_rm_rf(staging);
 
+    /* Cloning at a tag lands on a commit, and git lectures about detached HEAD -- advice
+     * for someone working in the checkout, not for a fetched dependency. Real failures
+     * still reach stderr. --depth is meaningless for a local path and git says so, so it
+     * is only passed when the source is actually remote. */
+    struct stat st;
+    bool local = stat(dep.git, &st) == 0 && S_ISDIR(st.st_mode);
     bool ok;
     if (dep.tag || dep.branch){
         char* ref = dep.tag ? dep.tag : dep.branch;
-        char* argv[] = { "git", "clone", "--quiet", "--depth", "1", "--branch", ref, "--", dep.git, staging, NULL };
-        ok = yap_exec(argv);
+        char* deep[]    = { "git", "-c", "advice.detachedHead=false", "clone", "--quiet", "--branch", ref, "--", dep.git, staging, NULL };
+        char* shallow[] = { "git", "-c", "advice.detachedHead=false", "clone", "--quiet", "--depth", "1", "--branch", ref, "--", dep.git, staging, NULL };
+        ok = yap_exec(local ? deep : shallow);
     } else {
-        char* argv[] = { "git", "clone", "--quiet", "--", dep.git, staging, NULL };
+        char* argv[] = { "git", "-c", "advice.detachedHead=false", "clone", "--quiet", "--", dep.git, staging, NULL };
         ok = yap_exec(argv);
     }
     if (ok && dep.rev){
