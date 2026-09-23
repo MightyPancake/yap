@@ -44,6 +44,7 @@ typedef struct yap_args{
   char* output_file;
   darr(char*) extra;
   bool show_modules_path;
+  bool install_global; //--global: install into YAP_HOME/modules instead of the project
   char* command;
   // --gen-c-bind: header to generate bindings from (e.g. "<stdio.h>")
   char* gen_c_bind_header;

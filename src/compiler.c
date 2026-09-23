@@ -113,7 +113,7 @@ static int yap_install_cmd(yap_args args){
     ctx->args = &args;
 
     const char* where = darr_len(args.extra) > 0 ? darr_first(args.extra) : ".";
-    int rc = yap_install(ctx, where);
+    int rc = yap_install(ctx, where, args.install_global);
     if (yap_ctx_dispatch_errors(ctx)) rc = 1;
     return rc;
 }
@@ -279,6 +279,7 @@ void yap_compiler_load_semantic_component(yap_compiler* compiler, const char* pa
 
 #define OPT_COMPONENT_FLAGS 0x1000
 #define OPT_FETCH 0x1001
+#define OPT_GLOBAL 0x1002
 
 static error_t parse_args(int key, char *arg, struct argp_state *state) {
     yap_args* args = state->input;
@@ -286,6 +287,9 @@ static error_t parse_args(int key, char *arg, struct argp_state *state) {
     switch(key) {
     case OPT_FETCH:
         args->command = "fetch";
+        break;
+    case OPT_GLOBAL:
+        args->install_global = true;
         break;
     case OPT_COMPONENT_FLAGS:
         args->command = "component_flags";
@@ -360,6 +364,7 @@ static struct argp_option options[] = {
     {"backend-flag", 'b', "FLAG", 0, "Raw flag forwarded to the backend component, e.g. -bO2 for optimization level, -bc to stop after emitting C (copied to ./out), -bcc=clang to pick the C compiler (gcc, clang, tcc supported), -bf=-Wall to forward a raw flag to that compiler. Resolved by the backend, not the core compiler.", 1},
     {"frontend-flag", 'f', "FLAG", 0, "Raw flag forwarded to the frontend component. Resolved by the frontend.", 1},
     {"select-component", 's', "COMPONENT=NAME", 0, "Select which directory under components/ implements a compiler stage, e.g. -sback=yap-c, -sfront=yap-ts, -ssem=yap-semantic.", 1},
+    {"global", OPT_GLOBAL, NULL, 0, "With install: put modules in YAP_HOME/modules, where every project can see them, instead of the project's own .yap/modules.", 1},
     {"fetch", OPT_FETCH, NULL, 0, "Clone the git dependencies declared in the source file's manifest into .yap/modules beside it.", 1},
     {"component-flags", OPT_COMPONENT_FLAGS, NULL, 0, "List the raw -b/-f flags supported by the currently selected components (also shown under --help).", 1},
     {"help", 'h', NULL, 0, "Give this help list.", 4},

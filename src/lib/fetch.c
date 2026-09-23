@@ -240,7 +240,7 @@ static bool yap_already_fetched(darr(char*) done, char* name){
 
 /* Walks the graph rather than just the root manifest: a fetched module's own git deps are
  * queued as it lands, so one install brings in everything a build will look for. */
-int yap_install(yap_ctx* ctx, const char* where){
+int yap_install(yap_ctx* ctx, const char* where, bool global){
     char* dir = yap_resolve_path(where && where[0] ? where : ".");
     if (!dir){
         printf("No such directory: %s\n", where ? where : ".");
@@ -262,8 +262,23 @@ int yap_install(yap_ctx* ctx, const char* where){
     }
     printf("Installing dependencies for %s\n", manifest_path);
 
-    char* dest_root = strus_newf("%s/.yap/modules", dir);
+    /* A global install lands where the stdlib lives, so manifest-less scripts can import
+     * it too; the project's own .yap/modules is searched first either way. */
+    char* dest_root;
+    if (global){
+        char* yap_home = yap_get_yap_home_path();
+        dest_root = strus_newf("%s/modules", yap_home);
+        free(yap_home);
+    } else {
+        dest_root = strus_newf("%s/.yap/modules", dir);
+    }
     yap_mkdir_p(dest_root);
+    if (access(dest_root, W_OK) != 0){
+        printf("Cannot write to %s\n", dest_root);
+        free(dest_root); free(manifest_path); free(dir);
+        return 1;
+    }
+    printf("Installing into %s\n", dest_root);
 
     darr(yap_dep_node) queue = darr_new(yap_dep_node);
     darr(char*) done = darr_new(char*);
@@ -311,9 +326,9 @@ int yap_install(yap_ctx* ctx, const char* where){
 }
 
 int yap_fetch_deps(yap_ctx* ctx, yap_args args){
-    if (darr_len(args.extra) == 0) return yap_install(ctx, ".");
+    if (darr_len(args.extra) == 0) return yap_install(ctx, ".", args.install_global);
     char* dir = yap_get_parent_dir(darr_first(args.extra));
-    int rc = yap_install(ctx, dir ? dir : ".");
+    int rc = yap_install(ctx, dir ? dir : ".", args.install_global);
     free(dir);
     return rc;
 }
