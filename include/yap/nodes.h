@@ -370,6 +370,9 @@ kenobi_new_struct_free(yap_file_import_node,
 
 kenobi_new_struct_free(yap_module_import_node,
     yap_identifier_node module_name;
+    /* 'import m:(args)' -- the module's __import macro chooses what else comes in. */
+    bool parameterized;
+    darr(yap_macro_param_node) params;
     yap_loc loc;
 );
 
