@@ -1,0 +1,4 @@
+// Macro args cross as one void* each, so a by-value f64 parameter would read an unset register.
+yExpr fn tenfold(f64 x){ ret yapi->int((x * 10.0).(i32)); }
+
+i32 fn main(){ ret tenfold:(1.5) - 15; }

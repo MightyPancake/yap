@@ -1,0 +1,4 @@
+// An integer argument is range-checked against its parameter's width.
+yExpr fn take_byte(byte x){ ret yapi->int(x.(i32)); }
+
+i32 fn main(){ ret take_byte:(300); }

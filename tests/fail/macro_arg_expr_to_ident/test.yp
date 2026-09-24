@@ -1,0 +1,7 @@
+// A #expr hands over a yExpr, not the name string a yIdent parameter reads.
+yStmt fn declare_int(yIdent name){ ret yapi->var_decl(yapi->type(c"i32"), name); }
+
+i32 fn main(){
+    declare_int:(#5);
+    ret 0;
+}

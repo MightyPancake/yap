@@ -1,0 +1,4 @@
+// A number handed to a byte@ parameter would be read as a pointer.
+yExpr fn first(byte@ s){ ret yapi->int(s:[0].(i32)); }
+
+i32 fn main(){ ret first:(65); }

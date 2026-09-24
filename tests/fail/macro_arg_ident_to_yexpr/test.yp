@@ -1,0 +1,4 @@
+// A +ident hands over a name string, not a yExpr.
+yExpr fn identity(yExpr e){ ret e; }
+
+i32 fn main(){ ret identity:(+fresh); }

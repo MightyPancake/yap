@@ -1,0 +1,4 @@
+// yExpr is registered as an 8-byte primitive, so it must not pass for an integer parameter.
+yExpr fn identity(yExpr e){ ret e; }
+
+i32 fn main(){ ret identity:(0); }

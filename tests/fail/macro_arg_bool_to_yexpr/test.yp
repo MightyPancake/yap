@@ -1,0 +1,7 @@
+// A bare bool is passed by value, not as a yExpr handle.
+yExpr fn identity(yExpr e){ ret e; }
+
+i32 fn main(){
+    _ b = identity:(true);
+    ret 0;
+}
