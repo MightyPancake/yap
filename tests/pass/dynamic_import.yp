@@ -4,7 +4,7 @@
 import reexport:()
 
 i32 fn main(){
-    arr->arr:(i32) nums;
+    arr:(i32) nums;
     nums:init();
     nums:push(4);
     _ n = nums:len().(i32);

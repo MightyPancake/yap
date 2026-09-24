@@ -6,7 +6,7 @@ import io
 import arr
 
 i32 fn main() {
-    arr->arr:(i32) nums;
+    arr:(i32) nums;
     nums:init();
     nums:push(1);
     nums:push(2);

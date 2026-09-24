@@ -70,7 +70,7 @@ i32 fn main() {
     io->putchar((fact % 10) + 48);
     io->putchar(10);
 
-    arr->arr:(i32) nums;
+    arr:(i32) nums;
     nums:init();
     i32 i = 0;
     while (i < 20) {
