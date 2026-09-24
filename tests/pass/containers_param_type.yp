@@ -1,0 +1,13 @@
+import containers:()
+
+fn consume(arr:(i32) nums){
+    nums:free();
+}
+
+i32 fn main(){
+    arr:(i32) a;
+    a:init();
+    a:push(42);
+    consume(a);
+    ret 0;
+}
