@@ -8,6 +8,6 @@ i32 fn main(){
     nums:push(1);
     nums:free();
 
-    hashmap->hashmap:(byte@, i32) m;
+    hashmap:(byte@, i32) m;
     ret 0;
 }
