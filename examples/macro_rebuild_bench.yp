@@ -23,83 +23,83 @@ struct Bench18 { i32 v, }
 struct Bench19 { i32 v, }
 
 i32 fn main() {
-    arr->arr:(Bench0) a0;
+    arr:(Bench0) a0;
     a0:init();
     a0:push([0].(Bench0));
 
-    arr->arr:(Bench1) a1;
+    arr:(Bench1) a1;
     a1:init();
     a1:push([1].(Bench1));
 
-    arr->arr:(Bench2) a2;
+    arr:(Bench2) a2;
     a2:init();
     a2:push([2].(Bench2));
 
-    arr->arr:(Bench3) a3;
+    arr:(Bench3) a3;
     a3:init();
     a3:push([3].(Bench3));
 
-    arr->arr:(Bench4) a4;
+    arr:(Bench4) a4;
     a4:init();
     a4:push([4].(Bench4));
 
-    arr->arr:(Bench5) a5;
+    arr:(Bench5) a5;
     a5:init();
     a5:push([5].(Bench5));
 
-    arr->arr:(Bench6) a6;
+    arr:(Bench6) a6;
     a6:init();
     a6:push([6].(Bench6));
 
-    arr->arr:(Bench7) a7;
+    arr:(Bench7) a7;
     a7:init();
     a7:push([7].(Bench7));
 
-    arr->arr:(Bench8) a8;
+    arr:(Bench8) a8;
     a8:init();
     a8:push([8].(Bench8));
 
-    arr->arr:(Bench9) a9;
+    arr:(Bench9) a9;
     a9:init();
     a9:push([9].(Bench9));
 
-    arr->arr:(Bench10) a10;
+    arr:(Bench10) a10;
     a10:init();
     a10:push([10].(Bench10));
 
-    arr->arr:(Bench11) a11;
+    arr:(Bench11) a11;
     a11:init();
     a11:push([11].(Bench11));
 
-    arr->arr:(Bench12) a12;
+    arr:(Bench12) a12;
     a12:init();
     a12:push([12].(Bench12));
 
-    arr->arr:(Bench13) a13;
+    arr:(Bench13) a13;
     a13:init();
     a13:push([13].(Bench13));
 
-    arr->arr:(Bench14) a14;
+    arr:(Bench14) a14;
     a14:init();
     a14:push([14].(Bench14));
 
-    arr->arr:(Bench15) a15;
+    arr:(Bench15) a15;
     a15:init();
     a15:push([15].(Bench15));
 
-    arr->arr:(Bench16) a16;
+    arr:(Bench16) a16;
     a16:init();
     a16:push([16].(Bench16));
 
-    arr->arr:(Bench17) a17;
+    arr:(Bench17) a17;
     a17:init();
     a17:push([17].(Bench17));
 
-    arr->arr:(Bench18) a18;
+    arr:(Bench18) a18;
     a18:init();
     a18:push([18].(Bench18));
 
-    arr->arr:(Bench19) a19;
+    arr:(Bench19) a19;
     a19:init();
     a19:push([19].(Bench19));
 

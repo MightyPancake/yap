@@ -191,7 +191,7 @@ yType fn arr(yType T){
 
 // new(T): value-yielding convenience constructor, so callers can write `_ a = arr->new:(i32);` instead of a var decl followed by init().
 yExpr fn new(yType T) {
-    // Must go through the module (`arr->arr(T)`), not a bare `arr(T)` call: methods link under the module-prefixed name ("arr_arr"), so a bare reference would be an unresolvable symbol.
+    // arr:(T) also works via the pun shorthand (bare module name resolves to module->name).
     _ arr_t = arr->arr(T);
     _ ptr_t = yapi->ptr_of(T);
     _ name = yapi->uniq_name();
