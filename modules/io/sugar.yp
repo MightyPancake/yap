@@ -99,6 +99,33 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
     ret yapi->block(stmts);
 }
 
+// Like print, but appends a newline after all arguments.
+yStmt fn println(yExpr[]@ args) {
+    _ stmts = yapi->stmt_list_new();
+    _ bool_t = yapi->type(c"bool");
+    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
+    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
+    u64 ai = 0;
+    while (ai < args.len) {
+        _ arg = args.:[ai];
+        _ t = yapi->type_of(arg);
+        if (t == bool_t) {
+            _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
+            _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
+            stmts = yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
+        } else if (t == byte_ptr_t) {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
+        } else if (t == byte_slice_t) {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
+        } else {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, yapi->type(c"i32")))));
+        }
+        ai = ai + 1;
+    }
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(10))));
+    ret yapi->block(stmts);
+}
+
 // Type-derived print: dispatches each arg to the right printer based on its type at compile time.
 // Integers and untyped literals -> print_i32 (cast to i32).
 // bool -> prints "true" or "false".

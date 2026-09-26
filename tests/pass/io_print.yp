@@ -6,5 +6,6 @@ i32 fn main() {
     io->printf:(c"Hello, world!\n", []);
     io->printf:(c"age = %d, tag = %c, name = %s, literal %% sign\n", [age, 33, c"Yap"]);
     io->print:([42, c" was the answer, bool=", true, c"\n"]);
+    io->println:([42, c" was the answer, bool=", true]);
     ret 0;
 }
