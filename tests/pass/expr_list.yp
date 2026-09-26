@@ -43,9 +43,9 @@ i32 fn main() {
 
     emit_chars:([72, 105, 10]); // prints "Hi\n"
 
-    if (a == 16) io->print:(c"List sum OK\n");
-    if (b == 100) io->print:(c"Default empty list OK\n");
-    if (c == b)   io->print:(c"Empty list == omitted OK\n");
+    if (a == 16) io->printf:(c"List sum OK\n");
+    if (b == 100) io->printf:(c"Default empty list OK\n");
+    if (c == b)   io->printf:(c"Empty list == omitted OK\n");
 
     ret a + b + c - 216;
 }

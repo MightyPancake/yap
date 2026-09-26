@@ -51,34 +51,34 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
 
     //Comptime types (opaque pointer handles for metaprogramming)
-    ctx->yexpr_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExpr",      "yExpr",      "void*");
-    ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "void*");
-    ctx->ystmt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmt", "yStmt", "void*");
-    ctx->yfn_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFn",      "yFn",      "void*");
+    ctx->yexpr_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExpr",      "yExpr",      "yExpr");
+    ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "yType");
+    ctx->ystmt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmt", "yStmt", "yStmt");
+    ctx->yfn_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFn",      "yFn",      "yFn");
     ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
     //yExprBlueprint: yExpr template with named holes ($name); must be :fill()'d and :finish()'d before use as a yExpr.
-    ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "void*");
+    ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "yExprBlueprint");
     //yStmtBlueprint: the stmt${ } analogue -- a yStmt template with named holes,
     //filled via :fill_expr(...)/:finish() (same C repr as yStmt, a yap_statement*).
-    ctx->ystmtblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtBlueprint", "yStmtBlueprint", "void*");
+    ctx->ystmtblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtBlueprint", "yStmtBlueprint", "yStmtBlueprint");
     //yExprList is a real slice of yExpr (not an opaque handle), so it gets native '.len' and ':[i]'.
     {
         yap_type yexprlist_slice = { .kind = yap_type_slice, .slice = { .element_type = ctx->yexpr_type_id }, .is_const = false };
         ctx->yexprlist_type_id = yap_ctx_push_named_type(ctx, "yExprList", NULL, yexprlist_slice);
     }
-    ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "void*");
+    ctx->ystmtlist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtList",  "yStmtList",  "yStmtList");
     //yCallArgs: opaque growable handle for a yapi->call(func, args) argument list, unlike the fixed-size yExprList above.
-    ctx->ycallargs_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yCallArgs",  "yCallArgs",  "void*");
+    ctx->ycallargs_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yCallArgs",  "yCallArgs",  "yCallArgs");
     //yDecl/yDeclList: what a module's __import macro returns, naming further modules to import.
-    ctx->ydecl_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDecl",      "yDecl",      "void*");
-    ctx->ydecllist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDeclList",  "yDeclList",  "void*");
+    ctx->ydecl_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDecl",      "yDecl",      "yDecl");
+    ctx->ydecllist_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yDeclList",  "yDeclList",  "yDeclList");
 
     //Comptime builder templates (yapi.md): opaque handles for the incremental
     //struct/enum/union/func builders, distinct from the finished yType/yFn they emit.
-    ctx->ystructt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStructT", "yStructT", "void*");
-    ctx->yenumt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yEnumT",   "yEnumT",   "void*");
-    ctx->yuniont_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yUnionT",  "yUnionT",  "void*");
-    ctx->yfnt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFnT",   "yFnT",   "void*");
+    ctx->ystructt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStructT", "yStructT", "yStructT");
+    ctx->yenumt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yEnumT",   "yEnumT",   "yEnumT");
+    ctx->yuniont_type_id  = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yUnionT",  "yUnionT",  "yUnionT");
+    ctx->yfnt_type_id   = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFnT",   "yFnT",   "yFnT");
 
     //Comptime builder module: yapi
     {
@@ -106,6 +106,7 @@ yap_ctx* yap_ctx_new(){
             { "int",           ye,      {i},          1 },
             { "float",         ye,      {f},          1 },
             { "string",        ye,      {bp},         1 },
+            { "cstr",          ye,      {bp},         1 },
             { "bool",          ye,      {b},          1 },
             { "var_value",     ye,      {bp},         1 },
             { "new_var",       ye,      {yt, yi},     2 },

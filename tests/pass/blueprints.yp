@@ -123,24 +123,24 @@ i32 fn main() {
 
     _ ct = bp_cast:(i64, #7);      // (i64)7
 
-    if (b == 11)         { io->print:(c"arith fill/finish OK\n");  pass = pass + 1; }
-    if (b == m)          { io->print:(c"blueprint == manual OK\n"); pass = pass + 1; }
-    if (s == 42)         { io->print:(c"stored OK\n");             pass = pass + 1; }
-    if (sq == 36)        { io->print:(c"hole reuse OK\n");         pass = pass + 1; }
-    if (tw == 7)         { io->print:(c"chained fill OK\n");       pass = pass + 1; }
-    if (ng == -5)        { io->print:(c"unary minus OK\n");        pass = pass + 1; }
-    if (tn == 10)        { io->print:(c"ternary then OK\n");       pass = pass + 1; }
-    if (tf == 20)        { io->print:(c"ternary else OK\n");       pass = pass + 1; }
-    if (lt)              { io->print:(c"cmp < true OK\n");         pass = pass + 1; }
-    if (nlt == false)    { io->print:(c"cmp < false OK\n");        pass = pass + 1; }
-    if (eq)              { io->print:(c"cmp == OK\n");             pass = pass + 1; }
-    if (ge)              { io->print:(c"cmp >= OK\n");             pass = pass + 1; }
+    if (b == 11)         { io->printf:(c"arith fill/finish OK\n");  pass = pass + 1; }
+    if (b == m)          { io->printf:(c"blueprint == manual OK\n"); pass = pass + 1; }
+    if (s == 42)         { io->printf:(c"stored OK\n");             pass = pass + 1; }
+    if (sq == 36)        { io->printf:(c"hole reuse OK\n");         pass = pass + 1; }
+    if (tw == 7)         { io->printf:(c"chained fill OK\n");       pass = pass + 1; }
+    if (ng == -5)        { io->printf:(c"unary minus OK\n");        pass = pass + 1; }
+    if (tn == 10)        { io->printf:(c"ternary then OK\n");       pass = pass + 1; }
+    if (tf == 20)        { io->printf:(c"ternary else OK\n");       pass = pass + 1; }
+    if (lt)              { io->printf:(c"cmp < true OK\n");         pass = pass + 1; }
+    if (nlt == false)    { io->printf:(c"cmp < false OK\n");        pass = pass + 1; }
+    if (eq)              { io->printf:(c"cmp == OK\n");             pass = pass + 1; }
+    if (ge)              { io->printf:(c"cmp >= OK\n");             pass = pass + 1; }
 
-    if (c1 == 11)        { io->print:(c"call-arg hole fill OK\n"); pass = pass + 1; }
-    if (c2 == 7)         { io->print:(c"call-arg multi-hole fill OK\n"); pass = pass + 1; }
-    if (c5 == 110)       { io->print:(c"call-arg >3 arity (call_args builder) OK\n"); pass = pass + 1; }
+    if (c1 == 11)        { io->printf:(c"call-arg hole fill OK\n"); pass = pass + 1; }
+    if (c2 == 7)         { io->printf:(c"call-arg multi-hole fill OK\n"); pass = pass + 1; }
+    if (c5 == 110)       { io->printf:(c"call-arg >3 arity (call_args builder) OK\n"); pass = pass + 1; }
 
-    if (ct == 7)         { io->print:(c"lazy cast type-hole fill OK\n"); pass = pass + 1; }
+    if (ct == 7)         { io->printf:(c"lazy cast type-hole fill OK\n"); pass = pass + 1; }
 
     // --- stmt${ } basics: assignment, arithmetic, multi-statement block ---
     i32 x = 0;
@@ -151,9 +151,9 @@ i32 fn main() {
     add_into:(#y, #x, #3);     // y = x + 3;
     bump_twice:(#z);           // { z = z + 1; z = z + 1; }
 
-    if (x == 5)  { io->print:(c"stmt bp assign OK\n");      pass = pass + 1; }
-    if (y == 8)  { io->print:(c"stmt bp add OK\n");         pass = pass + 1; }
-    if (z == 12) { io->print:(c"stmt bp multi/block OK\n"); pass = pass + 1; }
+    if (x == 5)  { io->printf:(c"stmt bp assign OK\n");      pass = pass + 1; }
+    if (y == 8)  { io->printf:(c"stmt bp add OK\n");         pass = pass + 1; }
+    if (z == 12) { io->printf:(c"stmt bp multi/block OK\n"); pass = pass + 1; }
 
     // --- stmt${ } with a statement hole (:fill_stmt) ---
     i32 c = 0;
@@ -161,17 +161,17 @@ i32 fn main() {
     i32 d = 0;
     guard_inc:(#false, #d);   // if (false) { d = d + 1; }
 
-    if (c == 1) { io->print:(c"fill_stmt then-taken OK\n");    pass = pass + 1; }
-    if (d == 0) { io->print:(c"fill_stmt then-skipped OK\n");  pass = pass + 1; }
+    if (c == 1) { io->printf:(c"fill_stmt then-taken OK\n");    pass = pass + 1; }
+    if (d == 0) { io->printf:(c"fill_stmt then-skipped OK\n");  pass = pass + 1; }
 
     // --- stmt${ }'s var_decl support (:fill_type + :fill_ident + :fill_var) ---
     declare_var:(i32, +vx, #42);
     vx = vx + 1;
-    if (vx == 43) { io->print:(c"canonical var_decl blueprint fill OK\n"); pass = pass + 1; }
+    if (vx == 43) { io->printf:(c"canonical var_decl blueprint fill OK\n"); pass = pass + 1; }
 
     i32 r = 0;
     build_double:(i32, #5, #r);
-    if (r == 10) { io->print:(c"fill_var declare+reference OK\n"); pass = pass + 1; }
+    if (r == 10) { io->printf:(c"fill_var declare+reference OK\n"); pass = pass + 1; }
 
     ret pass - 23;
 }

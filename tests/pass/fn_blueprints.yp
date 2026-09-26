@@ -30,10 +30,10 @@ yExpr fn make_and_call_adder(yExpr bonus, yExpr arg) {
 i32 fn main() {
     boxed:(i32) b;
     b.val = 42;
-    if (b.val == 42) { io->print:(c"fn blueprint built+emitted OK\n"); }
+    if (b.val == 42) { io->printf:(c"fn blueprint built+emitted OK\n"); }
 
     _ result = make_and_call_adder:(#10, #5); // adder_with_bonus(5) = 5 + 10 = 15
-    if (result == 15) { io->print:(c"fn$ eager splice + callable ref OK\n"); }
+    if (result == 15) { io->printf:(c"fn$ eager splice + callable ref OK\n"); }
 
     ret result - 15;
 }

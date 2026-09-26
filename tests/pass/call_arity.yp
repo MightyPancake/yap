@@ -36,7 +36,7 @@ yExpr fn call_sum5(yExprList@ vals) {
 i32 fn main() {
     _ result = call_sum5:([1, 2, 3, 4, 5]); // 1+2+3+4+5 = 15
 
-    if (result == 15) { io->print:(c"5-arg call_args builder OK\n"); }
+    if (result == 15) { io->printf:(c"5-arg call_args builder OK\n"); }
 
     ret result - 15;
 }

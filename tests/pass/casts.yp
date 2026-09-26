@@ -27,12 +27,12 @@ i32 fn main() {
     a.(none);
 
     i32 ok = 0;
-    if (b == 44) { io->print:(c"num-to-byte truncation OK\n"); ok = ok + 1; }
-    if (back == 300) { io->print:(c"num round-trip through f32 OK\n"); ok = ok + 1; }
-    if (widened == 300) { io->print:(c"widen through cast OK\n"); ok = ok + 1; }
-    if (addr != 0) { io->print:(c"pointer-to-int OK\n"); ok = ok + 1; }
-    if (back_p. == 300) { io->print:(c"pointer round-trip through none@ OK\n"); ok = ok + 1; }
-    if (widened_byte == 200) { io->print:(c"byte>=128 widens unsigned (no sign-extension) OK\n"); ok = ok + 1; }
+    if (b == 44) { io->printf:(c"num-to-byte truncation OK\n"); ok = ok + 1; }
+    if (back == 300) { io->printf:(c"num round-trip through f32 OK\n"); ok = ok + 1; }
+    if (widened == 300) { io->printf:(c"widen through cast OK\n"); ok = ok + 1; }
+    if (addr != 0) { io->printf:(c"pointer-to-int OK\n"); ok = ok + 1; }
+    if (back_p. == 300) { io->printf:(c"pointer round-trip through none@ OK\n"); ok = ok + 1; }
+    if (widened_byte == 200) { io->printf:(c"byte>=128 widens unsigned (no sign-extension) OK\n"); ok = ok + 1; }
 
     ret ok - 6;
 }

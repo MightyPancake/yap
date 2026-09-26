@@ -15,24 +15,24 @@ i32 fn main() {
 
     // map: [1,2,3,4] -> [2,4,6,8]
     _ doubled = nums:map((i32 fn i32 x) { ret x * 2; });
-    if (doubled:len() == 4) io->print:(c"map len OK\n");
+    if (doubled:len() == 4) io->printf:(c"map len OK\n");
     _ dsum = doubled:at(0) + doubled:at(1) + doubled:at(2) + doubled:at(3); // 20
-    if (dsum == 20) io->print:(c"map values OK\n");
+    if (dsum == 20) io->printf:(c"map values OK\n");
 
     // filter: [1,2,3,4] -> [2,4]
     _ evens = nums:filter((bool fn i32 x) { ret (x % 2) == 0; });
-    if (evens:len() == 2) io->print:(c"filter len OK\n");
+    if (evens:len() == 2) io->printf:(c"filter len OK\n");
     _ esum = evens:at(0) + evens:at(1); // 6
-    if (esum == 6) io->print:(c"filter values OK\n");
+    if (esum == 6) io->printf:(c"filter values OK\n");
 
     // fold: 0+1+2+3+4 = 10
     _ total = nums:fold((i32 fn i32 acc, i32 x) { ret acc + x; }, 0);
-    if (total == 10) io->print:(c"fold OK\n");
+    if (total == 10) io->printf:(c"fold OK\n");
 
     // foreach: side-effecting iteration with index+value, in order -- doesn't
     // build a new arr(T), so just confirm nums itself is unaffected after.
-    nums:foreach((none fn u32 i, i32 v) { io->print:(c"%u: %d\n", [i, v]); });
-    if (nums:len() == 4) io->print:(c"foreach len OK\n");
+    nums:foreach((none fn u32 i, i32 v) { io->printf:(c"%u: %d\n", [i, v]); });
+    if (nums:len() == 4) io->printf:(c"foreach len OK\n");
 
     // for (macro): 'nums:for:(+i, +v, { ... })' -- +i/+v are hygienic idents
     // the macro itself introduces (dispatched via receiver-style macro call,
@@ -44,7 +44,7 @@ i32 fn main() {
     nums:for:(+mi, +mv, {
         macro_total = macro_total + mv;
     });
-    if (macro_total == 10) io->print:(c"for macro OK\n");
+    if (macro_total == 10) io->printf:(c"for macro OK\n");
 
     nums:free();
     doubled:free();

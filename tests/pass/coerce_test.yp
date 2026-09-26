@@ -8,23 +8,23 @@ i32 fn main() {
     i64 b = -7;
     u32 c = 100;
 
-    if (a + 1 == 43) { io->print:(c"u64 literal OK\n");  ok = ok + 1; }
-    if (b + 1 == -6) { io->print:(c"i64 literal OK\n");  ok = ok + 1; }
-    if (c + 1 == 101) { io->print:(c"u32 literal OK\n"); ok = ok + 1; }
+    if (a + 1 == 43) { io->printf:(c"u64 literal OK\n");  ok = ok + 1; }
+    if (b + 1 == -6) { io->printf:(c"i64 literal OK\n");  ok = ok + 1; }
+    if (c + 1 == 101) { io->printf:(c"u32 literal OK\n"); ok = ok + 1; }
 
     // literal coercion: float literal to f32/f64
     f64 x = 3.0;
     f32 y = 2.0;
 
-    if (x * 2.0 == 6.0)  { io->print:(c"f64 literal OK\n"); ok = ok + 1; }
-    if (y * 2.0 == 4.0)  { io->print:(c"f32 literal OK\n"); ok = ok + 1; }
+    if (x * 2.0 == 6.0)  { io->printf:(c"f64 literal OK\n"); ok = ok + 1; }
+    if (y * 2.0 == 4.0)  { io->printf:(c"f32 literal OK\n"); ok = ok + 1; }
 
     // type inference
     _ ia = 42;
     _ fa = 3.0;
 
-    if (ia + 1 == 43)    { io->print:(c"infer i32 OK\n");   ok = ok + 1; }
-    if (fa * 2.0 == 6.0) { io->print:(c"infer f64 OK\n");   ok = ok + 1; }
+    if (ia + 1 == 43)    { io->printf:(c"infer i32 OK\n");   ok = ok + 1; }
+    if (fa * 2.0 == 6.0) { io->printf:(c"infer f64 OK\n");   ok = ok + 1; }
 
     ret ok - 7;
 }

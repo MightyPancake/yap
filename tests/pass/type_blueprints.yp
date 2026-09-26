@@ -120,12 +120,12 @@ i32 fn main() {
     nesb.inner.y = 5;
 
     i32 ok = 0;
-    if (p.first + p.second == 42) { io->print:(c"type bp $T splice OK\n"); ok = ok + 1; }
-    if (b.value + b.count == 12)  { io->print:(c"type bp named field OK\n"); ok = ok + 1; }
-    if (nb.as_int == 7)           { io->print:(c"type bp union OK\n");       ok = ok + 1; }
-    if (sg.(i32) == 2)            { io->print:(c"type bp enum OK\n");        ok = ok + 1; }
-    if (pb.p. == 9)               { io->print:(c"type bp pointer field OK\n"); ok = ok + 1; }
-    if (sb.count == 3)            { io->print:(c"type bp slice field OK\n");   ok = ok + 1; }
-    if (nesb.inner.x + nesb.inner.y == 9) { io->print:(c"type bp nested anon field OK\n"); ok = ok + 1; }
+    if (p.first + p.second == 42) { io->printf:(c"type bp $T splice OK\n"); ok = ok + 1; }
+    if (b.value + b.count == 12)  { io->printf:(c"type bp named field OK\n"); ok = ok + 1; }
+    if (nb.as_int == 7)           { io->printf:(c"type bp union OK\n");       ok = ok + 1; }
+    if (sg.(i32) == 2)            { io->printf:(c"type bp enum OK\n");        ok = ok + 1; }
+    if (pb.p. == 9)               { io->printf:(c"type bp pointer field OK\n"); ok = ok + 1; }
+    if (sb.count == 3)            { io->printf:(c"type bp slice field OK\n");   ok = ok + 1; }
+    if (nesb.inner.x + nesb.inner.y == 9) { io->printf:(c"type bp nested anon field OK\n"); ok = ok + 1; }
     ret ok - 7;
 }

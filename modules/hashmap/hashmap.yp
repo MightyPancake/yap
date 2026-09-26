@@ -296,7 +296,7 @@ yExpr fn new_dict(yType V) {
     ret hashmap->new(yapi->ptr_of(yapi->type(c"byte")), V);
 }
 
-// for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->print:(c"%d\n", [v]); });`.
+// for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->printf:(c"%d\n", [v]); });`.
 yStmt fn for(yExpr self, yIdent k, yIdent v, yStmt body) {
     _ entry_ptr_t = yapi->field_type(yapi->type_of(self), c"_phantom");
     _ entry_t = yapi->pointee_type(entry_ptr_t);

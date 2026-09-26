@@ -35,14 +35,28 @@ none fn print_i32(i32 v) {
     }
 }
 
-// printf-style macro: compile-time walks `fmt`, dispatching one runtime call per %-specifier, chained into a single block.
-yStmt fn print(byte@ fmt, yExpr[]@ args) {
+// printf-style macro: compile-time walks `fmt`, accumulating runs of literal characters into single print_str calls.
+yStmt fn printf(byte@ fmt, yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     i32 ai = 0;
     i32 i = 0;
+    i32 run_start = 0;
     while (fmt:[i] != 0) {
         i32 ch = fmt:[i].(i32);
         if (ch == 37) { // '%'
+            if (i > run_start) {
+                byte[512] buf;
+                i32 k = 0;
+                i32 j = run_start;
+                while (j < i) {
+                    buf:[k] = fmt:[j];
+                    j = j + 1;
+                    k = k + 1;
+                }
+                buf:[k] = 0;
+                _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf:[0]@));
+                stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
+            }
             i32 spec = fmt:[i + 1].(i32);
             if (spec == 100) { // %d
                 _ call_expr = yapi->call1(yapi->var_value(c"io_print_i32"), args.:[ai]);
@@ -59,16 +73,58 @@ yStmt fn print(byte@ fmt, yExpr[]@ args) {
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 ai = ai + 1;
                 i = i + 2;
-            } else { // %% or unknown -> print literally
+            } else { // %% or unknown -> print second char literally
                 _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(spec));
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 i = i + 2;
             }
+            run_start = i;
         } else {
-            _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(ch));
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
             i = i + 1;
         }
+    }
+    if (i > run_start) {
+        byte[512] buf;
+        i32 k = 0;
+        i32 j = run_start;
+        while (j < i) {
+            buf:[k] = fmt:[j];
+            j = j + 1;
+            k = k + 1;
+        }
+        buf:[k] = 0;
+        _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf:[0]@));
+        stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
+    }
+    ret yapi->block(stmts);
+}
+
+// Type-derived print: dispatches each arg to the right printer based on its type at compile time.
+// Integers and untyped literals -> print_i32 (cast to i32).
+// bool -> prints "true" or "false".
+// byte@ (C string) -> print_str.
+// byte[] (yap string) -> print_str via .data.
+yStmt fn print(yExpr[]@ args) {
+    _ stmts = yapi->stmt_list_new();
+    _ bool_t = yapi->type(c"bool");
+    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
+    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
+    u64 ai = 0;
+    while (ai < args.len) {
+        _ arg = args.:[ai];
+        _ t = yapi->type_of(arg);
+        if (t == bool_t) {
+            _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
+            _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
+            stmts = yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
+        } else if (t == byte_ptr_t) {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
+        } else if (t == byte_slice_t) {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
+        } else {
+            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, yapi->type(c"i32")))));
+        }
+        ai = ai + 1;
     }
     ret yapi->block(stmts);
 }

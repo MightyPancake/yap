@@ -60,7 +60,7 @@ i32 fn main() {
     // a named argument (exercises module-local identifier name mangling)
     fail = fail + assert_eq(foo_test_module->add_default_via_sibling(5), 7, 9);
 
-    if (fail == 0) io->print:(c"OK\n");
+    if (fail == 0) io->printf:(c"OK\n");
 
     ret fail;
 }

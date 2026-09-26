@@ -210,7 +210,7 @@ yExpr fn new(yType T) {
     ret yapi->block_expr(stmts);
 }
 
-// for(self, i, v, body): receiver-dispatched macro-method form of iteration, e.g. `gnums:for:(+i, +v, { io->print:(c"%u: %d\n", [i, v]); });`.
+// for(self, i, v, body): receiver-dispatched macro-method form of iteration, e.g. `gnums:for:(+i, +v, { io->printf:(c"%u: %d\n", [i, v]); });`.
 // +i/+v are hygienic idents the macro declares itself, so the block body can reference them directly (unlike foreach(cb) above).
 yStmt fn for(yExpr self, yIdent i, yIdent v, yStmt body) {
     // Element type derived from self's own 'data' field via yapi->field_type, not yapi->member(self,...) + type_of: a member-built expr's .type only resolves once the spliced result is later built for real.
@@ -218,13 +218,15 @@ yStmt fn for(yExpr self, yIdent i, yIdent v, yStmt body) {
     _ elem_t = yapi->pointee_type(ptr_t);
     _ u32_t = yapi->type(c"u32");
     ret stmt${
-        u32 $i;
-        $i = 0;
-        while ($i < $self.count) {
-            $ElemT $v;
-            $v = $self.data:[$i];
-            $body;
-            $i = $i + 1;
+        {
+            u32 $i;
+            $i = 0;
+            while ($i < $self.count) {
+                $ElemT $v;
+                $v = $self.data:[$i];
+                $body;
+                $i = $i + 1;
+            }
         }
     }
     :fill_var(c"i", u32_t, i)
