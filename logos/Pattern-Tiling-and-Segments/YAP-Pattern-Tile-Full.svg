@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 200 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:affinity="https://www.affinity.studio/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-782,-1720)">
+        <g id="YAP-Pattern-Tile-Full" transform="matrix(0.273224,0,0,0.208333,568.338798,1361.666667)">
+            <rect x="782" y="1720" width="732" height="480" style="fill:none;"/>
+            <clipPath id="_clip1">
+                <rect x="782" y="1720" width="732" height="480"/>
+            </clipPath>
+            <g clip-path="url(#_clip1)">
+                <g transform="matrix(2.023639,0,0,6.393729,-907.567276,-549.790003)">
+                    <path d="M1175.976,430.076L855.579,430.076C850.859,430.076 846.435,429.12 843.727,427.515C841.019,425.91 840.368,423.857 841.983,422.016C854.683,407.532 881.214,377.276 893.814,362.906C897.975,358.161 908.841,355.003 921.007,355.003C964.615,355.003 1066.94,355.003 1110.549,355.003C1122.714,355.003 1133.581,358.161 1137.742,362.906C1150.342,377.276 1176.872,407.532 1189.573,422.016C1191.187,423.857 1190.536,425.91 1187.829,427.515C1185.121,429.12 1180.697,430.076 1175.976,430.076Z" style="fill:white;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
