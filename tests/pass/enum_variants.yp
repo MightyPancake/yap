@@ -1,0 +1,50 @@
+// Referencing an enum variant by name, qualified by its type: 'Mood.calm'.
+// Before this you could only cast an int literal and count declaration order.
+import io
+
+enum Mood {
+    calm,
+    happy,
+    giddy,
+}
+
+// Shares a variant name with Mood.
+enum Weather {
+    calm,
+    stormy,
+}
+
+enum Code {
+    ok = 0,
+    missing = 404,
+    broken = 500,
+}
+
+i32 fn takes_mood(Mood m) {
+    ret m.(i32);
+}
+
+i32 fn main() {
+    i32 ok = 0;
+
+    Mood m = Mood.happy;
+    if (m == Mood.happy) { ok = ok + 1; }
+
+    if (Mood.calm.(i32) == 0) { ok = ok + 1; }
+    if (Mood.giddy.(i32) == 2) { ok = ok + 1; }
+
+    m = Mood.calm;
+    if (m != Mood.happy) { ok = ok + 1; }
+
+    if (takes_mood(Mood.giddy) == 2) { ok = ok + 1; }
+
+    Weather w = Weather.calm;
+    if (w.(i32) == 0) { ok = ok + 1; }
+    if (Weather.stormy.(i32) == 1) { ok = ok + 1; }
+
+    if (Code.missing.(i32) == 404) { ok = ok + 1; }
+    if (Code.broken.(i32) == 500) { ok = ok + 1; }
+
+    if (ok == 9) { io->printf:(c"enum variants OK\n"); }
+    ret ok - 9;
+}

@@ -1,0 +1,48 @@
+module enumtypes {
+    version: "0.1.0",
+    prefix: "et_"
+}
+
+// Emitted as 'enum et_Mood' and 'union et_Blob', and used below as parameter,
+// return and local types -- declaration and uses must agree on that C name.
+enum Mood {
+    calm,
+    happy,
+}
+
+// 'calm' here would clash with Mood's in C if variants weren't mangled too.
+enum Weather {
+    calm,
+    stormy,
+}
+
+union Blob {
+    i32 as_int,
+    f32 as_float,
+}
+
+// Variants resolve to the module-prefixed C constants.
+Mood fn brighten(Mood m) {
+    Mood out = m == Mood.calm ? Mood.happy else m;
+    ret out;
+}
+
+i32 fn mood_roundtrip(i32 n) {
+    Mood m = n.(Mood);
+    ret brighten(m).(i32);
+}
+
+i32 fn weather_roundtrip(i32 n) {
+    Weather w = n == 0 ? Weather.calm else Weather.stormy;
+    ret w.(i32);
+}
+
+i32 fn blob_read(Blob b) {
+    ret b.as_int;
+}
+
+i32 fn blob_roundtrip(i32 n) {
+    Blob b;
+    b.as_int = n;
+    ret blob_read(b);
+}

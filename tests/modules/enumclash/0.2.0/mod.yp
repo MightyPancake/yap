@@ -1,0 +1,22 @@
+module enumclash {
+    version: "0.2.0",
+    prefix: "ec_"
+}
+
+enum Mood {
+    calm,
+    happy,
+    giddy,
+}
+
+union Blob {
+    i32 as_int,
+    f32 as_float,
+}
+
+i32 fn value() {
+    Mood m = 1.(Mood);
+    Blob b;
+    b.as_int = 1;
+    ret m.(i32) + b.as_int;
+}

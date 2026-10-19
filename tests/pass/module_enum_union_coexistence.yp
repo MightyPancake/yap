@@ -1,0 +1,13 @@
+// Two versions of enumclash each declare an enum Mood and a union Blob, and both
+// are loaded at once. The prefix folds in the version, so they don't collide.
+module ecprobe {
+    version: "0.1.0",
+    deps: ["enumclash@^0.2.0", "enumclash_consumer@^0.1.0"]
+}
+
+import enumclash
+import enumclash_consumer
+
+i32 fn main(){
+    ret (enumclash->value() * 10) + enumclash_consumer->via_old() - 21;
+}

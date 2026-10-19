@@ -1,0 +1,1 @@
+Enum 'Mood' has no variant named 'furious'

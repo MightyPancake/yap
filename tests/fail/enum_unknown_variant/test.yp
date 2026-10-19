@@ -1,0 +1,10 @@
+// Naming a variant the enum does not have is a build error, not a C-level one.
+enum Mood {
+    calm,
+    happy,
+}
+
+i32 fn main() {
+    Mood m = Mood.furious;
+    ret 0;
+}

@@ -1,0 +1,9 @@
+module enumclash_consumer {
+    version: "0.1.0",
+    prefix: "ecc_",
+    deps: ["enumclash@^0.1.0"]
+}
+
+import enumclash
+
+i32 fn via_old() { ret enumclash->value(); }

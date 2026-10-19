@@ -1,0 +1,15 @@
+// A module's types carry its prefix, so 'enum Mood' is emitted as 'enum et_Mood'
+// -- the declaration and every use of it have to agree on that one C name.
+import enumtypes
+
+i32 fn main() {
+    // calm(0) brightened is happy(1)
+    i32 mood = enumtypes->mood_roundtrip(0);
+    i32 weather = enumtypes->weather_roundtrip(1);
+    i32 blob = enumtypes->blob_roundtrip(41);
+
+    // An imported module's enum reaches by its bare type name.
+    i32 imported = Mood.happy.(i32);
+
+    ret (mood - 1) + (weather - 1) + (blob - 41) + (imported - 1);
+}

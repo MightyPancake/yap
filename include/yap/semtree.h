@@ -38,6 +38,7 @@ kenobi_new_struct_free(yap_union_type,
 
 kenobi_new_struct_free(yap_enum_variant,
   char* name;
+  char* c_name;
   yap_expr* value;
 );
 
