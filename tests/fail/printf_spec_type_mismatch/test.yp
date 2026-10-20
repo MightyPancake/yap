@@ -1,0 +1,7 @@
+import io
+
+i32 fn main() {
+    i32 x = 5;
+    io->printf:(c"%u\n", [x]);
+    ret 0;
+}

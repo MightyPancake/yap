@@ -129,6 +129,8 @@ yap_ctx* yap_ctx_new(){
             { "array_of",      yt,      {yt, i},      2 },
             { "type_of",       yt,      {ye},         1 },
             { "pointee_type",  yt,      {yt},         1 },
+            { "is_pointer",    b,       {yt},         1 },
+            { "resolve_type",  yt,      {yt},         1 },
             { "field_type",    yt,      {yt, bp},     2 },
             { "sizeof",        ye,      {yt},         1 },
             { "call0",         ye,      {ye},             1 },

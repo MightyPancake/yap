@@ -7,5 +7,23 @@ i32 fn main() {
     io->printf:(c"age = %d, tag = %c, name = %s, literal %% sign\n", [age, 33, c"Yap"]);
     io->print:([42, c" was the answer, bool=", true, c"\n"]);
     io->println:([42, c" was the answer, bool=", true]);
+
+    // Unsigned ints, wide ints, floats, and pointers (0x hex).
+    u32 u32v = 4000000000;
+    u64 u64v = 18446744073709551615;
+    i64 i64v = -123456789012;
+    f32 f32v = 3.5;
+    f64 f64v = 2.5;
+    i32 x = 9;
+    i32@ p = x@;
+    io->printf:(c"u32=%u u64=%u i64=%d f32=%f f64=%f ptr=%p\n", [u32v, u64v, i64v, f32v, f64v, p]);
+    io->print:([u32v, c" ", u64v, c" ", i64v, c" ", f32v, c" ", f64v, c" ", p, c"\n"]);
+    io->println:([u32v, u64v, i64v, f32v, f64v, p]);
+
+    // INT32_MIN/INT64_MIN must not break the sign-handling (overflow on negation).
+    i32 min32 = -2147483648;
+    i64 min64 = -9223372036854775808;
+    io->printf:(c"min32=%d min64=%d\n", [min32, min64]);
+
     ret 0;
 }

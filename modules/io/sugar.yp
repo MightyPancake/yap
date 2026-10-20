@@ -12,19 +12,16 @@ none fn print_str(byte@ s) {
     }
 }
 
-none fn print_i32(i32 v) {
-    if (v < 0) {
-        io->print_char(45); // '-'
-        v = 0 - v;
-    }
+none fn print_u32(u32 v) {
     if (v == 0) {
-        io->print_char(48); // '0'
+        io->print_char(48);
         ret;
     }
     i32[12] digits;
     i32 n = 0;
     while (v > 0) {
-        digits:[n] = (v % 10) + 48;
+        u32 d = v % 10;
+        digits:[n] = d.(i32) + 48;
         v = v / 10;
         n = n + 1;
     }
@@ -33,6 +30,220 @@ none fn print_i32(i32 v) {
         io->print_char(digits:[i]);
         i = i - 1;
     }
+}
+
+// Negation via '0 - v' overflows i32 at INT32_MIN; go through the unsigned
+// type instead -- casting first then subtracting from 0 wraps modulo 2^32,
+// which recovers the correct magnitude for every representable i32, MIN included.
+none fn print_i32(i32 v) {
+    if (v < 0) {
+        io->print_char(45); // '-'
+        u32 mag = 0 - v.(u32);
+        io->print_u32(mag);
+        ret;
+    }
+    io->print_u32(v.(u32));
+}
+
+none fn print_u64(u64 v) {
+    if (v == 0) {
+        io->print_char(48);
+        ret;
+    }
+    i32[24] digits;
+    i32 n = 0;
+    while (v > 0) {
+        u64 d = v % 10;
+        digits:[n] = d.(i32) + 48;
+        v = v / 10;
+        n = n + 1;
+    }
+    i32 i = n - 1;
+    while (i >= 0) {
+        io->print_char(digits:[i]);
+        i = i - 1;
+    }
+}
+
+// Same INT_MIN-safe trick as print_i32, widened to i64/u64.
+none fn print_i64(i64 v) {
+    if (v < 0) {
+        io->print_char(45); // '-'
+        u64 mag = 0 - v.(u64);
+        io->print_u64(mag);
+        ret;
+    }
+    io->print_u64(v.(u64));
+}
+
+// f32 widens losslessly to f64, so route through the one float printer.
+none fn print_f32(f32 v) {
+    io->print_f64(v.(f64));
+}
+
+// Prints with 6 fractional digits: integer part, '.', then 6 digits peeled
+// off the fraction one at a time (no '%'/fmod on floats in this language).
+none fn print_f64(f64 v) {
+    if (v != v) { // NaN: the only value that compares unequal to itself
+        io->print_str(c"nan");
+        ret;
+    }
+    if (v < 0.0) {
+        io->print_char(45); // '-'
+        v = 0.0 - v;
+    }
+    if (v > 18446744073709551615.0) { // beyond u64 range (incl. +inf) -- can't truncate safely
+        io->print_str(c"inf");
+        ret;
+    }
+    i64 int_part = v.(i64);
+    io->print_u64(int_part.(u64));
+    io->print_char(46); // '.'
+    f64 frac = v - int_part.(f64);
+    i32 d = 0;
+    while (d < 6) {
+        frac = frac * 10.0;
+        i64 digit = frac.(i64);
+        io->print_char(digit.(i32) + 48);
+        frac = frac - digit.(f64);
+        d = d + 1;
+    }
+}
+
+none fn print_hex_digit(i32 d) {
+    if (d < 10) {
+        io->print_char(48 + d); // '0'..'9'
+    } else {
+        io->print_char(97 + (d - 10)); // 'a'..'f'
+    }
+}
+
+// Prints any pointer's raw address as "0x" + lowercase hex, e.g. 0x7ffe1234.
+none fn print_ptr(none@ p) {
+    io->print_str(c"0x");
+    u64 v = p.(u64);
+    if (v == 0) {
+        io->print_char(48);
+        ret;
+    }
+    i32[16] digits;
+    i32 n = 0;
+    while (v > 0) {
+        u64 d = v % 16;
+        digits:[n] = d.(i32);
+        v = v / 16;
+        n = n + 1;
+    }
+    i32 i = n - 1;
+    while (i >= 0) {
+        io->print_hex_digit(digits:[i]);
+        i = i - 1;
+    }
+}
+
+// Shared by print/println: appends the right printer call for one arg's
+// resolved type, or a comptime error if the type isn't one of the supported
+// scalars (bool, byte@/byte[] strings, every numeric width, or any pointer).
+yStmtList fn append_print_arg_stmts(yStmtList stmts, yExpr arg) {
+    _ bool_t = yapi->type(c"bool");
+    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
+    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
+    _ i32_t = yapi->type(c"i32");
+    _ u32_t = yapi->type(c"u32");
+    _ i64_t = yapi->type(c"i64");
+    _ u64_t = yapi->type(c"u64");
+    _ byte_t = yapi->type(c"byte");
+    _ f32_t = yapi->type(c"f32");
+    _ f64_t = yapi->type(c"f64");
+    _ none_ptr_t = yapi->ptr_of(yapi->type(c"none"));
+    _ t = yapi->resolve_type(yapi->type_of(arg));
+    if (t == bool_t) {
+        _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
+        _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
+        ret yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
+    }
+    if (t == byte_ptr_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
+    }
+    if (t == byte_slice_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
+    }
+    if (t == i32_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), arg)));
+    }
+    if (t == u32_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), arg)));
+    }
+    if (t == i64_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i64"), arg)));
+    }
+    if (t == u64_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u64"), arg)));
+    }
+    if (t == byte_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, i32_t))));
+    }
+    if (t == f32_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f32"), arg)));
+    }
+    if (t == f64_t) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f64"), arg)));
+    }
+    if (yapi->is_pointer(t)) {
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_ptr"), yapi->cast(arg, none_ptr_t))));
+    }
+    yapi->error(c"io->print/println: unsupported argument type (must be bool, a string, a number, or a pointer)");
+    ret stmts;
+}
+
+// Shared by printf: appends the right printer call for one '%spec' + its
+// argument, checked against the argument's actual resolved type; an
+// argument-category mismatch (or any other unsupported type) is a comptime error.
+yStmtList fn append_printf_spec_stmt(yStmtList stmts, i32 spec, yExpr arg) {
+    _ i32_t = yapi->type(c"i32");
+    _ u32_t = yapi->type(c"u32");
+    _ i64_t = yapi->type(c"i64");
+    _ u64_t = yapi->type(c"u64");
+    _ byte_t = yapi->type(c"byte");
+    _ f32_t = yapi->type(c"f32");
+    _ f64_t = yapi->type(c"f64");
+    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
+    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
+    _ none_ptr_t = yapi->ptr_of(yapi->type(c"none"));
+    _ t = yapi->resolve_type(yapi->type_of(arg));
+    if (spec == 100) { // %d -- signed decimal
+        if (t == i32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), arg))); }
+        if (t == i64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i64"), arg))); }
+        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, i32_t)))); }
+        yapi->error(c"io->printf: %d expects an i32/i64/byte argument");
+        ret stmts;
+    }
+    if (spec == 117) { // %u -- unsigned decimal
+        if (t == u32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), arg))); }
+        if (t == u64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u64"), arg))); }
+        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), yapi->cast(arg, u32_t)))); }
+        yapi->error(c"io->printf: %u expects a u32/u64/byte argument");
+        ret stmts;
+    }
+    if (spec == 102) { // %f -- floating point
+        if (t == f32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f32"), arg))); }
+        if (t == f64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f64"), arg))); }
+        yapi->error(c"io->printf: %f expects an f32/f64 argument");
+        ret stmts;
+    }
+    if (spec == 112) { // %p -- pointer, 0x hex
+        if (yapi->is_pointer(t)) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_ptr"), yapi->cast(arg, none_ptr_t)))); }
+        yapi->error(c"io->printf: %p expects a pointer argument");
+        ret stmts;
+    }
+    if (spec == 115) { // %s -- string
+        if (t == byte_ptr_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg))); }
+        if (t == byte_slice_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data")))); }
+        yapi->error(c"io->printf: %s expects a byte@ or byte[] argument");
+        ret stmts;
+    }
+    // %c -- char
+    ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), arg)));
 }
 
 // printf-style macro: compile-time walks `fmt`, accumulating runs of literal characters into single print_str calls.
@@ -58,19 +269,8 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
             }
             i32 spec = fmt:[i + 1].(i32);
-            if (spec == 100) { // %d
-                _ call_expr = yapi->call1(yapi->var_value(c"io_print_i32"), args.:[ai]);
-                stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
-                ai = ai + 1;
-                i = i + 2;
-            } else if (spec == 115) { // %s
-                _ call_expr = yapi->call1(yapi->var_value(c"io_print_str"), args.:[ai]);
-                stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
-                ai = ai + 1;
-                i = i + 2;
-            } else if (spec == 99) { // %c
-                _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), args.:[ai]);
-                stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
+            if (spec == 100 || spec == 117 || spec == 102 || spec == 112 || spec == 115 || spec == 99) { // %d %u %f %p %s %c
+                stmts = append_printf_spec_stmt(stmts, spec, args.:[ai]);
                 ai = ai + 1;
                 i = i + 2;
             } else { // %% or unknown -> print second char literally
@@ -102,24 +302,9 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
 // Like print, but appends a newline after all arguments.
 yStmt fn println(yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
-    _ bool_t = yapi->type(c"bool");
-    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
-    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
     u64 ai = 0;
     while (ai < args.len) {
-        _ arg = args.:[ai];
-        _ t = yapi->type_of(arg);
-        if (t == bool_t) {
-            _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
-            _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
-            stmts = yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
-        } else if (t == byte_ptr_t) {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
-        } else if (t == byte_slice_t) {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
-        } else {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, yapi->type(c"i32")))));
-        }
+        stmts = append_print_arg_stmts(stmts, args.:[ai]);
         ai = ai + 1;
     }
     stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(10))));
@@ -127,30 +312,13 @@ yStmt fn println(yExpr[]@ args) {
 }
 
 // Type-derived print: dispatches each arg to the right printer based on its type at compile time.
-// Integers and untyped literals -> print_i32 (cast to i32).
-// bool -> prints "true" or "false".
-// byte@ (C string) -> print_str.
-// byte[] (yap string) -> print_str via .data.
+// bool -> "true"/"false"; byte@/byte[] -> string; i32/u32/i64/u64/byte -> decimal; f32/f64 -> decimal float;
+// any other pointer -> "0x" + hex address. Any other argument type is a comptime error.
 yStmt fn print(yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
-    _ bool_t = yapi->type(c"bool");
-    _ byte_ptr_t = yapi->ptr_of(yapi->type(c"byte"));
-    _ byte_slice_t = yapi->slice_of(yapi->type(c"byte"));
     u64 ai = 0;
     while (ai < args.len) {
-        _ arg = args.:[ai];
-        _ t = yapi->type_of(arg);
-        if (t == bool_t) {
-            _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
-            _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
-            stmts = yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
-        } else if (t == byte_ptr_t) {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
-        } else if (t == byte_slice_t) {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
-        } else {
-            stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, yapi->type(c"i32")))));
-        }
+        stmts = append_print_arg_stmts(stmts, args.:[ai]);
         ai = ai + 1;
     }
     ret yapi->block(stmts);

@@ -1,0 +1,12 @@
+import io
+
+struct Point {
+    i32 x,
+    i32 y
+}
+
+i32 fn main() {
+    Point p = [1, 2];
+    io->print:([p]);
+    ret 0;
+}

@@ -152,6 +152,15 @@ Fixed-size array types ('Type[N]' in surface syntax) are built with
 yType array_of(yType elem, int size)
 //Mirrors ptr_of/slice_of; deduped the same way.
 
+Other type introspection:
+yType pointee_type(yType ptr_t) //inverse of ptr_of; errors if ptr_t is not a pointer type
+bool is_pointer(yType t) //true iff t is some 'T@' pointer type, for any T
+yType resolve_type(yType t) //strips an untyped-literal wrapper (e.g. a bare '42' arg's type)
+                             //down to the concrete type it defaults to (i32/f32/byte); any
+                             //other type is returned unchanged. Use this before comparing
+                             //yapi->type_of(arg) against named types, so untyped literal
+                             //arguments dispatch the same as already-typed ones.
+
 ## Functions
 To emit a function, you need to build it like so.
 yFnT fn_t()
