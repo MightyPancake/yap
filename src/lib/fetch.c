@@ -288,6 +288,46 @@ static bool yap_build_native_module(const char* dir, const char* name){
     return ok;
 }
 
+/* Wasm-flavored sibling of the archive above. Import resolution collects only
+ * lib*_wasm.a archives when the backend targets wasm and skips the native .a/.so
+ * outright (yap_target_is_wasm in imports.c), so a module installed without this one
+ * links for native targets and nowhere else -- the same gap `make wasm_modules` closes
+ * for in-tree modules and the bindgen auto-wrapper closes for generated ones.
+ *
+ * Best-effort on purpose: most machines have no emcc, and a native-only install is
+ * still a correct install everywhere but under -bcc=emcc, so a missing toolchain is
+ * silence rather than a failed `yap install`. */
+static void yap_build_wasm_module(const char* dir, const char* name){
+    char* wrapper = strus_newf("%s/wrapper.c", dir);
+    if (access(wrapper, R_OK) != 0){ free(wrapper); return; }
+
+    char* probe[] = { "emcc", "--version", NULL };
+    char* version = yap_exec_capture(probe);
+    bool have_emcc = version && version[0];
+    free(version);
+    if (!have_emcc){ free(wrapper); return; }
+
+    char* obj = strus_newf("%s/wrapper_wasm.o", dir);
+    char* archive = strus_newf("%s/lib%s_wasm.a", dir, name);
+
+    /* Static only: there is no wasm equivalent of the .so built above, dynamic wasm
+     * linking being a different model entirely. No -fvisibility=hidden either, matching
+     * the two recipes this mirrors -- that flag is there to keep the forwarding wrappers
+     * off the native shared library's ABI, and a static archive has no ABI to keep them
+     * off. emar rather than ar because it indexes wasm bitcode, which plain ar cannot
+     * do once a module is built with LTO; it ships with the emcc just probed for. */
+    char* compile[] = { "emcc", "-fPIC", "-I", (char*)dir, "-c", wrapper, "-o", obj, NULL };
+    char* ar_argv[] = { "emar", "rcs", archive, obj, NULL };
+
+    if (yap_exec(compile) && yap_exec(ar_argv))
+        printf("  built lib%s_wasm.a for %s\n", name, name);
+    else
+        printf("  could not build lib%s_wasm.a; %s will not link under -bcc=emcc\n", name, name);
+
+    unlink(obj);
+    free(wrapper); free(obj); free(archive);
+}
+
 static void yap_write_lock(const char* dir, darr(yap_lock_entry) locked){
     char* path = strus_newf("%s/yap.lock", dir);
     FILE* f = fopen(path, "w");
@@ -384,7 +424,10 @@ int yap_install(yap_ctx* ctx, const char* where, bool global){
         }
         fetched++;
         darr_push(done, dep.name);
-        if (landed) yap_build_native_module(landed, dep.name);
+        if (landed){
+            yap_build_native_module(landed, dep.name);
+            yap_build_wasm_module(landed, dep.name);
+        }
 
         /* Whatever just landed may itself depend on something. */
         char* sub_manifest = landed ? yap_find_project_manifest(ctx, landed) : NULL;
