@@ -26,3 +26,4 @@ foo
 foo/*
 benchmarks
 modules/laydoh
+modules/raylib
