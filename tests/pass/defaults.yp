@@ -37,26 +37,26 @@ i32 fn main() {
     // --- Struct field defaults ---
 
     // Override first, default second
-    Point p2 = [5];
+    Point p2 = {5};
     fail = fail + assert_eq(p2.x, 5, 1);
     fail = fail + assert_eq(p2.y, 0, 2);
 
     // Override both (no defaults used)
-    Point p3 = [3, 7];
+    Point p3 = {3, 7};
     fail = fail + assert_eq(p3.x, 3, 3);
     fail = fail + assert_eq(p3.y, 7, 4);
 
     // Named override, rest default
-    Point p4 = [.y=9];
+    Point p4 = {.y=9};
     fail = fail + assert_eq(p4.x, 0, 5);
     fail = fail + assert_eq(p4.y, 9, 6);
 
     // Mixed struct: first field required, rest have defaults
-    Mixed m1 = [5];
+    Mixed m1 = {5};
     fail = fail + assert_eq(m1.a, 5, 7);
 
     // Mixed struct: override first two, default third
-    Mixed m2 = [1, 2];
+    Mixed m2 = {1, 2};
     fail = fail + assert_eq(m2.a, 1, 8);
     fail = fail + assert_eq(m2.b, 2, 9);
 
@@ -70,7 +70,7 @@ i32 fn main() {
     // --- Cross-file defaults ---
 
     // Struct from imported file, partial override
-    Color c2 = [.r=5];
+    Color c2 = {.r=5};
     fail = fail + assert_eq(c2.r, 5, 4);
     fail = fail + assert_eq(c2.g, 0, 5);
     fail = fail + assert_eq(c2.b, 0, 6);

@@ -13,7 +13,7 @@ f64 fn Vec2 v:length() {
 }
 
 Vec2 fn Vec2 v:scaled(f64 factor) {
-    ret [v.x * factor, v.y * factor].(Vec2);
+    ret {v.x * factor, v.y * factor}.(Vec2);
 }
 
 f64 fn Vec2 a:dot(Vec2 b) {
@@ -42,8 +42,8 @@ i32 fn factorial(i32 n) {
 }
 
 i32 fn main() {
-    Vec2 a = [3.0, 4.0];
-    Vec2 b = [1.0, 2.0];
+    Vec2 a = {3.0, 4.0};
+    Vec2 b = {1.0, 2.0};
 
     f64 len = a:length();
     io->printf:(c"Vector length:\n");

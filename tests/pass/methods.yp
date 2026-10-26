@@ -19,12 +19,12 @@ i32 fn Vector v:len() {
 }
 
 Point fn Point p:scaled(i32 factor) {
-    ret [p.x * factor, p.y * factor].(Point);
+    ret {p.x * factor, p.y * factor}.(Point);
 }
 
 i32 fn main() {
-    Point p = [2, 3];
-    Vector v = [2, 3];
+    Point p = {2, 3};
+    Vector v = {2, 3};
 
     // Same method name on two different types: no collision.
     io->putchar(p:len() + 48);

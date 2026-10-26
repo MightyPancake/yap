@@ -245,7 +245,7 @@ yType fn hashmap(yType K, yType V) {
             $cursor = 0;
             $NoneP $item;
             while ($iter($self.map, $cursor@.($I64P), $item@.($NonePP))) {
-                $cb($item.($EntryPtr):[0].key, $item.($EntryPtr):[0].value);
+                $cb($item.($EntryPtr)[0].key, $item.($EntryPtr)[0].value);
             }
         }
         :fill_var(c"cursor", yapi->type(c"i64"), yapi->uniq_name())
@@ -296,7 +296,7 @@ yExpr fn new_dict(yType V) {
     ret hashmap->new(yapi->ptr_of(yapi->type(c"byte")), V);
 }
 
-// for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->printf:(c"%d\n", [v]); });`.
+// for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->printf:(c"%d\n", {v}); });`.
 yStmt fn for(yExpr self, yIdent k, yIdent v, yStmt body) {
     _ entry_ptr_t = yapi->field_type(yapi->type_of(self), c"_phantom");
     _ entry_t = yapi->pointee_type(entry_ptr_t);
@@ -310,9 +310,9 @@ yStmt fn for(yExpr self, yIdent k, yIdent v, yStmt body) {
         $NoneP $item;
         while ($iter($self.map, $cursor@.($I64P), $item@.($NonePP))) {
             $KT $k;
-            $k = $item.($EntryPtr):[0].key;
+            $k = $item.($EntryPtr)[0].key;
             $VT $v;
-            $v = $item.($EntryPtr):[0].value;
+            $v = $item.($EntryPtr)[0].value;
             $body;
         }
     }

@@ -1,6 +1,6 @@
 // containers re-exports a chosen subset of its own deps. Asking for arr alone
 // brings in arr and not hashmap, and the pun lets it be used unprefixed.
-import containers:(["arr"])
+import containers:({"arr"})
 
 i32 fn main(){
     arr:(i32) nums;

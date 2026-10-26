@@ -9,6 +9,6 @@ struct Thing {
 }
 
 i32 fn make() {
-    Thing t = [3, 4];
+    Thing t = {3, 4};
     ret t.a + t.b;
 }

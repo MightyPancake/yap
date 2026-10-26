@@ -6,8 +6,8 @@ none fn print_char(i32 c) {
 
 none fn print_str(byte@ s) {
     i32 i = 0;
-    while (s:[i] != 0) {
-        io->print_char(s:[i].(i32));
+    while (s[i] != 0) {
+        io->print_char(s[i].(i32));
         i = i + 1;
     }
 }
@@ -21,13 +21,13 @@ none fn print_u32(u32 v) {
     i32 n = 0;
     while (v > 0) {
         u32 d = v % 10;
-        digits:[n] = d.(i32) + 48;
+        digits[n] = d.(i32) + 48;
         v = v / 10;
         n = n + 1;
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_char(digits:[i]);
+        io->print_char(digits[i]);
         i = i - 1;
     }
 }
@@ -54,13 +54,13 @@ none fn print_u64(u64 v) {
     i32 n = 0;
     while (v > 0) {
         u64 d = v % 10;
-        digits:[n] = d.(i32) + 48;
+        digits[n] = d.(i32) + 48;
         v = v / 10;
         n = n + 1;
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_char(digits:[i]);
+        io->print_char(digits[i]);
         i = i - 1;
     }
 }
@@ -130,13 +130,13 @@ none fn print_ptr(none@ p) {
     i32 n = 0;
     while (v > 0) {
         u64 d = v % 16;
-        digits:[n] = d.(i32);
+        digits[n] = d.(i32);
         v = v / 16;
         n = n + 1;
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_hex_digit(digits:[i]);
+        io->print_hex_digit(digits[i]);
         i = i - 1;
     }
 }
@@ -252,25 +252,25 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
     i32 ai = 0;
     i32 i = 0;
     i32 run_start = 0;
-    while (fmt:[i] != 0) {
-        i32 ch = fmt:[i].(i32);
+    while (fmt[i] != 0) {
+        i32 ch = fmt[i].(i32);
         if (ch == 37) { // '%'
             if (i > run_start) {
                 byte[512] buf;
                 i32 k = 0;
                 i32 j = run_start;
                 while (j < i) {
-                    buf:[k] = fmt:[j];
+                    buf[k] = fmt[j];
                     j = j + 1;
                     k = k + 1;
                 }
-                buf:[k] = 0;
-                _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf:[0]@));
+                buf[k] = 0;
+                _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf[0]@));
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
             }
-            i32 spec = fmt:[i + 1].(i32);
+            i32 spec = fmt[i + 1].(i32);
             if (spec == 100 || spec == 117 || spec == 102 || spec == 112 || spec == 115 || spec == 99) { // %d %u %f %p %s %c
-                stmts = append_printf_spec_stmt(stmts, spec, args.:[ai]);
+                stmts = append_printf_spec_stmt(stmts, spec, args.[ai]);
                 ai = ai + 1;
                 i = i + 2;
             } else { // %% or unknown -> print second char literally
@@ -288,12 +288,12 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
         i32 k = 0;
         i32 j = run_start;
         while (j < i) {
-            buf:[k] = fmt:[j];
+            buf[k] = fmt[j];
             j = j + 1;
             k = k + 1;
         }
-        buf:[k] = 0;
-        _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf:[0]@));
+        buf[k] = 0;
+        _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf[0]@));
         stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
     }
     ret yapi->block(stmts);
@@ -304,7 +304,7 @@ yStmt fn println(yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     u64 ai = 0;
     while (ai < args.len) {
-        stmts = append_print_arg_stmts(stmts, args.:[ai]);
+        stmts = append_print_arg_stmts(stmts, args.[ai]);
         ai = ai + 1;
     }
     stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(10))));
@@ -318,7 +318,7 @@ yStmt fn print(yExpr[]@ args) {
     _ stmts = yapi->stmt_list_new();
     u64 ai = 0;
     while (ai < args.len) {
-        stmts = append_print_arg_stmts(stmts, args.:[ai]);
+        stmts = append_print_arg_stmts(stmts, args.[ai]);
         ai = ai + 1;
     }
     ret yapi->block(stmts);

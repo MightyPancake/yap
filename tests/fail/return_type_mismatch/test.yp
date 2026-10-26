@@ -1,0 +1,3 @@
+// `ret` checks its value against the function's return type.
+struct P { i32 x }
+i32 fn main(){ P p = {1}; ret p; }

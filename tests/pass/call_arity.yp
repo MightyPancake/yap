@@ -26,7 +26,7 @@ yExpr fn call_sum5(yExprList@ vals) {
     _ n = vals..len.(i32);
     i32 i = 0;
     while (i < n) {
-        args = yapi->call_args_push(args, vals.:[i]);
+        args = yapi->call_args_push(args, vals.[i]);
         i = i + 1;
     }
     _ call_expr = yapi->call(yapi->var_value(c"arity_test_sum5"), args);
@@ -34,7 +34,7 @@ yExpr fn call_sum5(yExprList@ vals) {
 }
 
 i32 fn main() {
-    _ result = call_sum5:([1, 2, 3, 4, 5]); // 1+2+3+4+5 = 15
+    _ result = call_sum5:({1, 2, 3, 4, 5}); // 1+2+3+4+5 = 15
 
     if (result == 15) { io->printf:(c"5-arg call_args builder OK\n"); }
 

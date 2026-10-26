@@ -6,8 +6,8 @@ module containers {
 
 // Re-exports a chosen subset of this module's own dependencies:
 //
-//     import containers:(["arr"])            // just arr
-//     import containers:(["arr", "hashmap"]) // both
+//     import containers:({"arr"})            // just arr
+//     import containers:({"arr", "hashmap"}) // both
 //     import containers:()                   // everything it offers
 //
 // Names are checked against deps above, so asking for something containers does
@@ -24,7 +24,7 @@ yDeclList fn __import(yExprList@ names) {
 
     i32 i = 0;
     while (i < n) {
-        _ name = yapi->string_value(names.:[i]);
+        _ name = yapi->string_value(names.[i]);
         l = yapi->decl_list_push(l, yapi->import_module(name));
         i = i + 1;
     }

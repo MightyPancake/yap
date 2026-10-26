@@ -1,0 +1,20 @@
+// Pointer-to-array types emit C's `T (*p)[N]` declarator, not an array of pointers.
+// Postfix types read left to right: `i32[2][3]` is 3 x (i32[2]), so its first index runs to 3.
+
+struct Holder { i32[4]@ arr_ptr, i32[3] plain }
+struct P { i32 x, i32 y }
+
+P fn mk(i32 v) { ret {v, v + 1}; }
+
+i32 fn sum4(i32[4]@ p) { ret p.[0] + p.[1] + p.[2] + p.[3]; }
+
+i32 fn main() {
+    i32[4] a = {1, 2, 3, 4};
+    i32[4]@ p = a@;
+    p.[2] = 30;
+    Holder h = {p, {7, 8, 9}};
+    i32[2][3] grid = {};
+    grid[2][1] = 5;
+    if (a[2] != 30 || sum4(a@) != 37 || h.arr_ptr.[3] != 4 || grid[2][1] != 5 || mk(4).y != 5 || h.plain[2] != 9) { ret 1; }
+    ret 0;
+}

@@ -61,7 +61,7 @@ yap_ctx* yap_ctx_new(){
     //yStmtBlueprint: the stmt${ } analogue -- a yStmt template with named holes,
     //filled via :fill_expr(...)/:finish() (same C repr as yStmt, a yap_statement*).
     ctx->ystmtblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmtBlueprint", "yStmtBlueprint", "yStmtBlueprint");
-    //yExprList is a real slice of yExpr (not an opaque handle), so it gets native '.len' and ':[i]'.
+    //yExprList is a real slice of yExpr (not an opaque handle), so it gets native '.len' and '[i]'.
     {
         yap_type yexprlist_slice = { .kind = yap_type_slice, .slice = { .element_type = ctx->yexpr_type_id }, .is_const = false };
         ctx->yexprlist_type_id = yap_ctx_push_named_type(ctx, "yExprList", NULL, yexprlist_slice);

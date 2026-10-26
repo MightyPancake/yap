@@ -59,7 +59,7 @@ i32 fn main() {
     _ h2 = hashmap->new:(i64, i64);
     h2:put(10, 1000);
     h2:put(20, 2000);
-    h2:foreach((none fn i64 k, i64 v) { io->printf:(c"foreach: %d\n", [v.(i32)]); });
+    h2:foreach((none fn i64 k, i64 v) { io->printf:(c"foreach: %d\n", {v.(i32)}); });
     if (h2:len() == 2) io->printf:(c"foreach HOF OK\n");
     h2:free();
 
@@ -71,8 +71,8 @@ i32 fn main() {
     _ h3direct = hashmap->new:(byte@, test_struct);
     h3direct:free();
     _ h3 = hashmap->new_dict:(test_struct);
-    h3:put(c"alice", [1, 2].(test_struct));
-    h3:put(c"bob", [3, 4].(test_struct));
+    h3:put(c"alice", {1, 2}.(test_struct));
+    h3:put(c"bob", {3, 4}.(test_struct));
     if (h3:len() == 2) io->printf:(c"string-key len OK\n");
     if (h3:has(c"alice")) io->printf:(c"string-key has OK\n");
     if (!h3:has(c"carol")) io->printf:(c"string-key has-miss OK\n");
@@ -83,7 +83,7 @@ i32 fn main() {
     _ mv = h3:get(c"carol");
     if (mv.a == 0 && mv.b == 0) io->printf:(c"string-key get-miss-zero-struct OK\n");
 
-    test_struct out = [0, 0].(test_struct);
+    test_struct out = {0, 0}.(test_struct);
     if (h3:try_get(c"bob", out@) && out.a == 3 && out.b == 4) io->printf:(c"string-key try_get OK\n");
 
     if (h3:delete(c"alice") && !h3:has(c"alice")) io->printf:(c"string-key delete OK\n");

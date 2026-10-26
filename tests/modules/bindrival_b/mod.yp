@@ -9,6 +9,6 @@ bind struct RivalThing {
 }
 
 i32 fn width() {
-    RivalThing t = [3, 4];
+    RivalThing t = {3, 4};
     ret t.a + t.b;
 }

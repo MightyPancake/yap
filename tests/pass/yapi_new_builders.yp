@@ -111,7 +111,7 @@ i32 fn main() {
     fail = fail + assert_eq(build_bnot:(#5), -6, 5);
 
     // opt_member
-    Box b = [42];
+    Box b = {42};
     Box@ bptr = b@;
     _ v3 = read_opt:(#bptr);
     fail = fail + assert_eq(v3, 42, 6);
@@ -122,10 +122,10 @@ i32 fn main() {
 
     // array_of
     declare_i32_array:(+nums);
-    nums:[0] = 10;
-    nums:[1] = 20;
-    nums:[2] = nums:[0] + nums:[1];
-    fail = fail + assert_eq(nums:[2], 30, 8);
+    nums[0] = 10;
+    nums[1] = 20;
+    nums[2] = nums[0] + nums[1];
+    fail = fail + assert_eq(nums[2], 30, 8);
 
     // enum variant with an explicit value (build/round-trip smoke test)
     traffic_light:() tl;

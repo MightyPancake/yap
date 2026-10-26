@@ -41,7 +41,7 @@ yType fn arr(yType T){
                 if ($self.cap == 0) { $self.cap = 8; }
                 $self.data = $realloc($self.data.($NonePtr), $self.cap * $elemsize).($PtrT);
             }
-            $self.data:[$self.count] = $value;
+            $self.data[$self.count] = $value;
             $self.count = $self.count + 1;
         }
         :fill_type(c"NonePtr", none_ptr_t)
@@ -52,13 +52,13 @@ yType fn arr(yType T){
         :fill_expr(c"elemsize", yapi->sizeof(T)):finish());
     push_t:finish(c"push");
 
-    // at(index): direct pointer indexing into data. Index access inside a blueprint must use ':[' -- bare '[' is ambiguous with array_type's size-bracket.
+    // at(index): direct pointer indexing into data.
     _ at_t = res:new_method();
     _ idx_p = at_t:add_param(yapi->type(c"i32"), c"index");
     yExpr self3 = at_t:get_subject();
     at_t:set_return_type(T);
     at_t:set_body(
-        stmt${ ret $self.data:[$idx]; }:fill_expr(c"self", self3):fill_expr(c"idx", idx_p):finish());
+        stmt${ ret $self.data[$idx]; }:fill_expr(c"self", self3):fill_expr(c"idx", idx_p):finish());
     at_t:finish(c"at");
 
     // len(): element count.
@@ -95,7 +95,7 @@ yType fn arr(yType T){
             u32 $i;
             $i = 0;
             while ($i < $self.count) {
-                $out.data:[$i] = $f($self.data:[$i]);
+                $out.data[$i] = $f($self.data[$i]);
                 $i = $i + 1;
             }
             ret $out;
@@ -125,8 +125,8 @@ yType fn arr(yType T){
             u32 $i;
             $i = 0;
             while ($i < $self.count) {
-                if ($keep($self.data:[$i])) {
-                    $out.data:[$out.count] = $self.data:[$i];
+                if ($keep($self.data[$i])) {
+                    $out.data[$out.count] = $self.data[$i];
                     $out.count = $out.count + 1;
                 }
                 $i = $i + 1;
@@ -154,7 +154,7 @@ yType fn arr(yType T){
             u32 $i;
             $i = 0;
             while ($i < $self.count) {
-                $acc = $f($acc, $self.data:[$i]);
+                $acc = $f($acc, $self.data[$i]);
                 $i = $i + 1;
             }
             ret $acc;
@@ -174,7 +174,7 @@ yType fn arr(yType T){
             u32 $i;
             $i = 0;
             while ($i < $self.count) {
-                $cb($i, $self.data:[$i]);
+                $cb($i, $self.data[$i]);
                 $i = $i + 1;
             }
         }
@@ -210,7 +210,7 @@ yExpr fn new(yType T) {
     ret yapi->block_expr(stmts);
 }
 
-// for(self, i, v, body): receiver-dispatched macro-method form of iteration, e.g. `gnums:for:(+i, +v, { io->printf:(c"%u: %d\n", [i, v]); });`.
+// for(self, i, v, body): receiver-dispatched macro-method form of iteration, e.g. `gnums:for:(+i, +v, { io->printf:(c"%u: %d\n", {i, v}); });`.
 // +i/+v are hygienic idents the macro declares itself, so the block body can reference them directly (unlike foreach(cb) above).
 yStmt fn for(yExpr self, yIdent i, yIdent v, yStmt body) {
     // Element type derived from self's own 'data' field via yapi->field_type, not yapi->member(self,...) + type_of: a member-built expr's .type only resolves once the spliced result is later built for real.
@@ -223,7 +223,7 @@ yStmt fn for(yExpr self, yIdent i, yIdent v, yStmt body) {
             $i = 0;
             while ($i < $self.count) {
                 $ElemT $v;
-                $v = $self.data:[$i];
+                $v = $self.data[$i];
                 $body;
                 $i = $i + 1;
             }

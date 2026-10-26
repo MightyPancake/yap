@@ -130,6 +130,9 @@ kenobi_new_struct_free(yap_ctx,
   //Counter for anonymous names (__anon_<tag>_N). Ctx-global, not per-source, so two files can't mint the same name.
   yap_anon_id anon_id;
 
+  //Return type of the function body being built (0 outside one), so `ret` can coerce/check its value like a call argument.
+  yap_type_id build_ret_type;
+
   //Types
   darr(yap_type) types; //yap_type_id points to types in this array
   map named_types; //map of named types

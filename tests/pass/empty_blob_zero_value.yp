@@ -1,0 +1,27 @@
+import io
+
+// `{}` is the zero value for structs and arrays alike, in every expression position.
+struct Inner { i32 a, byte@ s }
+struct P { i32 x, Inner in, i32[3] arr }
+
+// `ret` takes the return type the way a call argument takes its parameter type.
+P fn mk() { ret {}; }
+P fn mk2(i32 x) { ret {x, {x}, {x, x, x}}; }
+// `{}` passed to a yStmt param is an empty block, not an empty list.
+yStmt fn run_body(yStmt body) { ret body; }
+
+i32 fn take(P p) { ret p.x + p.in.a + p.arr[2]; }
+
+i32 fn main() {
+    P p = {};
+    i32[4] a = {};
+    _ q = {}.(P);
+    {} // statement position: an empty block, not a blob
+    io->printf:(c"%d %d %d %d\n", {p.x, a[3], take({}), mk().arr[1]});
+    _ lit = (P fn i32 x) { ret {.x = x}; };
+    if (mk2(7).arr[2] != 7 || mk2(7).in.a != 7 || lit(5).x != 5) { ret 1; }
+    run_body:({});
+    run_body:({ a[1] = 0; });
+    io->printf:(c"empty ok\n", {});
+    ret p.x + a[0] + q.in.a + take(p);
+}

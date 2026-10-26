@@ -8,6 +8,6 @@ struct Thing {
 }
 
 i32 fn make() {
-    Thing t = [7];
+    Thing t = {7};
     ret t.a;
 }

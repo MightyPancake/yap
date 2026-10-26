@@ -31,7 +31,7 @@ i32 fn main() {
 
     // foreach: side-effecting iteration with index+value, in order -- doesn't
     // build a new arr(T), so just confirm nums itself is unaffected after.
-    nums:foreach((none fn u32 i, i32 v) { io->printf:(c"%u: %d\n", [i, v]); });
+    nums:foreach((none fn u32 i, i32 v) { io->printf:(c"%u: %d\n", {i, v}); });
     if (nums:len() == 4) io->printf:(c"foreach len OK\n");
 
     // for (macro): 'nums:for:(+i, +v, { ... })' -- +i/+v are hygienic idents

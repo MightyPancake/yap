@@ -18,10 +18,10 @@ i32 fn main() {
     io->putchar(n + 48);
 
     _ ptr = stdlib->malloc(64).(byte@);
-    ptr:[0] = '4';
-    ptr:[1] = '2';
-    ptr:[2] = '\0';
-    io->printf:(c"%s\n", [ptr]);
+    ptr[0] = '4';
+    ptr[1] = '2';
+    ptr[2] = '\0';
+    io->printf:(c"%s\n", {ptr});
     stdlib->free(ptr.(none@));
 
     io->putchar('\n');

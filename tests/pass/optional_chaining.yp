@@ -10,7 +10,7 @@ struct Outer {
 
 i32 fn main() {
     // Optional chaining on a non-null pointer dereferences normally
-    Inner in = [42];
+    Inner in = {42};
     Inner@ in_ptr = in@;
     _ v1 = in_ptr?.val;
     io->putchar(v1 / 10 + 48);
@@ -24,7 +24,7 @@ i32 fn main() {
     io->putchar(10);
 
     // Chained optional access through two levels of pointers
-    Outer out = [in_ptr];
+    Outer out = {in_ptr};
     Outer@ out_ptr = out@;
     _ v3 = out_ptr?.inner?.val;
     io->putchar(v3 / 10 + 48);

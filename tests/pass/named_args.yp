@@ -47,7 +47,7 @@ i32 fn main() {
     fail = fail + assert_eq(triple(.b=5), 153, 5);
 
     // Method call: named arg overrides default
-    Point pt = [3, 4];
+    Point pt = {3, 4};
     fail = fail + assert_eq(pt:scaled_sum(.scale=2), 14, 6);
 
     // Method call: named arg matches the default value

@@ -8,6 +8,6 @@ bind struct RivalThing {
 }
 
 i32 fn width() {
-    RivalThing t = [5];
+    RivalThing t = {5};
     ret t.a;
 }

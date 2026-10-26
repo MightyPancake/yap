@@ -7,7 +7,7 @@ i32 fn main(byte@[] args) {
     i32 code = 0;
 
     if (args.len == 0) { code = code + 1; }
-    if (args:[0]:[0] == 0) { code = code + 1; }
+    if (args[0][0] == 0) { code = code + 1; }
 
     ret code;
 }

@@ -6,7 +6,7 @@ struct Point {
 }
 
 i32 fn main() {
-    Point p = [1, 2];
-    io->print:([p]);
+    Point p = {1, 2};
+    io->print:({p});
     ret 0;
 }

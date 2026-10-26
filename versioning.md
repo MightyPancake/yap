@@ -115,7 +115,7 @@ ground Python covered moving from `setup.py` to `pyproject.toml`.
 
 ### Why not a const struct, or a separate package.json
 
-A `const ModuleInfo module = [...]` blob literal reuses the language's own
+A `const ModuleInfo module = {...}` blob literal reuses the language's own
 literal syntax, but reading it requires yap's full expression grammar, which
 makes third-party tooling harder rather than easier. The module block is a
 **data** language ; blob literals are an **expression** language, and phase 0
@@ -223,7 +223,7 @@ coexistence does.
 
 ## 8. `__import` selects among declared deps
 
-The dynamic import work (`import collections:(["arr","map"])`, dispatched
+The dynamic import work (`import collections:({"arr","map"})`, dispatched
 through a module's `__import` macro during the semantic build) discovers
 imports while building, which is in tension with a graph solved before
 parsing.
