@@ -3,7 +3,7 @@
 // asked for, so the result is 10*10 + 9.
 module coexist {
     version: "0.1.0",
-    deps: ["vertest@^0.10.0", "vertest_consumer@^0.1.0"]
+    deps: {"vertest@^0.10.0", "vertest_consumer@^0.1.0"}
 }
 
 import vertest

@@ -7,7 +7,7 @@ module depsdemo {
     webpage: "https://nullptr.free/depsdemo",
     license: "MIT",
     description: "Dependency spec coverage",
-    deps: [
+    deps: {
         "hashmap",
         "stdlib@0.1.0",
         "arr@^0.1.0",
@@ -15,7 +15,7 @@ module depsdemo {
         "vertest@local",
         { name: "math", version: "^0.1.0" },
         { name: "time", version: "0.1.0" },
-    ],
+    },
 }
 
 i32 fn main(){

@@ -3,7 +3,7 @@
 // string) and not 3.0.0. tag() encodes the version as major*10000+minor*100+patch.
 module semverprobe {
     version: "1.0.0",
-    deps: ["semvertest@^2.9.9"]
+    deps: {"semvertest@^2.9.9"}
 }
 
 import semvertest

@@ -1,5 +1,5 @@
 module badspec {
-    deps: ["foo@>=1.0"]
+    deps: {"foo@>=1.0"}
 }
 
 i32 fn main(){

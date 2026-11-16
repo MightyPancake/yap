@@ -1,7 +1,7 @@
 module badreexport {
     version: "0.1.0",
     prefix: "badreexp_",
-    deps: ["arr@^0.1.0"]
+    deps: {"arr@^0.1.0"}
 }
 
 // Names io, which is not among this module's deps, so the import is refused.

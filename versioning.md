@@ -79,10 +79,10 @@ explicitly, so nothing about emitted symbol names changes.
 module io {
     version: "0.0.1",
     prefix: "io_",
-    deps: [
+    deps: {
         "stdlib@^0.0.1",
         "math@latest",
-    ],
+    },
 }
 ```
 
@@ -382,7 +382,7 @@ module webthing {
     license:     "MIT",
     description: "Does web things",
 
-    deps: [
+    deps: {
         // 1. bare name -- unconstrained, equivalent to @latest
         "hashmap",
 
@@ -422,7 +422,7 @@ module webthing {
 
         // 11. explicit registry
         { name: "json", version: "^1.0.0", registry: "https://yap.pkg/x" },
-    ],
+    },
 }
 ```
 
@@ -453,7 +453,7 @@ version: "1.0.0-rc.1"                    // prerelease tags are out of subset
 { version: "^1.0" }                      // name is required in the object form
 { name: "foo", git: "...", path: "..." } // two sources for one dep
 { name: "foo", prefix: "f_" }            // prefix belongs to the module itself
-deps: ["arr@" + version]                 // no expressions, no identifiers
+deps: {"arr@" + version}                 // no expressions, no identifiers
 ```
 
 Note what is *not* on that list: `version: "1.4"` and `"foo@^0.1"` are both
