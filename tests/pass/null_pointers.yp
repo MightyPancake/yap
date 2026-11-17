@@ -1,0 +1,21 @@
+// null converts to any pointer: as an argument, in == / !=, in a declaration and a return.
+i32 fn is_null(i32@ p) {
+    if (p == null) ret 1;
+    ret 0;
+}
+
+i32@ fn nothing() {
+    ret null;
+}
+
+i32 fn main() {
+    i32 x = 5;
+    i32@ p = null;
+    if (is_null(null) != 1) ret 1;
+    if (is_null(x@) != 0) ret 2;
+    if (p != null) ret 3;
+    if (null != nothing()) ret 4;
+    p = x@;
+    if (p == null) ret 5;
+    ret 0;
+}
