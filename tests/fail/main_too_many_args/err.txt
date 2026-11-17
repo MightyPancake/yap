@@ -1,1 +1,1 @@
-'main' must take either no arguments or a single 'byte@[]' argument
+'main' must take either no arguments or a single 'u8@[]' argument

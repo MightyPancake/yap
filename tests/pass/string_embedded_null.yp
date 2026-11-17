@@ -2,7 +2,7 @@
 // Fixed by propagating decoded length (value_len -> text_len) past strlen.
 
 i32 fn main() {
-    byte[] s = "hello\x00world";
+    u8[] s = "hello\x00world";
     if (s.len == 11) ret 0;
     ret 1;
 }

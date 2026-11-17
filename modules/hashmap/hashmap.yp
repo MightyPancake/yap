@@ -1,7 +1,7 @@
 // Generic, type-safe wrapper around the raw hashmap module (binds.yp): hashmap(K, V) builds one concrete struct type
 // per (K, V) instantiation, with real K/V-typed methods layered over the raw none@ item-pointer surface underneath.
 //
-// Key support is intentionally narrow: K must be a 4-byte or 8-byte scalar, or byte@ treated as a C string. No struct keys.
+// Key support is intentionally narrow: K must be a 4-byte or 8-byte scalar, or u8@ treated as a C string. No struct keys.
 
 // Picks wrapper.c's hash_id/cmp_id for a given key type; -1 means "unsupported", callers check for that.
 i32 fn key_size_id(yType K) {
@@ -11,7 +11,7 @@ i32 fn key_size_id(yType K) {
     if (K == yapi->type(c"i64") || K == yapi->type(c"u64") || K == yapi->type(c"f64")) {
         ret 1;
     }
-    if (K == yapi->ptr_of(yapi->type(c"byte"))) {
+    if (K == yapi->ptr_of(yapi->type(c"u8"))) {
         ret 2;
     }
     ret -1;
@@ -29,7 +29,7 @@ yType fn hashmap(yType K, yType V) {
     }
     _ size_id = key_size_id(K);
     if (size_id < 0) {
-        yapi->error(c"hashmap:(K, V): unsupported key type -- K must be a 4- or 8-byte scalar (i32/u32/f32/i64/u64/f64) or byte@ (C string)");
+        yapi->error(c"hashmap:(K, V): unsupported key type -- K must be a 4- or 8-byte scalar (i32/u32/f32/i64/u64/f64) or u8@ (C string)");
         ret K;
     }
 
@@ -68,7 +68,7 @@ yType fn hashmap(yType K, yType V) {
     init_t:finish(c"init");
 
     // put(key, value): builds a { key, value } entry on the stack and hands its address to hashmap_set, which copies it in.
-    // For a byte@ key this only copies the pointer, not the string contents -- the caller must keep the buffer alive.
+    // For a u8@ key this only copies the pointer, not the string contents -- the caller must keep the buffer alive.
     _ put_t = res:new_method();
     _ pkey_p = put_t:add_param(K, c"key");
     _ pval_p = put_t:add_param(V, c"value");
@@ -291,9 +291,9 @@ yExpr fn new(yType K, yType V) {
     ret yapi->block_expr(stmts);
 }
 
-// new_dict(V): value-yielding constructor for a byte@-keyed (C string) hashmap, e.g. `hashmap->new_dict:(test_struct)`.
+// new_dict(V): value-yielding constructor for a u8@-keyed (C string) hashmap, e.g. `hashmap->new_dict:(test_struct)`.
 yExpr fn new_dict(yType V) {
-    ret new(yapi->ptr_of(yapi->type(c"byte")), V);
+    ret new(yapi->ptr_of(yapi->type(c"u8")), V);
 }
 
 // for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->printf:(c"%d\n", {v}); });`.

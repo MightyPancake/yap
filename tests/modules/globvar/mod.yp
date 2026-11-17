@@ -17,7 +17,7 @@ i32 counter = 5;
 _ limit = 100;
 Point origin = {3, 4};
 i32[3] table = {1, 2, 3};
-byte@ name = c"globvar";
+u8@ name = c"globvar";
 
 i32 fn seed() {
     ret 40;

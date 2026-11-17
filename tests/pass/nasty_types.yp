@@ -3,13 +3,13 @@ struct pointer_party {
     i32@ single_ptr,
     i32@@ double_ptr,
     i32@@@@ quad_ptr,
-    byte const single_const,
-    byte const @ const_ptr_to_const,
-    byte const @ const @ const_ptr_to_const_ptr,
-    byte @ const const_ptr,
-    byte@@ const const_double_ptr,
+    u8 const single_const,
+    u8 const @ const_ptr_to_const,
+    u8 const @ const @ const_ptr_to_const_ptr,
+    u8 @ const const_ptr,
+    u8@@ const const_double_ptr,
     i32 const @ const int_const_ptr,
-    byte const @ const @ const ptr_to_const_ptr_to_const,
+    u8 const @ const @ const ptr_to_const_ptr_to_const,
     u64 const @ const @ const @ const u64_triple_const_ptr
 }
 
@@ -25,13 +25,13 @@ struct deep_nesting {
             f64 z_double,
             // Level 3: anonymous struct inside anonymous union
             struct {
-                byte flag,
+                u8 flag,
                 i32 value
             }
         },
         // Another at level 2: named embedded
         struct {
-            byte a, byte b, byte c, byte d
+            u8 a, u8 b, u8 c, u8 d
         } rgba
     },
     // Level 1: anonymous union next to the struct
@@ -68,7 +68,7 @@ union schizophrenic_union {
     i32 just_an_int,
     f64 just_a_double,
     struct {
-        byte data,
+        u8 data,
         i32 len
     },
     // Anonymous union inside named union
@@ -77,7 +77,7 @@ union schizophrenic_union {
         f32 b
     },
     (fn i32, i32) callback,
-    byte const @ str_ptr
+    u8 const @ str_ptr
 }
 
 // Real-world-ish: AST node
@@ -95,7 +95,7 @@ struct ast_node_data {
         } literal_data,
         struct {
             i32@ left,
-            byte op,
+            u8 op,
             i32@ right
         } binary_data,
         struct {
@@ -103,7 +103,7 @@ struct ast_node_data {
             i32@ args
         } call_data,
         struct {
-            byte@ name
+            u8@ name
         } var_data
     }
 }

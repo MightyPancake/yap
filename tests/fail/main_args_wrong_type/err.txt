@@ -1,1 +1,1 @@
-'main' argument must have type 'byte@[]'
+'main' argument must have type 'u8@[]'

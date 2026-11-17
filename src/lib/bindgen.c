@@ -444,7 +444,7 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
     case CXType_Double: case CXType_LongDouble:
       { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "f64"); return id ? id : ctx->internal_error_type_id; }
     case CXType_Char_S: case CXType_Char_U: case CXType_SChar: case CXType_UChar:
-      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "byte"); return id ? id : ctx->internal_error_type_id; }
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "u8"); return id ? id : ctx->internal_error_type_id; }
     case CXType_Pointer: {
       yap_type_id pointee = process_type(ctx, clang_getPointeeType(canon));
       yap_type ptr = { .kind = yap_type_ptr, .pointer_type = pointee };

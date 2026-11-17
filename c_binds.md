@@ -228,7 +228,7 @@ But imported C headers use native C names:
   int   (not int32_t)
   float (same)
   long  (not int64_t)
-  char* (not byte@)
+  char* (not u8@)
 
 Emitting int32_t for an imported function like printf would produce
 broken code ; stdio.h did not declare printf with int32_t.
@@ -241,7 +241,7 @@ Add a new decl kind that wraps a normal yap function signature
 plus the original C-name strings for return and parameter types:
 
   yap_decl_extern_func {
-    yap_func_decl yap_sig;          // yap-level signature (i32 fn byte@, ...)
+    yap_func_decl yap_sig;          // yap-level signature (i32 fn u8@, ...)
     char *c_return_spelling;         // "int"
     darr(char *) c_param_spellings;  // ["const char*", "..."]
   }

@@ -1,10 +1,10 @@
-// byte is unsigned: values >= 128 must compare and widen as such.
+// u8 is unsigned: values >= 128 must compare and widen as such.
 i32 fn main() {
-    byte b = 245;
+    u8 b = 245;
     if (b != 245) ret 1;
     if (b < 200) ret 2;
     if (b.(i32) != 245) ret 3;
-    byte@ s = c"\xf5";
+    u8@ s = c"\xf5";
     if (s[0] != 245) ret 4;
     ret 0;
 }

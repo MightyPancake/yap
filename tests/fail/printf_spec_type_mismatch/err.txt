@@ -1,1 +1,1 @@
-io->printf: %u expects a u32/u64/byte argument
+io->printf: %u expects a u32/u64/u8 argument

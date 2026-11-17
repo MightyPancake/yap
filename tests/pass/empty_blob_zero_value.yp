@@ -1,7 +1,7 @@
 import io
 
 // `{}` is the zero value for structs and arrays alike, in every expression position.
-struct Inner { i32 a, byte@ s }
+struct Inner { i32 a, u8@ s }
 struct P { i32 x, Inner in, i32[3] arr }
 
 // `ret` takes the return type the way a call argument takes its parameter type.

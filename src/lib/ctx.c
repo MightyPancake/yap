@@ -39,7 +39,7 @@ yap_ctx* yap_ctx_new(){
     ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "internal_error_t", "ie_t", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
     ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
-    yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "unsigned char"); // unsigned like yap's byte; plain char is signed on x86
+    yap_ctx_push_new_primitive_type(ctx, 1, false, false, "u8", "c", "unsigned char"); // plain char is signed on x86
     ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int");
     yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "unsigned int");
     // "long"/"unsigned long" are only 8 bytes under LP64 (x86-64 Linux); wasm32/emscripten and
@@ -88,7 +88,7 @@ yap_ctx* yap_ctx_new(){
         yap_type_id i  = ctx->int_type_id;
         yap_type_id f  = yap_ctx_get_type_id_by_name(ctx, "f64");
         yap_type_id b  = ctx->bool_type_id;
-        yap_type_id bp = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+        yap_type_id bp = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "u8"));
         yap_type_id yt = ctx->ytype_type_id;
         yap_type_id yi = ctx->yident_type_id;
         yap_type_id ys = ctx->ystmt_type_id;
@@ -211,7 +211,7 @@ yap_ctx* yap_ctx_new(){
         yap_type_id yft = ctx->yfnt_type_id;
         yap_type_id b   = ctx->bool_type_id;
         yap_type_id v   = ctx->void_type_id;
-        yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "byte"));
+        yap_type_id bp  = yap_ctx_get_pointer_of_type_id(ctx, yap_ctx_get_type_id_by_name(ctx, "u8"));
         yap_type_id yi  = ctx->yident_type_id;
         yap_type_id ybp = ctx->yexprblueprint_type_id;
         yap_type_id ysbp = ctx->ystmtblueprint_type_id;
@@ -279,7 +279,7 @@ yap_ctx* yap_ctx_new(){
     //Untyped default types for literal coercion
     ctx->untyped_int_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->int_type_id));
     ctx->untyped_float_type_id = yap_ctx_push_type(ctx, yap_untyped_type(ctx->float_type_id));
-    yap_type_id byte_id = yap_ctx_get_type_id_by_name(ctx, "byte");
+    yap_type_id byte_id = yap_ctx_get_type_id_by_name(ctx, "u8");
     ctx->untyped_byte_type_id = yap_ctx_push_type(ctx, yap_untyped_type(byte_id));
     
     return ctx;

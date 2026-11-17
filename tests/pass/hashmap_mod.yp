@@ -5,7 +5,7 @@
 // (hygienic +k/+v idents, body built inline in the caller's own scope --
 // can close over an outer local, same as arr(T)'s own `for`), and the
 // typed-callback `foreach(cb)` HOF (capture-free func_literal, same as
-// arr(T)'s `foreach`). Key support: 4-/8-byte scalars, and byte@ treated as
+// arr(T)'s `foreach`). Key support: 4-/8-byte scalars, and u8@ treated as
 // a C string (hashed/compared by contents).
 import io
 import hashmap
@@ -63,12 +63,12 @@ i32 fn main() {
     if (h2:len() == 2) io->printf:(c"foreach HOF OK\n");
     h2:free();
 
-    // String-keyed, struct-valued instantiation: byte@ key (C string,
+    // String-keyed, struct-valued instantiation: u8@ key (C string,
     // hashed/compared by contents) and a real struct V -- exercises get()'s
     // memset-based zero value (a struct can't be produced by casting 0).
     // Both the direct spelling and the new_dict(V) sugar work now that a
     // compound type can be resolved as a macro type argument.
-    _ h3direct = hashmap->new:(byte@, test_struct);
+    _ h3direct = hashmap->new:(u8@, test_struct);
     h3direct:free();
     _ h3 = hashmap->new_dict:(test_struct);
     h3:put(c"alice", {1, 2}.(test_struct));

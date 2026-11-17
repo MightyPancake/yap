@@ -156,7 +156,7 @@ Other type introspection:
 yType pointee_type(yType ptr_t) //inverse of ptr_of; errors if ptr_t is not a pointer type
 bool is_pointer(yType t) //true iff t is some 'T@' pointer type, for any T
 yType resolve_type(yType t) //strips an untyped-literal wrapper (e.g. a bare '42' arg's type)
-                             //down to the concrete type it defaults to (i32/f32/byte); any
+                             //down to the concrete type it defaults to (i32/f32/u8); any
                              //other type is returned unchanged. Use this before comparing
                              //yapi->type_of(arg) against named types, so untyped literal
                              //arguments dispatch the same as already-typed ones.

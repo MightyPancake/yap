@@ -1,1 +1,1 @@
-Argument 1: expected byte@, given an integer literal
+Argument 1: expected u8@, given an integer literal

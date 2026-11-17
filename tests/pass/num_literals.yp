@@ -19,7 +19,7 @@ i32 fn main() {
     u32 wide_u32 = 300000;
     f64 wide_f64 = 1;
     f32 int_into_f32 = 7;
-    byte small_byte = 65;
+    u8 small_byte = 65;
     u64 max_u64 = 18446744073709551615;
     i64 min_i64 = -9223372036854775808;
 
