@@ -11,6 +11,7 @@ typedef enum {
     yap_decl_file_import,
     yap_decl_module_decl,
     yap_decl_macro,
+    yap_decl_global_var,
 } yap_decl_kind;
 
 typedef enum {

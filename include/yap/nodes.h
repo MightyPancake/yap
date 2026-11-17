@@ -415,6 +415,12 @@ kenobi_new_struct_free(yap_module_decl_node,
     yap_loc loc;
 );
 
+// 'bind T name;' names an existing C global; it has no initializer.
+kenobi_new_struct_free(yap_global_var_node,
+    yap_var_decl_node var_decl;
+    bool is_bind;
+);
+
 kenobi_new_struct_free(yap_decl_node,
     yap_decl_kind kind;
     union {
@@ -424,6 +430,7 @@ kenobi_new_struct_free(yap_decl_node,
         yap_file_import_node file_import;
         yap_module_decl_node module_decl;
         yap_macro_call_node macro_call;
+        yap_global_var_node global_var;
         yap_error err;
     };
     yap_loc loc;

@@ -359,11 +359,17 @@ kenobi_new_struct_free(yap_named_type_decl,
   yap_type_id type_id;
 );
 
+kenobi_new_struct_free(yap_global_var,
+  yap_var_decl var_decl;
+  bool is_bind;
+);
+
 kenobi_new_struct_free(yap_decl,
   yap_decl_kind kind;
   union{
     yap_func_decl func_decl;
     yap_named_type_decl named_type_decl;
+    yap_global_var global_var;
     yap_error err;
   };
   yap_loc loc;

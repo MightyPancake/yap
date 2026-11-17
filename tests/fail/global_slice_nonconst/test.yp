@@ -1,0 +1,9 @@
+i32 fn seed() {
+    ret 1;
+}
+
+i32[] values = {seed(), 2};
+
+i32 fn main() {
+    ret values[0];
+}
