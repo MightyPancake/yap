@@ -18,6 +18,8 @@ typedef struct {
 } bindgen_wrapper_entry;
 
 static darr(bindgen_wrapper_entry) s_wrapper_entries = NULL;
+// Kept out of ctx->semantic_decls: the wrapper pass indexes that in step with s_wrapper_entries.
+static darr(yap_var) s_vars = NULL;
 
 static bool is_reserved_name(const char *name) {
     return name && name[0] == '_' && name[1] == '_';
@@ -81,6 +83,7 @@ int yap_gen_c_bind(yap_args args) {
     full_argv[full_argc++] = "-x"; full_argv[full_argc++] = "c";
     if (glibc_inc) { full_argv[full_argc++] = "-isystem"; full_argv[full_argc++] = glibc_inc; }
 
+    s_vars = darr_new(yap_var);
     yap_bindgen_import(ctx, "/tmp/yap_bindgen_input.c", full_argc, full_argv);
 
     fprintf(out, "// C bindings from %s\n\n", header);
@@ -158,6 +161,20 @@ int yap_gen_c_bind(yap_args args) {
             fprintf(out, ");\n");
         }
     }
+
+    /* global variables */
+    bool printed_vars_header = false;
+    for (size_t i = 0; i < darr_len(s_vars); i++) {
+        yap_var *v = &s_vars[i];
+        if (is_reserved_name(v->name) || !v->type || type_uses_reserved(ctx, v->type)) continue;
+        if (!printed_vars_header) { fprintf(out, "\n"); printed_vars_header = true; }
+        fprintf(out, "bind ");
+        print_type_inline(ctx, out, v->type);
+        fprintf(out, " %s;\n", v->name);
+    }
+    for (size_t i = 0; i < darr_len(s_vars); i++) free(s_vars[i].name);
+    darr_free(s_vars);
+    s_vars = NULL;
     fclose(out);
 
     if (gen_wrapper) {
@@ -566,6 +583,22 @@ static void push_imported_func(yap_ctx *ctx, CXCursor c) {
   clang_disposeString(cs);
 }
 
+/* ===== global variable importer ===== */
+
+// File-scope 'extern' variables; re-declarations of the same name are dropped.
+static void push_imported_var(yap_ctx *ctx, CXCursor c) {
+  if (!s_vars) return;
+  CXCursor sp = clang_getCursorSemanticParent(c);
+  if (clang_getCursorKind(sp) != CXCursor_TranslationUnit) return;
+  CXString cs = clang_getCursorSpelling(c); const char *vname = clang_getCString(cs);
+  if (!vname || !*vname) { clang_disposeString(cs); return; }
+  for (size_t i = 0; i < darr_len(s_vars); i++)
+    if (strcmp(s_vars[i].name, vname) == 0) { clang_disposeString(cs); return; }
+  yap_type_id tid = process_type(ctx, clang_getCursorType(c));
+  darr_push(s_vars, ((yap_var){ .name = strdup(vname), .type = tid }));
+  clang_disposeString(cs);
+}
+
 /* ===== walker + public API ===== */
 
 static enum CXChildVisitResult bindgen_visitor(CXCursor c, CXCursor parent, CXClientData cd) {
@@ -574,6 +607,10 @@ static enum CXChildVisitResult bindgen_visitor(CXCursor c, CXCursor parent, CXCl
   if (k == CXCursor_FunctionDecl) {
     enum CXLinkageKind lk = clang_getCursorLinkage(c);
     if (lk == CXLinkage_External || lk == CXLinkage_UniqueExternal) push_imported_func(ctx, c);
+  }
+  if (k == CXCursor_VarDecl) {
+    enum CXLinkageKind lk = clang_getCursorLinkage(c);
+    if (lk == CXLinkage_External || lk == CXLinkage_UniqueExternal) push_imported_var(ctx, c);
   }
   if (k == CXCursor_StructDecl || k == CXCursor_UnionDecl || k == CXCursor_EnumDecl) {
     CXString ns = clang_getCursorSpelling(c);
