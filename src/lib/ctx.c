@@ -39,7 +39,7 @@ yap_ctx* yap_ctx_new(){
     ctx->internal_error_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "internal_error_t", "ie_t", "__yap_internal_error_t"); //This is a dummy type used for invalid/empty types. Basically, we can return 0 for error in this case
     ctx->void_type_id = yap_ctx_push_new_primitive_type(ctx, 0, false, false, "none", "v", "void");
     ctx->bool_type_id = yap_ctx_push_new_primitive_type(ctx, 1, false, false, "bool", "b", "bool");
-    yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "char");
+    yap_ctx_push_new_primitive_type(ctx, 1, false, false, "byte", "c", "unsigned char"); // unsigned like yap's byte; plain char is signed on x86
     ctx->int_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, false, "i32", "i32", "int");
     yap_ctx_push_new_primitive_type(ctx, 4, false, false, "u32", "u32", "unsigned int");
     // "long"/"unsigned long" are only 8 bytes under LP64 (x86-64 Linux); wasm32/emscripten and
@@ -55,7 +55,7 @@ yap_ctx* yap_ctx_new(){
     ctx->ytype_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yType",      "yType",      "yType");
     ctx->ystmt_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yStmt", "yStmt", "yStmt");
     ctx->yfn_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yFn",      "yFn",      "yFn");
-    ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const char*");
+    ctx->yident_type_id     = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yIdent",     "yIdent",     "const unsigned char*");
     //yExprBlueprint: yExpr template with named holes ($name); must be :fill()'d and :finish()'d before use as a yExpr.
     ctx->yexprblueprint_type_id = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExprBlueprint", "yExprBlueprint", "yExprBlueprint");
     //yStmtBlueprint: the stmt${ } analogue -- a yStmt template with named holes,
