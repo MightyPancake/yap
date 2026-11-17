@@ -63,7 +63,15 @@ int yap_gen_c_bind(yap_args args) {
     FILE *tmp = fopen("/tmp/yap_bindgen_input.c", "w");
     if (!tmp) { return 1; }
     if (header[0] == '<') fprintf(tmp, "#include %s\n", header);
-    else fprintf(tmp, "#include \"%s\"\n", header);
+    else {
+        // The temp file lives in /tmp, so a relative path would resolve against /tmp, not here.
+        char abs_header[PATH_MAX];
+        if (!realpath(header, abs_header)) {
+            fprintf(stderr, "Error: header '%s' not found\n", header);
+            fclose(tmp); unlink("/tmp/yap_bindgen_input.c"); return 1;
+        }
+        fprintf(tmp, "#include \"%s\"\n", abs_header);
+    }
     fclose(tmp);
 
     FILE *out = fopen(outfile, "w");
@@ -133,8 +141,13 @@ int yap_gen_c_bind(yap_args args) {
             if (!typ.enumeration.name || is_reserved_name(typ.enumeration.name)
                 || strchr(typ.enumeration.name, '(') || strchr(typ.enumeration.name, '/')) continue;
             fprintf(out, "bind enum %s {\n", typ.enumeration.name);
-            for (size_t j = 0; j < darr_len(typ.enumeration.variants); j++)
-                fprintf(out, "    %s,\n", typ.enumeration.variants[j].name);
+            for (size_t j = 0; j < darr_len(typ.enumeration.variants); j++) {
+                yap_enum_variant *ev = &typ.enumeration.variants[j];
+                if (ev->value && ev->value->literal.text)
+                    fprintf(out, "    %s = %s,\n", ev->name, ev->value->literal.text);
+                else
+                    fprintf(out, "    %s,\n", ev->name);
+            }
             fprintf(out, "}\n\n");
         }
     }
@@ -408,7 +421,11 @@ static enum CXChildVisitResult ef_visitor(CXCursor c, CXCursor parent, CXClientD
   (void)parent; yap_enum_type *et = cd;
   if (clang_getCursorKind(c) == CXCursor_EnumConstantDecl) {
     CXString ns = clang_getCursorSpelling(c);
-    yap_enum_variant ev = { .name = strdup(clang_getCString(ns)), .value = NULL };
+    // C enums can skip values (raylib's KEY_SPACE is 32), so position alone isn't enough.
+    yap_expr *val = calloc(1, sizeof(yap_expr));
+    char buf[32]; snprintf(buf, sizeof(buf), "%lld", clang_getEnumConstantDeclValue(c));
+    *val = (yap_expr){ .kind = yap_expr_literal, .literal = { .kind = yap_literal_numerical, .text = strdup(buf) } };
+    yap_enum_variant ev = { .name = strdup(clang_getCString(ns)), .value = val };
     clang_disposeString(ns); darr_push(et->variants, ev);
   }
   return CXChildVisit_Continue;
