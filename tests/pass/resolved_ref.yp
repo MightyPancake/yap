@@ -1,0 +1,14 @@
+import refmod
+
+// Same name as refmod's helper; the macros must not pick this one up.
+i32 fn helper(i32 x) {
+    ret 0 - 1;
+}
+
+i32 fn main(){
+    if (refmod->via_helper:(#4) != 40) ret 1;
+    if (refmod->via_qualified:(#5) != 50) ret 2;
+    if (refmod->hit_count:() != 2) ret 3;
+    if (helper(1) != -1) ret 4;
+    ret 0;
+}

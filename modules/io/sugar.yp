@@ -158,39 +158,39 @@ yStmtList fn append_print_arg_stmts(yStmtList stmts, yExpr arg) {
     _ none_ptr_t = yapi->ptr_of(yapi->type(c"none"));
     _ t = yapi->resolve_type(yapi->type_of(arg));
     if (t == bool_t) {
-        _ true_call  = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"true")));
-        _ false_call = yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(c"false")));
+        _ true_call  = yapi->expr_stmt(yapi->call1(#print_str, yapi->cstr(c"true")));
+        _ false_call = yapi->expr_stmt(yapi->call1(#print_str, yapi->cstr(c"false")));
         ret yapi->stmt_list_push(stmts, yapi->if_else_stmt(arg, true_call, false_call));
     }
     if (t == byte_ptr_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_str, arg)));
     }
     if (t == byte_slice_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data"))));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_str, yapi->member(arg, c"data"))));
     }
     if (t == i32_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i32, arg)));
     }
     if (t == u32_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_u32, arg)));
     }
     if (t == i64_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i64"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i64, arg)));
     }
     if (t == u64_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u64"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_u64, arg)));
     }
     if (t == byte_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, i32_t))));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i32, yapi->cast(arg, i32_t))));
     }
     if (t == f32_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f32"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_f32, arg)));
     }
     if (t == f64_t) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f64"), arg)));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_f64, arg)));
     }
     if (yapi->is_pointer(t)) {
-        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_ptr"), yapi->cast(arg, none_ptr_t))));
+        ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_ptr, yapi->cast(arg, none_ptr_t))));
     }
     yapi->error(c"io->print/println: unsupported argument type (must be bool, a string, a number, or a pointer)");
     ret stmts;
@@ -212,38 +212,38 @@ yStmtList fn append_printf_spec_stmt(yStmtList stmts, i32 spec, yExpr arg) {
     _ none_ptr_t = yapi->ptr_of(yapi->type(c"none"));
     _ t = yapi->resolve_type(yapi->type_of(arg));
     if (spec == 100) { // %d -- signed decimal
-        if (t == i32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), arg))); }
-        if (t == i64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i64"), arg))); }
-        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_i32"), yapi->cast(arg, i32_t)))); }
+        if (t == i32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i32, arg))); }
+        if (t == i64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i64, arg))); }
+        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_i32, yapi->cast(arg, i32_t)))); }
         yapi->error(c"io->printf: %d expects an i32/i64/byte argument");
         ret stmts;
     }
     if (spec == 117) { // %u -- unsigned decimal
-        if (t == u32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), arg))); }
-        if (t == u64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u64"), arg))); }
-        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_u32"), yapi->cast(arg, u32_t)))); }
+        if (t == u32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_u32, arg))); }
+        if (t == u64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_u64, arg))); }
+        if (t == byte_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_u32, yapi->cast(arg, u32_t)))); }
         yapi->error(c"io->printf: %u expects a u32/u64/byte argument");
         ret stmts;
     }
     if (spec == 102) { // %f -- floating point
-        if (t == f32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f32"), arg))); }
-        if (t == f64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_f64"), arg))); }
+        if (t == f32_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_f32, arg))); }
+        if (t == f64_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_f64, arg))); }
         yapi->error(c"io->printf: %f expects an f32/f64 argument");
         ret stmts;
     }
     if (spec == 112) { // %p -- pointer, 0x hex
-        if (yapi->is_pointer(t)) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_ptr"), yapi->cast(arg, none_ptr_t)))); }
+        if (yapi->is_pointer(t)) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_ptr, yapi->cast(arg, none_ptr_t)))); }
         yapi->error(c"io->printf: %p expects a pointer argument");
         ret stmts;
     }
     if (spec == 115) { // %s -- string
-        if (t == byte_ptr_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), arg))); }
-        if (t == byte_slice_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_str"), yapi->member(arg, c"data")))); }
+        if (t == byte_ptr_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_str, arg))); }
+        if (t == byte_slice_t) { ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_str, yapi->member(arg, c"data")))); }
         yapi->error(c"io->printf: %s expects a byte@ or byte[] argument");
         ret stmts;
     }
     // %c -- char
-    ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), arg)));
+    ret yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_char, arg)));
 }
 
 // printf-style macro: compile-time walks `fmt`, accumulating runs of literal characters into single print_str calls.
@@ -265,7 +265,7 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
                     k = k + 1;
                 }
                 buf[k] = 0;
-                _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf[0]@));
+                _ str_call = yapi->call1(#print_str, yapi->cstr(buf[0]@));
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
             }
             i32 spec = fmt[i + 1].(i32);
@@ -274,7 +274,7 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
                 ai = ai + 1;
                 i = i + 2;
             } else { // %% or unknown -> print second char literally
-                _ call_expr = yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(spec));
+                _ call_expr = yapi->call1(#print_char, yapi->int(spec));
                 stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(call_expr));
                 i = i + 2;
             }
@@ -293,7 +293,7 @@ yStmt fn printf(byte@ fmt, yExpr[]@ args) {
             k = k + 1;
         }
         buf[k] = 0;
-        _ str_call = yapi->call1(yapi->var_value(c"io_print_str"), yapi->cstr(buf[0]@));
+        _ str_call = yapi->call1(#print_str, yapi->cstr(buf[0]@));
         stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(str_call));
     }
     ret yapi->block(stmts);
@@ -307,7 +307,7 @@ yStmt fn println(yExpr[]@ args) {
         stmts = append_print_arg_stmts(stmts, args.[ai]);
         ai = ai + 1;
     }
-    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(yapi->var_value(c"io_print_char"), yapi->int(10))));
+    stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(yapi->call1(#print_char, yapi->int(10))));
     ret yapi->block(stmts);
 }
 

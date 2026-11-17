@@ -1,0 +1,27 @@
+module refmod {
+    version: "0.1.0",
+    prefix: "rm_"
+}
+
+i32 hits = 0;
+
+i32 fn helper(i32 x) {
+    hits = hits + 1;
+    ret x * 10;
+}
+
+// Expands to helper(v) in the caller's code; '#helper' was already resolved to rm_helper here.
+yExpr fn via_helper(yExpr v) {
+    ret yapi->call1(#helper, v);
+}
+
+// Same, spelled with the module name.
+yExpr fn via_qualified(yExpr v) {
+    yExpr f = #refmod->helper;
+    ret yapi->call1(f, v);
+}
+
+// Refers to this module's global from generated code.
+yExpr fn hit_count() {
+    ret #hits;
+}

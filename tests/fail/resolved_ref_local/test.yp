@@ -1,0 +1,8 @@
+yExpr fn bad() {
+    i32 n = 3;
+    ret #n;
+}
+
+i32 fn main() {
+    ret bad:();
+}

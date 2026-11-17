@@ -59,6 +59,7 @@ typedef enum {
     yap_expr_type_blueprint,  // type${ struct{...} } eager type blueprint (parse AST only; desugared in build.c -> yStructT/yEnumT/yUnionT)
     yap_expr_stmt_blueprint,  // stmt${ ...statements... } lazy stmt blueprint (parse AST only; desugared in build.c -> yStmtBlueprint)
     yap_expr_fn_blueprint,    // (RET fn$ params){body} eager fn blueprint (parse AST only; desugared in build.c -> yFnT)
+    yap_expr_resolved_ref,    // #name / #mod->name (parse AST only; lowered in build.c, uses .paren)
 } yap_expr_kind;
 
 typedef enum {

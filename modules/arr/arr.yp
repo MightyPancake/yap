@@ -48,7 +48,7 @@ yType fn arr(yType T){
         :fill_type(c"PtrT", ptr_t)
         :fill_expr(c"self", self2)
         :fill_expr(c"value", val_p)
-        :fill_expr(c"realloc", yapi->var_value(c"stdlib_realloc"))
+        :fill_expr(c"realloc", #stdlib->realloc)
         :fill_expr(c"elemsize", yapi->sizeof(T)):finish());
     push_t:finish(c"push");
 
@@ -73,7 +73,7 @@ yType fn arr(yType T){
     yExpr self5 = yapi->deref(free_t:get_subject());
     free_t:set_body(
         stmt${ $free($self.data.($NonePtr)); }
-            :fill_expr(c"free", yapi->var_value(c"stdlib_free"))
+            :fill_expr(c"free", #stdlib->free)
             :fill_expr(c"self", self5)
             :fill_type(c"NonePtr", none_ptr_t):finish());
     free_t:finish(c"free");
@@ -106,7 +106,7 @@ yType fn arr(yType T){
         :fill_var(c"i", u32_t, yapi->uniq_name())
         :fill_expr(c"self", self6)
         :fill_expr(c"f", map_f)
-        :fill_expr(c"malloc", yapi->var_value(c"stdlib_malloc"))
+        :fill_expr(c"malloc", #stdlib->malloc)
         :fill_expr(c"elemsize", yapi->sizeof(T)):finish());
     map_t:finish(c"map");
 
@@ -139,7 +139,7 @@ yType fn arr(yType T){
         :fill_var(c"i", u32_t, yapi->uniq_name())
         :fill_expr(c"self", self7)
         :fill_expr(c"keep", filt_f)
-        :fill_expr(c"malloc", yapi->var_value(c"stdlib_malloc"))
+        :fill_expr(c"malloc", #stdlib->malloc)
         :fill_expr(c"elemsize", yapi->sizeof(T)):finish());
     filt_t:finish(c"filter");
 

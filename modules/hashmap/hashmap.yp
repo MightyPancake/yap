@@ -58,7 +58,7 @@ yType fn hashmap(yType K, yType V) {
             $self._phantom = 0.($EntryPtr);
         }
         :fill_expr(c"self", self1)
-        :fill_expr(c"make", yapi->var_value(c"yhm_make"))
+        :fill_expr(c"make", #make)
         :fill_expr(c"elsize", yapi->sizeof(entry_t))
         :fill_expr(c"hashid", yapi->int(size_id))
         :fill_expr(c"cmpid", yapi->int(size_id))
@@ -85,7 +85,7 @@ yType fn hashmap(yType K, yType V) {
         :fill_expr(c"k", pkey_p)
         :fill_expr(c"v", pval_p)
         :fill_expr(c"self", self2)
-        :fill_expr(c"set", yapi->var_value(c"yhm_set"))
+        :fill_expr(c"set", #set)
         :fill_type(c"NoneP", none_ptr_t)
         :finish()
     );
@@ -106,7 +106,7 @@ yType fn hashmap(yType K, yType V) {
         :fill_var(c"e", entry_t, yapi->uniq_name())
         :fill_expr(c"k", hkey_p)
         :fill_expr(c"self", self3)
-        :fill_expr(c"get", yapi->var_value(c"yhm_get"))
+        :fill_expr(c"get", #get)
         :fill_type(c"NoneP", none_ptr_t)
         :finish()
     );
@@ -133,12 +133,12 @@ yType fn hashmap(yType K, yType V) {
         stmts = yapi->stmt_list_push(stmts, yapi->var_decl(none_ptr_t, found_name));
         stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
             yapi->assign(found_var, 61,
-                yapi->call2(yapi->var_value(c"yhm_get"),
+                yapi->call2(#get,
                     yapi->member(self4, c"map"),
                     yapi->cast(yapi->addr_of(probe_var), none_ptr_t)))));
         stmts = yapi->stmt_list_push(stmts, yapi->var_decl(V, zero_name));
         stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
-            yapi->call2(yapi->var_value(c"yhm_zero"),
+            yapi->call2(#zero,
                 yapi->cast(yapi->addr_of(zero_var), none_ptr_t),
                 yapi->sizeof(V))));
 
@@ -171,7 +171,7 @@ yType fn hashmap(yType K, yType V) {
         stmts2 = yapi->stmt_list_push(stmts2, yapi->var_decl(none_ptr_t, found_name2));
         stmts2 = yapi->stmt_list_push(stmts2, yapi->expr_stmt(
             yapi->assign(found_var2, 61,
-                yapi->call2(yapi->var_value(c"yhm_get"),
+                yapi->call2(#get,
                     yapi->member(self4b, c"map"),
                     yapi->cast(yapi->addr_of(probe_var2), none_ptr_t)))));
 
@@ -206,7 +206,7 @@ yType fn hashmap(yType K, yType V) {
         :fill_var(c"e", entry_t, yapi->uniq_name())
         :fill_expr(c"k", dkey_p)
         :fill_expr(c"self", self5)
-        :fill_expr(c"del", yapi->var_value(c"yhm_delete"))
+        :fill_expr(c"del", #delete)
         :fill_type(c"NoneP", none_ptr_t)
         :finish()
     );
@@ -219,7 +219,7 @@ yType fn hashmap(yType K, yType V) {
     len_t:set_body(
         stmt${ ret $count($self.map); }
         :fill_expr(c"self", self6)
-        :fill_expr(c"count", yapi->var_value(c"yhm_count"))
+        :fill_expr(c"count", #count)
         :finish()
     );
     len_t:finish(c"len");
@@ -230,7 +230,7 @@ yType fn hashmap(yType K, yType V) {
     free_t:set_body(
         stmt${ $free($self.map); }
         :fill_expr(c"self", self7)
-        :fill_expr(c"free", yapi->var_value(c"yhm_free"))
+        :fill_expr(c"free", #free)
         :finish()
     );
     free_t:finish(c"free");
@@ -252,7 +252,7 @@ yType fn hashmap(yType K, yType V) {
         :fill_type(c"NoneP", none_ptr_t)
         :fill_var(c"item", none_ptr_t, yapi->uniq_name())
         :fill_expr(c"self", self8)
-        :fill_expr(c"iter", yapi->var_value(c"yhm_iter"))
+        :fill_expr(c"iter", #iter)
         :fill_type(c"I64P", yapi->ptr_of(yapi->type(c"i64")))
         :fill_type(c"NonePP", yapi->ptr_of(none_ptr_t))
         :fill_type(c"EntryPtr", entry_ptr_t)
@@ -282,7 +282,7 @@ yExpr fn new(yType K, yType V) {
     stmts = yapi->stmt_list_push(stmts, yapi->var_decl(hm_t, name));
     stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
         yapi->assign(yapi->member(out, c"map"), 61,
-            yapi->call3(yapi->var_value(c"yhm_make"), yapi->sizeof(entry_t),
+            yapi->call3(#make, yapi->sizeof(entry_t),
                 yapi->int(size_id), yapi->int(size_id)))));
     stmts = yapi->stmt_list_push(stmts, yapi->expr_stmt(
         yapi->assign(yapi->member(out, c"_phantom"), 61, yapi->cast(yapi->int(0), entry_ptr_t))));
@@ -320,7 +320,7 @@ yStmt fn for(yExpr self, yIdent k, yIdent v, yStmt body) {
     :fill_type(c"NoneP", none_ptr_t)
     :fill_var(c"item", none_ptr_t, yapi->uniq_name())
     :fill_expr(c"self", self)
-    :fill_expr(c"iter", yapi->var_value(c"yhm_iter"))
+    :fill_expr(c"iter", #iter)
     :fill_type(c"I64P", yapi->ptr_of(i64_t))
     :fill_type(c"NonePP", yapi->ptr_of(none_ptr_t))
     :fill_type(c"KT", k_t)

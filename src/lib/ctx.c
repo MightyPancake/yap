@@ -109,6 +109,7 @@ yap_ctx* yap_ctx_new(){
             { "cstr",          ye,      {bp},         1 },
             { "bool",          ye,      {b},          1 },
             { "var_value",     ye,      {bp},         1 },
+            { "__resolved_ref", ye,     {bp, i},      2 }, // target of '#name': C name + type id, both fixed at build time
             { "new_var",       ye,      {yt, yi},     2 },
             { "bin_op",        ye,      {ye, i, ye},  3 },
             { "neg",           ye,      {ye},         1 },
