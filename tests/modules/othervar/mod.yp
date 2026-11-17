@@ -1,0 +1,11 @@
+module othervar {
+    version: "0.1.0",
+    prefix: "ov_"
+}
+
+// Shares the name 'counter' with globvar, to exercise ambiguous bare references.
+i32 counter = 99;
+
+i32 fn only_here() {
+    ret 3;
+}

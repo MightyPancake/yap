@@ -1,0 +1,5 @@
+import othervar
+
+i32 fn helper() {
+    ret only_here();
+}

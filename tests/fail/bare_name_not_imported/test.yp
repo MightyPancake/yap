@@ -1,0 +1,6 @@
+// helper.yp imports othervar; that doesn't make othervar's names bare-visible here.
+import "helper.yp"
+
+i32 fn main(){
+    ret only_here();
+}

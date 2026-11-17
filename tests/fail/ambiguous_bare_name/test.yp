@@ -1,0 +1,6 @@
+import globvar
+import othervar
+
+i32 fn main(){
+    ret counter;
+}
