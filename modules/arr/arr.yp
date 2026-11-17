@@ -1,5 +1,4 @@
 // Generic growable array, implemented entirely in yap via the yapi builder API -- no C backend.
-// Callers must `import stdlib` themselves before `import arr` (nested module-to-module imports mis-prefix declarations).
 //
 // yBinOp/yAssignOp codes are raw ASCII/enum ints (no char-literal syntax in yap): '+' = 43, '*' = 42, '=' = 61.
 yType fn arr(yType T){
@@ -192,7 +191,7 @@ yType fn arr(yType T){
 // new(T): value-yielding convenience constructor, so callers can write `_ a = arr->new:(i32);` instead of a var decl followed by init().
 yExpr fn new(yType T) {
     // arr:(T) also works via the pun shorthand (bare module name resolves to module->name).
-    _ arr_t = arr->arr(T);
+    _ arr_t = arr(T);
     _ ptr_t = yapi->ptr_of(T);
     _ name = yapi->uniq_name();
     _ out = yapi->new_var(arr_t, name);

@@ -1,20 +1,20 @@
 // Hand-written sugar on top of the auto-generated bindings; `make bindings` never touches this file.
 
 none fn print_char(i32 c) {
-    io->putchar(c);
+    putchar(c);
 }
 
 none fn print_str(byte@ s) {
     i32 i = 0;
     while (s[i] != 0) {
-        io->print_char(s[i].(i32));
+        print_char(s[i].(i32));
         i = i + 1;
     }
 }
 
 none fn print_u32(u32 v) {
     if (v == 0) {
-        io->print_char(48);
+        print_char(48);
         ret;
     }
     i32[12] digits;
@@ -27,7 +27,7 @@ none fn print_u32(u32 v) {
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_char(digits[i]);
+        print_char(digits[i]);
         i = i - 1;
     }
 }
@@ -37,17 +37,17 @@ none fn print_u32(u32 v) {
 // which recovers the correct magnitude for every representable i32, MIN included.
 none fn print_i32(i32 v) {
     if (v < 0) {
-        io->print_char(45); // '-'
+        print_char(45); // '-'
         u32 mag = 0 - v.(u32);
-        io->print_u32(mag);
+        print_u32(mag);
         ret;
     }
-    io->print_u32(v.(u32));
+    print_u32(v.(u32));
 }
 
 none fn print_u64(u64 v) {
     if (v == 0) {
-        io->print_char(48);
+        print_char(48);
         ret;
     }
     i32[24] digits;
@@ -60,7 +60,7 @@ none fn print_u64(u64 v) {
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_char(digits[i]);
+        print_char(digits[i]);
         i = i - 1;
     }
 }
@@ -68,43 +68,43 @@ none fn print_u64(u64 v) {
 // Same INT_MIN-safe trick as print_i32, widened to i64/u64.
 none fn print_i64(i64 v) {
     if (v < 0) {
-        io->print_char(45); // '-'
+        print_char(45); // '-'
         u64 mag = 0 - v.(u64);
-        io->print_u64(mag);
+        print_u64(mag);
         ret;
     }
-    io->print_u64(v.(u64));
+    print_u64(v.(u64));
 }
 
 // f32 widens losslessly to f64, so route through the one float printer.
 none fn print_f32(f32 v) {
-    io->print_f64(v.(f64));
+    print_f64(v.(f64));
 }
 
 // Prints with 6 fractional digits: integer part, '.', then 6 digits peeled
 // off the fraction one at a time (no '%'/fmod on floats in this language).
 none fn print_f64(f64 v) {
     if (v != v) { // NaN: the only value that compares unequal to itself
-        io->print_str(c"nan");
+        print_str(c"nan");
         ret;
     }
     if (v < 0.0) {
-        io->print_char(45); // '-'
+        print_char(45); // '-'
         v = 0.0 - v;
     }
     if (v > 18446744073709551615.0) { // beyond u64 range (incl. +inf) -- can't truncate safely
-        io->print_str(c"inf");
+        print_str(c"inf");
         ret;
     }
     i64 int_part = v.(i64);
-    io->print_u64(int_part.(u64));
-    io->print_char(46); // '.'
+    print_u64(int_part.(u64));
+    print_char(46); // '.'
     f64 frac = v - int_part.(f64);
     i32 d = 0;
     while (d < 6) {
         frac = frac * 10.0;
         i64 digit = frac.(i64);
-        io->print_char(digit.(i32) + 48);
+        print_char(digit.(i32) + 48);
         frac = frac - digit.(f64);
         d = d + 1;
     }
@@ -112,18 +112,18 @@ none fn print_f64(f64 v) {
 
 none fn print_hex_digit(i32 d) {
     if (d < 10) {
-        io->print_char(48 + d); // '0'..'9'
+        print_char(48 + d); // '0'..'9'
     } else {
-        io->print_char(97 + (d - 10)); // 'a'..'f'
+        print_char(97 + (d - 10)); // 'a'..'f'
     }
 }
 
 // Prints any pointer's raw address as "0x" + lowercase hex, e.g. 0x7ffe1234.
 none fn print_ptr(none@ p) {
-    io->print_str(c"0x");
+    print_str(c"0x");
     u64 v = p.(u64);
     if (v == 0) {
-        io->print_char(48);
+        print_char(48);
         ret;
     }
     i32[16] digits;
@@ -136,7 +136,7 @@ none fn print_ptr(none@ p) {
     }
     i32 i = n - 1;
     while (i >= 0) {
-        io->print_hex_digit(digits[i]);
+        print_hex_digit(digits[i]);
         i = i - 1;
     }
 }

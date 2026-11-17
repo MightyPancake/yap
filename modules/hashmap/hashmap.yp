@@ -27,7 +27,7 @@ yType fn hashmap(yType K, yType V) {
         yapi->error(c"hashmap:(K, V): value type cannot be 'none'");
         ret K;
     }
-    _ size_id = hashmap->key_size_id(K);
+    _ size_id = key_size_id(K);
     if (size_id < 0) {
         yapi->error(c"hashmap:(K, V): unsupported key type -- K must be a 4- or 8-byte scalar (i32/u32/f32/i64/u64/f64) or byte@ (C string)");
         ret K;
@@ -270,10 +270,10 @@ yType fn hashmap(yType K, yType V) {
 // new(K, V): value-yielding convenience constructor, e.g.
 // `_ h = hashmap->new:(i32, i32);` instead of a separate declare + init().
 yExpr fn new(yType K, yType V) {
-    _ hm_t = hashmap->hashmap(K, V);
+    _ hm_t = hashmap(K, V);
     _ entry_ptr_t = yapi->field_type(hm_t, c"_phantom");
     _ entry_t = yapi->pointee_type(entry_ptr_t);
-    _ size_id = hashmap->key_size_id(K);
+    _ size_id = key_size_id(K);
 
     _ name = yapi->uniq_name();
     _ out = yapi->new_var(hm_t, name);
@@ -293,7 +293,7 @@ yExpr fn new(yType K, yType V) {
 
 // new_dict(V): value-yielding constructor for a byte@-keyed (C string) hashmap, e.g. `hashmap->new_dict:(test_struct)`.
 yExpr fn new_dict(yType V) {
-    ret hashmap->new(yapi->ptr_of(yapi->type(c"byte")), V);
+    ret new(yapi->ptr_of(yapi->type(c"byte")), V);
 }
 
 // for(self, k, v, body): receiver-dispatched macro-method form of iteration, e.g. `h:for:(+k, +v, { io->printf:(c"%d\n", {v}); });`.
