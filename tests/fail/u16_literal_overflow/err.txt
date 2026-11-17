@@ -1,0 +1,1 @@
+Numeric literal '70000' overflows type 'u16'

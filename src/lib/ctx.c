@@ -49,6 +49,10 @@ yap_ctx* yap_ctx_new(){
     yap_ctx_push_new_primitive_type(ctx, 8, false, false, "u64", "u64", "unsigned long long");
     ctx->float_type_id = yap_ctx_push_new_primitive_type(ctx, 4, true, true, "f32", "f32", "float");
     yap_ctx_push_new_primitive_type(ctx, 8, true, true, "f64", "f64", "double");
+    // Appended after the rest so existing type ids don't shift.
+    yap_ctx_push_new_primitive_type(ctx, 1, true, false, "i8", "i8", "signed char");
+    yap_ctx_push_new_primitive_type(ctx, 2, true, false, "i16", "i16", "short");
+    yap_ctx_push_new_primitive_type(ctx, 2, false, false, "u16", "u16", "unsigned short");
 
     //Comptime types (opaque pointer handles for metaprogramming)
     ctx->yexpr_type_id      = yap_ctx_push_new_primitive_type(ctx, 8, false, false, "yExpr",      "yExpr",      "yExpr");

@@ -1,0 +1,46 @@
+// i8, i16 and u16: ranges, wraparound, widening, struct packing and printing.
+import io
+
+struct Packed {
+    i8 a,
+    i8 b,
+    i16 c,
+}
+
+i32 fn main() {
+    i8 lo = -128;
+    i8 hi = 127;
+    i16 slo = -32768;
+    i16 shi = 32767;
+    u16 umax = 65535;
+
+    if (lo.(i32) != -128 || hi.(i32) != 127) ret 1;
+    if (slo.(i32) != -32768 || shi.(i32) != 32767) ret 2;
+    if (umax.(i32) != 65535) ret 3;
+
+    // Wraparound at the type's own width.
+    hi++;
+    if (hi.(i32) != -128) ret 4;
+    umax += 1;
+    if (umax.(i32) != 0) ret 5;
+    shi++;
+    if (shi.(i32) != -32768) ret 6;
+
+    // Sign extension going wide, truncation going narrow.
+    i8 neg = -1;
+    if (neg.(i32) != -1) ret 7;
+    if (neg.(u8).(i32) != 255) ret 8;
+    if (300.(i8).(i32) != 44) ret 9;
+    if (70000.(u16).(i32) != 4464) ret 10;
+    u16 big = 40000;
+    if (big.(i16).(i32) != -25536) ret 11;
+
+    Packed p = {-2, 3, -300};
+    if (p.a + p.b != 1 || p.c.(i32) != -300) ret 12;
+    Packed@ pp = p@;
+    if (pp.c.(i32) != -300) ret 13;
+
+    io->println:({lo, c" ", slo, c" ", umax, c" ", big});
+    io->printf:(c"%d %d %u\n", {neg, p.c, big});
+    ret 0;
+}
