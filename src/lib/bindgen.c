@@ -436,14 +436,24 @@ static yap_type_id process_type(yap_ctx *ctx, CXType t) {
   switch (canon.kind) {
     case CXType_Void:  return ctx->void_type_id;
     case CXType_Bool:  return ctx->bool_type_id;
-    case CXType_Int: case CXType_UInt: case CXType_Short: case CXType_UShort:
+    case CXType_Int:
       return ctx->int_type_id;
-    case CXType_Long: case CXType_ULong: case CXType_LongLong: case CXType_ULongLong:
+    case CXType_UInt:
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "u32"); return id ? id : ctx->internal_error_type_id; }
+    case CXType_Short:
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "i16"); return id ? id : ctx->internal_error_type_id; }
+    case CXType_UShort:
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "u16"); return id ? id : ctx->internal_error_type_id; }
+    case CXType_SChar:
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "i8"); return id ? id : ctx->internal_error_type_id; }
+    case CXType_Long: case CXType_LongLong:
       { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "i64"); return id ? id : ctx->internal_error_type_id; }
+    case CXType_ULong: case CXType_ULongLong:
+      { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "u64"); return id ? id : ctx->internal_error_type_id; }
     case CXType_Float: return ctx->float_type_id;
     case CXType_Double: case CXType_LongDouble:
       { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "f64"); return id ? id : ctx->internal_error_type_id; }
-    case CXType_Char_S: case CXType_Char_U: case CXType_SChar: case CXType_UChar:
+    case CXType_Char_S: case CXType_Char_U: case CXType_UChar:
       { yap_type_id id = yap_ctx_get_type_id_by_name(ctx, "u8"); return id ? id : ctx->internal_error_type_id; }
     case CXType_Pointer: {
       yap_type_id pointee = process_type(ctx, clang_getPointeeType(canon));
